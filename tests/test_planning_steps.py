@@ -676,5 +676,26 @@ class EnglishPlanningStepsTest(unittest.TestCase):
                 self.assertIn("Answer in the user's language.", intro)
 
 
+class GlossedGermanValuesTest(unittest.TestCase):
+    """Review: Die deutschen Werte bleiben (fab liest sie aus Kommentaren), dahinter steht
+    eine kurze englische Erklärung in Klammern, damit englische Leser sie verstehen."""
+
+    def test_verify_statuses_in_fab_are_glossed(self):
+        fab = read("skills/fab/SKILL.md")
+        tracker = fab.split("<!-- regel:tracker-lesen -->")[1].split("<!-- /regel:tracker-lesen -->")[0]
+        self.assertIn("(with status `bestanden` (passed), `Lücken gefunden` (gaps found) or "
+                      "`Mensch nötig` (human needed))", tracker)
+        rows = fab.split("<!-- regel:entscheiden -->")[1].split("<!-- /regel:entscheiden -->")[0]
+        for value, gloss in (("bestanden", "passed"), ("Lücken gefunden", "gaps found"),
+                             ("Mensch nötig", "human needed")):
+            with self.subTest(value=value):
+                self.assertIn("last `verify` result `%s` (%s) |" % (value, gloss), rows)
+
+    def test_challenge_verdicts_in_template_are_glossed(self):
+        result = section(read("skills/challenge/SKILL.md"), "Ergebnis")
+        self.assertIn("**Verdict:** bauen (build) | kleiner bauen (build smaller) | "
+                      "nicht bauen (don't build) — <carrying reason>", result)
+
+
 if __name__ == "__main__":
     unittest.main()

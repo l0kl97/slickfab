@@ -190,7 +190,7 @@ Spec check:
 ```
 ## Ergebnis challenge
 
-**Verdict:** bauen | kleiner bauen | nicht bauen — <carrying reason>
+**Verdict:** bauen (build) | kleiner bauen (build smaller) | nicht bauen (don't build) — <carrying reason>
 **Objections:** <1–7, each with recommendation> (or “no real objections”)
 **Only the human:** <questions> (pile 1: <n>, pile 2: <n>)
 **Comment:** <link> or “only in the chat”

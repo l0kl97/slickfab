@@ -138,7 +138,7 @@ Spec check:
 ```
 ## Ergebnis challenge
 
-**Verdict:** bauen | kleiner bauen | nicht bauen — <carrying reason>
+**Verdict:** bauen (build) | kleiner bauen (build smaller) | nicht bauen (don't build) — <carrying reason>
 **Objections:** <1–7, each with recommendation> (or “no real objections”)
 **Only the human:** <questions> (pile 1: <n>, pile 2: <n>)
 **Comment:** <link> or “only in the chat”
@@ -483,7 +483,7 @@ Only if `.slickfab/config` is complete and the tracker is reachable (the session
 
 - status of the spec issue, status of every ticket, and labels (`slickfab:needs-human`, `slickfab:rework`, `slickfab:replan`, `slickfab:ready`),
 - “blocked by” relations,
-- the comments from `challenge`, `verify` (with status `bestanden`, `Lücken gefunden` or `Mensch nötig`), handoffs (`handoff`) and revisions of the spec (first line `## Spec überarbeitet`), each with its time and its last marker line.
+- the comments from `challenge`, `verify` (with status `bestanden` (passed), `Lücken gefunden` (gaps found) or `Mensch nötig` (human needed)), handoffs (`handoff`) and revisions of the spec (first line `## Spec überarbeitet`), each with its time and its last marker line.
 
 If the configuration is missing or the tracker is unreachable, you do not read it and guess nothing about it: no spec, no ticket and no status you have not seen. You then decide only with what the repo and the conversation show, and name under “Missing for setup” what is missing. You do not abort.
 <!-- /regel:fab/tracker-lesen -->
@@ -507,9 +507,9 @@ Go through the table from top to bottom; the first row that applies counts. Work
 | 10 | Ticket in `Todo`, no open blocker | `/slickfab:implement <ticket>` |
 | 11 | Ticket in `Todo`, its blocker is still in `Backlog` | no step: the human approves the blocker (`Todo`); name both tickets |
 | 12 | Spec issue still open, all tickets closed, at least one `Done`, no `verify` result after the last merge | `/slickfab:verify <spec issue>` |
-| 13 | Spec issue still open, all tickets closed, at least one `Done`, last `verify` result `bestanden` | `/slickfab:retro <spec issue>`; after that the human sets the spec to `Done` (retro writes nothing to the tracker, that is the end), with the next piece of work `/slickfab:grill` |
-| 14 | Spec issue still open, all tickets closed, at least one `Done`, last `verify` result `Lücken gefunden` | `/slickfab:verify <spec issue>`: proposes the fix tickets and creates them after the human's yes |
-| 15 | Spec issue still open, all tickets closed, at least one `Done`, last `verify` result `Mensch nötig` | no step: the human checks the points from the `verify` comment, then `/slickfab:verify <spec issue>` |
+| 13 | Spec issue still open, all tickets closed, at least one `Done`, last `verify` result `bestanden` (passed) | `/slickfab:retro <spec issue>`; after that the human sets the spec to `Done` (retro writes nothing to the tracker, that is the end), with the next piece of work `/slickfab:grill` |
+| 14 | Spec issue still open, all tickets closed, at least one `Done`, last `verify` result `Lücken gefunden` (gaps found) | `/slickfab:verify <spec issue>`: proposes the fix tickets and creates them after the human's yes |
+| 15 | Spec issue still open, all tickets closed, at least one `Done`, last `verify` result `Mensch nötig` (human needed) | no step: the human checks the points from the `verify` comment, then `/slickfab:verify <spec issue>` |
 | 16 | Spec has tickets in `Backlog`, none in `Todo`, `In Progress` or `In Review` | no step: the human approves the next ticket (`Todo`) |
 | 17 | All tickets of the spec `Canceled` or `Duplicate` | no step: the human decides whether the spec is split again (`/slickfab:tickets <spec issue>`) or ends; status `NEEDS_CONTEXT` |
 | 18 | Spec without tickets and without a `challenge` comment, or last `challenge` verdict `nicht bauen` and after it a comment `## Spec überarbeitet` (later than the last `challenge` comment) | `/slickfab:challenge <spec issue>` |

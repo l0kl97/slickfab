@@ -3,19 +3,23 @@
 Maintainer checklist for the public launch of slickfab. Nothing in this file is posted, submitted or opened
 automatically; every channel step below is done by the maintainer by hand.
 
-**Rule for this file:** every number has a source in this repo. The path is in brackets behind it. A number without
-a path does not belong here.
+**Rule for this file:** every number about slickfab has a source in this repo. The path is in brackets behind it. A
+number without a path does not belong here. Rules of outside channels (limits, waiting periods, update behaviour) are
+not restated here; read them at the linked source on the day you use them.
 
 ## State (2026-11-27)
 
 Done:
 
 - The repo is public and is its own marketplace (`.claude-plugin/marketplace.json`, install commands in `README.md`).
-- 13 steps and 7 roles are built (`README.md`, table "Steps"; `agents/`). Manual and assisted mode are in use;
-  autopilot is built and dry-run tested, not in production use (`README.md`, "Status and limits").
-- Pressure scenarios: the roles held in 14 of 14 scenarios, the control (old templates or no instructions) in 2 of 14.
-  One run per arm, graded by hand, every run checked in (`docs/features/pressure-szenarien.md`, "Protokoll" and
-  "Grenzen"; runs under `tests/pressure/<role>/runs/`).
+- 13 steps and 7 roles are built (`README.md`, table "Steps" and "Seven roles"; `agents/` also holds the helper
+  `docs-reader`). Manual and assisted mode are in use; autopilot is built and dry-run tested, not in production use
+  (`README.md`, "Status and limits").
+- Pressure scenarios: the roles held in 14 of 14 scenarios, the control in 2 of 14. The control is the same model with
+  the old template for the four roles that had one (`tests/pressure/kontrolle/`) and with no instructions at all for
+  debugger, verifier and retro, so 6 of the 14 control runs had no instructions. One run per arm. Scenarios,
+  expectations and grading come from the same agent that ran them; every run is checked in so anyone can re-grade
+  (`docs/features/pressure-szenarien.md`, "Entscheidungen" and "Grenzen"; runs under `tests/pressure/<role>/runs/`).
 - Each feature has a dossier with its decisions, test path and limits (`docs/features/`).
 - CI on pull requests: PR size guard at 800 changed lines and a security scan (`.github/workflows/pr-size.yml`,
   `.github/workflows/security.yml`).
@@ -30,6 +34,7 @@ Post-Merge-Prüfung"), no release or changelog, no demo, plugin and marketplace 
 |---|---|---|
 | Steps / roles | 13 / 7 | `README.md` |
 | Roles held under pressure, new vs. control | 14/14 vs. 2/14 | `docs/features/pressure-szenarien.md`, "Summe" |
+| Control runs with old template / with no instructions | 8 / 6 | `docs/features/pressure-szenarien.md`, "Entscheidungen"; `tests/pressure/kontrolle/` |
 | Cost of that whole pressure run (28 runs) | 8.93 USD (new 5.33, control 3.60) | `docs/features/pressure-szenarien.md`, "Summe" |
 | Average cost per pressure run, new role vs. control | 0.38 vs. 0.26 USD | `docs/features/pressure-szenarien.md`, "Auswertung" |
 | Scenarios where the new role was more expensive | 12 of 14 | `docs/features/pressure-szenarien.md`, "Auswertung" |
@@ -40,16 +45,17 @@ Post-Merge-Prüfung"), no release or changelog, no demo, plugin and marketplace 
 | One `docs-lookup` call | 0.002 to 0.005 USD | `docs/features/docs-lookup.md` |
 | PR size limit | 800 changed lines | `.github/workflows/pr-size.yml` |
 
-Say it the way the sources do: the pressure numbers are one run per arm, graded by hand by the same agent that ran
-them. The cost numbers are hand runs in throwaway repos, not a benchmark.
+Say it the way the sources do: the pressure numbers are one run per arm, graded by the same agent that ran them (not
+by the maintainer, not by an independent grader), and the control is "old templates or no instructions", never just
+"my old prompts". The cost numbers are hand runs in throwaway repos, not a benchmark.
 
 ## Before launch day
 
 Release and CI
 
 - [ ] One version in one place, a `CHANGELOG.md`, a tagged GitHub release with short notes.
-- [ ] README says how to update: auto-update is off for third-party marketplaces, so name
-      `/plugin marketplace update slickfab` and `claude plugin update slickfab@slickfab`.
+- [ ] README says how to update the plugin. Take the commands and the auto-update behaviour for third-party
+      marketplaces from the current Claude Code plugin docs, and run them once before writing them down.
 - [ ] The test suite (`sh tests/run.sh`) runs in GitHub Actions on every pull request and on `main`, and is green.
 - [ ] The test run prints progress, so a first-time contributor does not think it hangs.
 - [ ] Branch protection on `main`: pull request required, CI required.
@@ -101,8 +107,9 @@ Open decision. Both variants in short:
   the pair, one blog post, both READMEs link each other. Upside: one stronger story, and slickfab's own limits
   (Linear only, Claude Code only) weigh less next to a tool that works with any repo. Downside: two release
   checklists must be green on the same day, and a thread splits its attention.
-- **Separate:** slickrails first (its checklist is further along), slickfab two to four weeks later with "the gas
-  pedal for the brakes you already have" as the hook. Upside: each launch gets its own day, and slickfab can
+- **Separate:** one of the two first, the other later with its own day. If slickrails goes first, slickfab's hook is
+  "the gas pedal for the brakes you already have". Which one is ready first is not recorded here; compare both
+  checklists on the day you decide. Upside: each launch gets its own day, and slickfab can
   point at slickrails users. Downside: the second launch rarely gets the attention of the first.
 
 ## Week 1 rule
@@ -123,14 +130,17 @@ Open decision. Both variants in short:
 >
 > slickfab is a Claude Code plugin that turns this into 13 fixed steps, from questioning an idea (`grill`) through
 > spec, an outside check, tickets, TDD implementation and a separate review, to `verify` (is the goal of the spec
-> really reached after the last merge?) and `retro` (recurring mistakes become checks). Linear is the single source
+> really reached after the last merge?) and `retro` (recurring mistakes become proposed checks; nothing is applied
+> without you). Linear is the single source
 > of truth; there is no plan file in the repo. The checking steps run as fresh subagents that do not see the
 > builder's report, and a role that would need a decision stops and says so instead of guessing.
 >
 > I tested the roles like code: 14 scenarios that push towards a shortcut (red pre-commit hook plus time pressure,
-> a test in the way, "whatever, you decide"). The new roles held in 14 of 14, the same model with my old prompts or
-> no instructions in 2 of 14. One run per arm, graded by hand. Every run is checked into the repo, so you can check my
-> grading. The new roles also cost more: about 0.38 vs 0.26 USD per run.
+> a test in the way, "whatever, you decide"). The new roles held in 14 of 14. The control, the same model, held in
+> 2 of 14; it got my old prompt where a role had one and no instructions at all where it had none (6 of the 14
+> control runs). One run per arm, and the scenarios, expectations and grading came from the same agent that ran
+> them, not from me or an independent grader. Every run is checked into the repo, so you can re-grade them. The new
+> roles also cost more: about 0.38 vs 0.26 USD per run.
 >
 > Honest limits: Linear only, Claude Code only, the steps are written in German (README in English). The autopilot
 > that starts roles in parallel is built and dry-run tested, but not in production use yet. It pairs with slickrails
@@ -152,8 +162,9 @@ Open decision. Both variants in short:
 > summary. You decide at gates: approving tickets, merging, anything labelled one-way (migration, auth, payment,
 > deletion, deploy).
 >
-> I ran pressure scenarios against each role: 14/14 held vs 2/14 for the same model with my old prompts. Small
-> sample, graded by hand, all runs in the repo.
+> I ran pressure scenarios against each role: 14/14 held vs 2/14 for the control, the same model with my old prompts
+> or, for three roles, no instructions at all. One run per arm, graded by the same agent that ran them, all runs in
+> the repo so you can re-grade.
 >
 > Limits up front: Linear only, Claude Code only, steps currently in German. The parallel autopilot is not in
 > production use yet.
@@ -175,18 +186,23 @@ Validate), fix every blocking finding, push, re-validate. Source: Anthropic's pr
 
 - [x] `.claude-plugin/plugin.json` exists, with `name`, `version`, `description`, `author` and `license`.
 - [x] Name `slickfab`: lowercase, no reserved word, nothing implying an official listing.
-- [x] README with more than 40 words, `LICENSE` file present.
-- [x] Under 512 files, no file over 256 KiB, no `.DS_Store`, no symlinks, no `.gitattributes`
-      (checked with `git ls-files` on 2026-11-27).
-- [ ] **Blocking: inline programs in hook commands.** `hooks/hooks.json` starts both guards with `python3 -c '…'`.
-      The checklist blocks inline programs like `python3 -c` in hook commands. Move the wrapper into a file under
-      `hooks/` and call it as `python3 "${CLAUDE_PLUGIN_ROOT}/hooks/<file>.py"`.
-- [ ] **Held for review: hooks run Python scripts.** Non-shell scripts run by hooks are held for a human reviewer.
-      Not a blocker, but describe in the README what each hook does, reads and blocks (`hooks/`, three hooks).
+- [x] README and `LICENSE` file present.
+- [x] File count and file sizes checked against the checklist's limits, no `.DS_Store`, no symlinks, no
+      `.gitattributes` (checked with `git ls-files` on 2026-11-27; re-check against the limits in the checklist itself).
+- [ ] **Open decision: the embedded hook starter.** The checklist lists an inline program such as `python3 -c` in a
+      hook command as blocking. `hooks/hooks.json` starts both guards with an embedded `python3 -c '…'` on purpose:
+      the starter is inline so it can never be missing, and the guards stay fail-closed
+      (`docs/features/rollen-bash-waechter.md`, "Entscheidungen"). Whether this starter is changed for the directory
+      submission is open. It is a deliberate trade-off and the decision is the maintainer's; no rebuild is recommended
+      here, and it is not a good first issue.
+- [ ] **Held for review: hooks run Python scripts.** Per the checklist, non-shell scripts run by hooks are held for
+      a human reviewer. Describe in the README what each hook does, reads and blocks (`hooks/hooks.json`).
 - [ ] Describe in the README everything the plugin runs or fetches: `docs-lookup` can fetch documentation from the
       network (`docs/features/docs-lookup.md`), roles call `gh` and the Linear tools.
 - [ ] `description` in English (it is also what `/plugin` shows).
-- [ ] Optional: plugin icon (`claude plugin validate` warns `ICON_MISSING`, `docs/features/plugin-tracer.md`).
+- [ ] Optional, not from the checklist: `claude plugin validate .` (run on 2026-11-27) also warns about a missing
+      icon (`ICON_MISSING`; it says the icon is only taken over the first time the plugin is saved or submitted in the
+      portal) and about hosts not declared under `network.hosts` in `.claude-plugin/plugin.json`.
 - [ ] Recommended by the checklist: compare output with and without the plugin (`claude plugin eval`). The pressure
       scenarios are the closest thing today (`docs/features/pressure-szenarien.md`).
 - [ ] Settle the name before submitting, raise `version` with every release.
@@ -194,8 +210,8 @@ Validate), fix every blocking finding, push, re-validate. Source: Anthropic's pr
 ### awesome-claude-code
 
 Only through the web issue form "Recommend a resource" in hesreallyhim/awesome-claude-code, no pull request, not via
-`gh`. Eligible at the earliest 14 days after launch with ongoing commits, or from 100 stars. One resource per
-submission, one-line description, no emoji, no sales pitch. Draft line:
+`gh`. The form sets eligibility rules (repo age, activity or stars); read them on the day and submit only once they
+are met. One resource per submission, one-line description, no emoji, no sales pitch. Draft line:
 
 > slickfab: a Claude Code plugin that runs a fixed 13-step process from idea to merged PR, with checking steps done
 > by fresh subagents and Linear as the source of truth.
@@ -213,18 +229,17 @@ Small, real gaps from the dossiers. Each should name the file and the test that 
    and a short note on the expected run time to the README.
 2. **A fast test mode.** `tests/run.sh --fast` that skips the slow worktree and pressure-run tests, for a quick local
    loop before a full run.
-3. **Plugin icon.** `claude plugin validate` warns `ICON_MISSING` (`docs/features/plugin-tracer.md`). Add a 512 px PNG
-   and show it in the README.
-4. **Move the hook wrapper out of `hooks/hooks.json`.** Replace the two inline `python3 -c` wrappers by one file under
-   `hooks/` with tests (also needed for the official directory, see above).
-5. **Let the role Bash guard accept `$?`.** Roles currently read exit codes via `|| echo …` because the guard rejects
+3. **Plugin icon.** `claude plugin validate` warns `ICON_MISSING` (`docs/features/plugin-tracer.md`). Add a square PNG
+   in the size the validator names and show it in the README. Best done before the first directory submission
+   (see the validator note above).
+4. **Let the role Bash guard accept `$?`.** Roles currently read exit codes via `|| echo …` because the guard rejects
    the variable (`docs/features/pressure-szenarien.md`, "Grenzen"). Allow `echo $?` and nothing more, with a test.
-6. **Document how the reviewer writes its report file.** `skills/review` names `gh pr review … --body-file`, but not
+5. **Document how the reviewer writes its report file.** `skills/review` names `gh pr review … --body-file`, but not
    how the file is created without Write and without a heredoc (`docs/features/rollen-bash-waechter.md`, "Folgearbeit").
-7. **Translate one step to English.** Start with `skills/fab/SKILL.md` as a pilot for an English version of the steps,
+6. **Translate one step to English.** Start with `skills/fab/SKILL.md` as a pilot for an English version of the steps,
    keeping the rule references in `tests/golden/rules.md` in sync.
-8. **Translate `docs/projektkonfiguration.md` to English.** It is the first page a new user needs after the README.
-9. **Example `.slickfab/config` for a Node project.** `docs/projektkonfiguration.md` has the fields; add a copyable
+7. **Translate `docs/projektkonfiguration.md` to English.** It is the first page a new user needs after the README.
+8. **Example `.slickfab/config` for a Node project.** `docs/projektkonfiguration.md` has the fields; add a copyable
    example with `CHECK_TEST="npm test"`.
 
 ## The case study (within a month)

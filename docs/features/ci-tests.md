@@ -37,3 +37,4 @@ Das Repo ist öffentlich, aber auf GitHub liefen nur Secret-Scan, Audit und PR-G
 ## Historie
 
 - 2026-11-27: angelegt
+- 2026-11-27: Erster CI-Lauf rot: 3 Worktree-Tests (`rm`) scheiterten auf Linux → Ursache: Fixture-Repo ignorierte `__pycache__/` nicht, der Referenzlauf legte `.pyc` ab, `rm` sah ungesicherte Arbeit; lokal verdeckt durch `sys.pycache_prefix` von Apples Python → Fix: `__pycache__/` in die Fixture-`.gitignore` (`tests/test_worktree.py`).

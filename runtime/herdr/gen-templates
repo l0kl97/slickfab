@@ -1,0 +1,77 @@
+#!/usr/bin/env python3
+"""gen-templates: erzeugt aus den Agent-Hüllen (agents/*.md) die Herdr-Vorlagen.
+
+  gen-templates --out <ordner>      je Rolle eine Vorlage <rolle>.md in <ordner>
+  gen-templates --check <ordner>    prüft, ob <ordner> genau das enthält, was erzeugt würde;
+                                    schreibt nichts, Exit 1 bei Abweichung
+  --agents <ordner>                 andere Hüllen als agents/ dieses Repos
+
+Ein Ziel muss immer ausdrücklich genannt werden: Ohne --out schreibt das Skript nirgends hin,
+auch nicht ins Herdr-Vorlagenverzeichnis. Nur Python-Standardbibliothek (läuft mit 3.9).
+"""
+import argparse
+import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import slickfab_templates as st  # noqa: E402
+
+
+def log(msg):
+    print("gen-templates: " + msg, file=sys.stderr, flush=True)
+
+
+def check(folder, files):
+    """Liste der Abweichungen zwischen <folder> und den erwarteten Vorlagen."""
+    problems = []
+    present = sorted(f for f in os.listdir(folder) if f.endswith(".md")) if os.path.isdir(folder) else []
+    for name, text in files.items():
+        path = os.path.join(folder, name)
+        if name not in present:
+            problems.append("%s fehlt" % name)
+            continue
+        try:
+            with open(path, encoding="utf-8") as f:
+                same = f.read() == text
+        except (OSError, UnicodeDecodeError) as e:
+            problems.append("%s nicht lesbar (%s)" % (name, e))
+            continue
+        if not same:
+            problems.append("%s passt nicht zur Hülle (neu erzeugen)" % name)
+    for name in present:
+        if name not in files:
+            problems.append("%s hat keine Hülle mehr" % name)
+    return problems
+
+
+def main(argv):
+    ap = argparse.ArgumentParser(prog="gen-templates", description="Herdr-Vorlagen aus agents/*.md")
+    target = ap.add_mutually_exclusive_group(required=True)
+    target.add_argument("--out", help="Zielordner (wird angelegt)")
+    target.add_argument("--check", help="Ordner, der gegen die Hüllen geprüft wird")
+    ap.add_argument("--agents", default=st.AGENTS, help="Ordner mit den Hüllen")
+    args = ap.parse_args(argv)
+    try:
+        files = st.render_all(args.agents)
+    except (st.Fail, OSError) as e:
+        log("abgebrochen, nichts geschrieben: %s" % e)
+        return 1
+    if args.check:
+        problems = check(args.check, files)
+        for p in problems:
+            log(p)
+        return 1 if problems else 0
+    try:
+        os.makedirs(args.out, exist_ok=True)
+        for name, text in files.items():
+            with open(os.path.join(args.out, name), "w", encoding="utf-8") as f:
+                f.write(text)
+    except OSError as e:
+        log("Schreiben nach %s fehlgeschlagen: %s" % (args.out, e))
+        return 1
+    log("%d Vorlagen nach %s geschrieben" % (len(files), args.out))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

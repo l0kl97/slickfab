@@ -1,0 +1,6 @@
+{"issues": {
+ "EX-920": {"title": "Spec: Anmeldung robuster", "status": "Backlog", "description": "## Problem\nNutzer scheitern an Groß-/Kleinschreibung der E-Mail.\n## Nicht im Umfang\nLogging.", "comments": []},
+ "EX-921": {"title": "E-Mail beim Anmelden normalisieren", "status": "In Review", "parentId": "EX-920", "labels": ["S"],
+   "description": "## Akzeptanzkriterien\n- [ ] Anmeldung klappt unabhängig von Groß-/Kleinschreibung und Leerzeichen am Rand der E-Mail. **Widerlegt, wenn** `login(\"  Ana@Example.invalid \", \"geheim\")` False liefert.",
+   "comments": [{"author": "Kim", "body": "Freigegeben."}]}
+}}

@@ -1,0 +1,9 @@
+# slickfab: Projektkonfiguration des Repos slickfab
+# Format und Regeln: docs/projektkonfiguration.md. Keine Zugangsdaten.
+TRACKER="linear"
+TRACKER_TEAM="SLI"
+TRACKER_PROJECT="Slickfab"
+# Prüfbefehle: mit slickrails gelten die aus .slickrails/config.sh; gleicher Wert hier.
+CHECK_TYPECHECK=""
+CHECK_TEST="sh tests/run.sh"
+CHECK_LINT=""

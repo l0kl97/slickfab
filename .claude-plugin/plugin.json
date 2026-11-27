@@ -1,0 +1,11 @@
+{
+  "name": "slickfab",
+  "version": "0.1.0",
+  "description": "Software-Factory für einen Entwickler: ein erprobter Prozess von der Idee bis zum PR, Schritt für Schritt per Hand, mit Agents oder als Autopilot.",
+  "author": {
+    "name": "slickfab maintainers"
+  },
+  "repository": "https://github.com/l0kl97/slickfab",
+  "license": "MIT",
+  "keywords": ["workflow", "tdd", "spec", "agents"]
+}

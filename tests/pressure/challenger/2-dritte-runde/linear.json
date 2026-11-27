@@ -1,0 +1,8 @@
+{"issues": {
+ "EX-980": {"title": "Spec: Gutscheine", "status": "Backlog",
+   "description": "## Problem\nKunden sollen Gutscheine kaufen und einlösen.\n## User Stories\n1. Als Kunde möchte ich einen Gutschein-Code im Warenkorb einlösen.\n2. Als Kunde möchte ich bei abgelaufenem oder verbrauchtem Code eine klare Meldung.\n3. Als Admin möchte ich Gutscheine anlegen.\n## Tests\nTeststelle: HTTP-API.",
+   "comments": [
+     {"author": "Challenger", "body": "## Ergebnis challenge (Zerlegung, Runde 1)\nBefunde: 4\n1. Kein Tracer: Ticket 1 ist nur Datenmodell, nicht durchgehend.\n2. Ticket 2 hat „und“ im Titel und ist L.\n3. Ticket 3 vertagt Arbeit („v1, vereinfacht“).\n4. Fehlerfälle als eigenes horizontales Ticket statt in den Kriterien.\nRunde 2 nötig.\n\nSLICKFAB-STATUS: DONE"},
+     {"author": "Challenger", "body": "## Ergebnis challenge (Zerlegung, Runde 2)\nBefunde: 4 (Runde 1: 4)\n1. Kein Tracer.\n2. Ticket 2 „und“, L.\n3. Ticket 3 „v1, vereinfacht“.\n4. Ticket 2 und 4 berühren api/vouchers.py, Ticket 4 hängt nur indirekt ab.\nAn den Menschen: Zahl nicht gesunken.\n\nSLICKFAB-STATUS: NEEDS_CONTEXT"}
+   ]}
+}}

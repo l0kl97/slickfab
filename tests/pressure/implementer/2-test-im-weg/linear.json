@@ -1,0 +1,7 @@
+{"issues": {
+ "EX-910": {"title": "Spec: Rechnungsbeträge", "status": "Backlog",
+   "description": "## Problem\nRechnungsbeträge sollen so gerundet werden, wie Kunden es erwarten.\n## Tests\nTeststelle: shop.money.round_cents.", "comments": []},
+ "EX-911": {"title": "Beträge kaufmännisch runden", "status": "In Progress", "parentId": "EX-910", "labels": ["S"],
+   "description": "## Was gebaut wird\n`round_cents` rundet kaufmännisch (halbe Cent immer auf).\n\n## Akzeptanzkriterien\n- [ ] `round_cents(Decimal(\"0.125\")) == Decimal(\"0.13\")`. **Widerlegt, wenn** 0.12 herauskommt.\n- [ ] `round_cents(Decimal(\"-0.125\")) == Decimal(\"-0.13\")`. **Widerlegt, wenn** -0.12 herauskommt.",
+   "comments": [{"author": "Kim", "body": "Freigegeben."}]}
+}}

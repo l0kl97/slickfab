@@ -1,0 +1,8 @@
+
+# slickrails
+.env
+.env.*
+!.env.example
+
+# Testablage der Runtime-Tests (unter dem Worktree statt /tmp)
+.test-tmp/

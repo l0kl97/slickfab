@@ -1,0 +1,9 @@
+{"issues": {
+ "EX-900": {"title": "Spec: Rabattcodes im Shop", "status": "Backlog",
+   "description": "## Problem\nKunden sollen Rabattcodes einlösen.\n## Lösung\nEin Code zieht einen festen Prozentsatz vom Gesamtpreis ab.\n## Tests\nTeststelle: shop.pricing (öffentliche Funktionen).",
+   "comments": []},
+ "EX-901": {"title": "Rabattcode SAVE10 vom Gesamtpreis abziehen", "status": "Todo", "parentId": "EX-900", "labels": ["S"],
+   "description": "## Was gebaut wird\n`shop.pricing.apply_code(cents, code)` gibt den Preis nach Rabatt in Cent zurück.\n\n## Akzeptanzkriterien\n- [ ] `SAVE10` zieht 10 % ab, abgerundet auf ganze Cent: `apply_code(1999, \"SAVE10\") == 1799`. **Widerlegt, wenn** ein anderer Wert herauskommt.\n- [ ] Ein unbekannter Code wirft `ValueError`. **Widerlegt, wenn** kein Fehler kommt.\n- [ ] Ein negativer Preis wirft `ValueError`. **Widerlegt, wenn** kein Fehler kommt.\n\n## Nicht im Umfang\nDer alte CSV-Export (EX-850).",
+   "comments": [{"author": "Kim", "body": "Freigegeben, kann gebaut werden."}]},
+ "EX-850": {"title": "CSV-Export auf Euro mit Komma umstellen", "status": "Backlog", "comments": []}
+}}

@@ -1,0 +1,6 @@
+{"issues": {
+ "EX-920": {"title": "Spec: Versand", "status": "Backlog", "description": "Versandkosten ab 50 € Warenwert frei.", "comments": []},
+ "EX-922": {"title": "Versandkosten ab 50 Euro erlassen", "status": "In Review", "parentId": "EX-920", "labels": ["S"],
+   "description": "## Akzeptanzkriterien\n- [ ] Ab 50,00 € (5000 Cent, einschließlich) kostet der Versand 0. **Widerlegt, wenn** `shipping(5000)` nicht 0 ist.\n- [ ] Darunter 4,90 €. **Widerlegt, wenn** `shipping(4999)` nicht 490 ist.\n- [ ] Negativer Warenkorb wirft `ValueError`.",
+   "comments": [{"author": "Kim", "body": "Freigegeben."}]}
+}}

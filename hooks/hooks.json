@@ -1,0 +1,37 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Write|Edit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -c 'import io, json, runpy, signal, sys\nguard, roles = sys.argv[1], sys.argv[2].split(\",\")\ntry:\n    data = sys.stdin.read()\n    agent = json.loads(data).get(\"agent_type\")\nexcept Exception:\n    sys.exit(0)\nif not isinstance(agent, str) or agent not in roles:\n    sys.exit(0)\ndef deny(why):\n    sys.__stdout__.write(json.dumps({\"hookSpecificOutput\": {\"hookEventName\": \"PreToolUse\", \"permissionDecision\": \"deny\", \"permissionDecisionReason\": \"slickfab-Waechter nicht lauffaehig (\" + why + \"), im Zweifel abgelehnt\"}}))\n    sys.exit(0)\ndef late(*_):\n    raise TimeoutError(\"Frist\")\nsignal.signal(signal.SIGALRM, late)\nsignal.alarm(8)\nout = io.StringIO()\nsys.stdin, sys.stdout = io.StringIO(data), out\ntry:\n    runpy.run_path(guard, run_name=\"__main__\")\n    code = 0\nexcept SystemExit as e:\n    code = e.code\nexcept BaseException as e:\n    deny(type(e).__name__)\nsignal.alarm(0)\nif code not in (0, None):\n    deny(\"Exit %s\" % code)\nsys.__stdout__.write(out.getvalue())\n' \"${CLAUDE_PLUGIN_ROOT}/hooks/docs_lookup_guard.py\" slickfab:docs-reader || true",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -c 'import io, json, runpy, signal, sys\nguard, roles = sys.argv[1], sys.argv[2].split(\",\")\ntry:\n    data = sys.stdin.read()\n    agent = json.loads(data).get(\"agent_type\")\nexcept Exception:\n    sys.exit(0)\nif not isinstance(agent, str) or agent not in roles:\n    sys.exit(0)\ndef deny(why):\n    sys.__stdout__.write(json.dumps({\"hookSpecificOutput\": {\"hookEventName\": \"PreToolUse\", \"permissionDecision\": \"deny\", \"permissionDecisionReason\": \"slickfab-Waechter nicht lauffaehig (\" + why + \"), im Zweifel abgelehnt\"}}))\n    sys.exit(0)\ndef late(*_):\n    raise TimeoutError(\"Frist\")\nsignal.signal(signal.SIGALRM, late)\nsignal.alarm(8)\nout = io.StringIO()\nsys.stdin, sys.stdout = io.StringIO(data), out\ntry:\n    runpy.run_path(guard, run_name=\"__main__\")\n    code = 0\nexcept SystemExit as e:\n    code = e.code\nexcept BaseException as e:\n    deny(type(e).__name__)\nsignal.alarm(0)\nif code not in (0, None):\n    deny(\"Exit %s\" % code)\nsys.__stdout__.write(out.getvalue())\n' \"${CLAUDE_PLUGIN_ROOT}/hooks/role_bash_guard.py\" slickfab:reviewer,slickfab:verifier,slickfab:retro || true",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolBatch": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/context_guard.py\" || true",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

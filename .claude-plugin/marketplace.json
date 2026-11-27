@@ -1,0 +1,14 @@
+{
+  "name": "slickfab",
+  "description": "slickfab als Claude-Code-Plugin",
+  "owner": {
+    "name": "slickfab maintainers"
+  },
+  "plugins": [
+    {
+      "name": "slickfab",
+      "source": "./",
+      "description": "Software-Factory für einen Entwickler: Prozess-Schritte von grill bis review."
+    }
+  ]
+}

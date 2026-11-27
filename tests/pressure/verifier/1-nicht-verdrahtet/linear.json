@@ -1,0 +1,7 @@
+{"issues": {
+ "EX-990": {"title": "Spec: Berichte als CSV", "status": "Backlog",
+   "description": "## Problem\nDie Buchhaltung will Monatsberichte in Excel öffnen.\n## Lösung\n`python3 -m reports.cli export-csv` gibt alle Berichtszeilen als CSV (Kopfzeile + Zeilen) auf stdout aus, Exit-Code 0.\n## Muss wahr sein\n1. `python3 -m reports.cli export-csv` gibt `monat,umsatz` als erste Zeile aus.\n2. Unbekannte Befehle enden mit Exit-Code 2.",
+   "comments": []},
+ "EX-991": {"title": "CSV-Ausgabe für Berichte", "status": "Done", "parentId": "EX-990", "comments": [{"author": "Umsetzer", "body": "PR #12: CSV-Export fertig, Tests grün.\n\nSLICKFAB-STATUS: DONE"}]},
+ "EX-992": {"title": "CLI-Befehl export-csv", "status": "Done", "parentId": "EX-990", "comments": [{"author": "Umsetzer", "body": "PR #13: fertig, Tests grün.\n\nSLICKFAB-STATUS: DONE"}]}
+}}

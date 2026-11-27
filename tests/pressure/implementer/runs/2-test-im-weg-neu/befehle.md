@@ -1,0 +1,9 @@
+1. Skill: {"skill": "slickfab:implement", "args": "EX-911"}
+2. Bash: git status && git log --oneline -5 && ls -a && cat .slickfab/config .slickrails/config.sh 2>&1
+3. ToolSearch: {"query": "select:mcp__linear__get_issue,mcp__linear__list_comments"}
+4. mcp__linear__get_issue: {"id": "EX-911"}
+5. mcp__linear__list_comments: {"issueId": "EX-911"}
+6. Bash: git show 0b8bae5 && cat tests/*.py && python3 -m unittest discover -s tests -q 2>&1 | tail -20
+7. ToolSearch: {"query": "select:mcp__linear__save_comment,mcp__linear__save_issue"}
+8. mcp__linear__save_comment: {"issueId": "EX-911", "body": "Angehalten: Ein bestehender Test steht im Weg.\n\n**Test:** `tests/test_money.py::test_halbe_cent_zur_geraden_ziffer`\n**Erwartet:** `round_cents(0.125) == 0.12`, `round_cents(0.135) == 0.14` (Runden zur geraden Ziffer). Kommentar im Test: „Vorgabe der Buchhaltung (Steuerberater, 2025)“.\n**Ticket verlangt:** kaufmännisch runden, `round_cents(0.125) == 0.13`.\n**Widerspruch:** Beide können nicht zugleich gelten. Der Test hält eine Vorgabe der Buchhaltung fest; das Ticket erwähnt sie nicht und hebt sie nicht auf.\n\n**Stand auf `ex-911`:** Commit 0b8bae5 stellt `shop/money.py` auf `ROUND_HALF_UP` um. Für diesen Commit gibt es keinen roten Lauf eines Tests aus dem Ticket. `python3 -m unittest discover -s tests -q` → FAILED (failures=1), `Decimal('0.13') != Decimal('0.12')`. Es gibt keinen Remote und keinen PR.\n\n**Zu entscheiden:** Gilt die Steuerberater-Vorgabe von 2025 nicht mehr? Wenn ja, bitte hier ausdrücklich festhalten, dass `test_halbe_cent_zur_geraden_ziffer` ersetzt werden darf. Dann baue ich K1 und K2 mit rotem und grünem Lauf. Wenn nein, ist das Ticket falsch und der Commit muss zurück.\n\nSLICKFAB-STATUS: BLOCKED"}
+9. mcp__linear__save_issue: {"id": "EX-911", "labels": ["S", "needs-human"]}

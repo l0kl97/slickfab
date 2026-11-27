@@ -1,0 +1,117 @@
+# Planungs-Schritte: spec, prototype, challenge, tickets
+
+**Status:** aktiv · **Stand:** 2026-11-25 · **Gebaut von:** Claude Code
+
+## Auftrag (Alltagssprache)
+
+Der Maintainer will, dass ein Entwickler mit slickfab den ganzen Prozess Schritt für Schritt fahren kann („the goal of this is to get 10x from one developer because he can use the process/steps you know?“). Dieses Ticket deckt die Planung nach `grill` ab: Ein Entwickler kommt per Slash-Befehl von einem geklärten Gespräch bis zu fertigen Tickets im Tracker.
+
+- `spec` schreibt aus dem Gespräch die Spezifikation, ohne neu zu befragen.
+- `prototype` klärt, was man nicht erfragen kann, auf einem Wegwerf-Branch.
+- `challenge` gibt einen frischen Blick: Produkt, Baubarkeit, Zerlegung.
+- `tickets` schneidet die Spec in dünne, durchgehende Tickets und legt sie erst nach Bestätigung an.
+
+Dazu zwei Verträge für alle späteren Schritte: der Tracker-Vertrag für Linear und die Projektkonfiguration je Repo.
+
+## Entscheidungen
+
+- **Vertrag wörtlich in jedem Schritt (Entscheidung des Masters nach Review PR #2, A1).** Zuerst verwiesen die Schritte per `${CLAUDE_PLUGIN_ROOT}` auf die Vertragsdateien. Ohne Auto-Modus verweigert Claude Code aber das Lesen außerhalb des Projekts, und dann fehlten dem Schritt Labels, Marker und Pflichtschlüssel. Auch `${CLAUDE_SKILL_DIR}` und `!`cat …`` halfen nicht (Review). Jetzt sind die Quellen mit `<!-- vertrag:NAME -->` … `<!-- /vertrag:NAME -->` eingefasst, und jeder Schritt trägt die Blöcke, die er braucht, im Abschnitt „Vertrag“. `tests/test_contract_blocks.py` prüft die Pflichtblöcke je Schritt und die Zeichengleichheit mit der Quelle. Wer die Quelle ändert, kopiert den Block in die Schritte; der Test sagt, wo.
+- **Marker-Position:** `SLICKFAB-STATUS` ist immer die letzte Zeile, `SLICKFAB-VERDICT` nur beim Reviewer die vorletzte (Review A2; vorher widersprüchlich: „genau eine Marker-Zeile“ und „zusätzlich davor“).
+- **Label-Namen in Linear:** Dort heißen sie `rework` usw. in der Gruppe `slickfab`; `slickfab:<name>` ist die Schreibweise in Texten (Review A3).
+- **Kein Herdr im Vertrag:** `hc send` steht nicht mehr im Marker-Block, weil der Block in Schritte eingebettet wird, die ohne Herdr laufen (Review R2).
+- **Tracker-Vertrag in `tracker/linear.md`** (wie geplant). Schreibweisen exakt wie in der Spec. Statusfolge nach den echten Status im Team Example (`Backlog` → `Todo` → `In Progress` → `In Review` → `Done`); nur der Mensch setzt auf `Todo`.
+- **Beschreibung der Projektkonfiguration in `docs/projektkonfiguration.md`.** Sie gehört zu keinem Tracker, darum nicht unter `tracker/`; der Plan sieht für `docs/` ohnehin die Betriebsdoku vor.
+- **Format von `.slickfab/config`: `SCHLÜSSEL="wert"`, wird als Text gelesen, nie per `source`.** Gleiche Form wie `.slickrails/config.sh`, aber ohne Code-Ausführung aus einer eingecheckten Datei. Schlüssel: `TRACKER`, `TRACKER_TEAM`, `TRACKER_PROJECT`, `CHECK_TYPECHECK`, `CHECK_TEST`, `CHECK_LINT`.
+- **Mit slickrails gelten dessen `CHECK_*`-Werte;** abweichende Werte in `.slickfab/config` werden genannt, aber nicht benutzt. Eine Quelle für Prüfbefehle.
+- **Fehlt Konfiguration oder Tracker: melden, im Chat zeigen, keine Datei.** Linear ist die einzige Wahrheit. Die Konfiguration selbst darf nach Bestätigung angelegt werden; sie ist keine Plan-Datei.
+- **`spec` stellt keine Inhaltsfragen.** Jede Aussage braucht eine Quelle (Mensch, „Autonom entschieden“ aus `grill`, Repo). Fehlt sie: umkehrbar-technisch selbst entscheiden und offenlegen, Produktfrage oder schwer umkehrbar zurück an `grill`. Die einzige Frage ist die Freigabe zum Anlegen.
+- **`challenge` hat zwei Betriebsarten:** Spec-Prüfung (Produkt + Baubarkeit, nach `spec`) und Zerlegungsprüfung (aus `tickets` heraus, vor der Bestätigung durch den Menschen). Der frische Blick entsteht über einen Sub-Agent, der nur die Spec (und die Liste) bekommt; in einer frischen Session prüft der Schritt selbst; ohne Sub-Agent verweist er auf eine neue Session.
+- **Zerlegungsprüfung: höchstens 2 Runden, Abbruch, wenn die Befundzahl in Runde 2 nicht sinkt** (gsd revision-loop, aber mit 2 statt 3 Runden wie im Ticket). Befunde nennen bindende Eigenschaft und nur beispielhaften Fix.
+- **`tickets`: Pfade nur in „Agent notes“.** Die Spec bleibt pfadfrei; die Dateiliste braucht `tickets` aber für die Überschnitts-Relationen und der Autopilot später für „kein Dateiüberschnitt“.
+- **Verbote nur als Disziplinregeln** (keine stille Annahme in `spec`, keine vertagenden Formulierungen in `tickets`), mit kurzer Ausrede-Tabelle; Formvorgaben als Vorlagen (Lehre aus superpowers).
+- **Tests in `tests/test_planning_steps.py` prüfen die Texte als öffentliche Schnittstelle:** Vertragsbegriffe (Schreibweisen aus der Spec), Pflichtteile je Schritt (Voraussetzungsprüfung, nächster Schritt, Verweis auf Vertrag und Konfiguration). Erwartete Werte stammen aus Spec und Ticket. Verhalten prüft der Hand-Durchlauf.
+- **tickets endet bei jedem Tracker-Fehler mit `BLOCKED`.** Der Vertrag „Zugang“ lässt den Schritt bei jeder Fehlerantwort aufhören. Darum hat jeder Ablauf-Schritt, der den Tracker anspricht (1 lesen, 6 Dublettensuche, 7 anlegen), eine Abbruch-Zeile in „Wo tickets endet“. Der Test `TicketsTrackerErrorTest` findet diese Schritte an ihren Tracker-Aufrufen, nicht an Stoppwörtern, und hält die Menge {1, 6, 7} fest.
+- **Urteil `nicht bauen` endet in tickets mit einer Rückfrage.** Schritt 1 hört auf, außer der Mensch hat ausdrücklich gesagt, dass trotzdem zerlegt wird; `NEEDS_CONTEXT`, nächster Schritt `spec` (ändern, dann `challenge`) oder Spec auf `Canceled`.
+
+## Wo es lebt
+
+- `skills/spec/SKILL.md`, `skills/prototype/SKILL.md`, `skills/challenge/SKILL.md`, `skills/tickets/SKILL.md`: die vier Schritte.
+- `tracker/linear.md`: Tracker-Vertrag (Labels, Marker, Statusfolge, Rulings).
+- `docs/projektkonfiguration.md`: Format und Regeln von `.slickfab/config`.
+- `tests/test_planning_steps.py`: Vertragstests und Ankersätze der Fehlerfall-Regeln; läuft über `sh tests/run.sh`.
+- `tests/test_contract_blocks.py`: eingebettete Vertragsblöcke gleich der Quelle, Pflichtblöcke je Schritt.
+- `.slickfab/config`: Projektkonfiguration des Repos slickfab selbst (Linear, Team Example, Projekt Example, `CHECK_TEST="sh tests/run.sh"` wie in slickrails). `tests/test_repo_config.py` liest sie nach dem Format aus `docs/projektkonfiguration.md`.
+- `docs/features/belege/prototype-hand.md`: Endausgaben und Git-Zustand des Hand-Durchlaufs von prototype.
+
+## So testet man es
+
+1. `sh tests/run.sh` → `slickfab tests: ok`.
+2. Gegenprobe: in `tracker/linear.md` `slickfab:needs-human` zu `slickfab:needshuman` ändern → `test_labels` rot, und `test_embedded_blocks_equal_source` meldet jede Kopie, die jetzt abweicht. Zurücksetzen.
+3. Mutationsprobe (Review R1): 21 Mutationen an Regel- und Vertragssätzen (z. B. „hör hier auf“ → „schreib tickets.md“, „ausdrücklichen Ja“ → „sofort“, „kein `source`“ → „per `source`“, eine einzelne Kopie verändert). Vor den Ankertests überlebten 18, danach 0.
+4. Hand-Durchlauf in einem Wegwerf-Repo: `claude --plugin-dir <pfad-zu-slickfab>`, dann `/slickfab:grill <Wunsch>` → `/slickfab:spec` → `/slickfab:challenge <Spec>` → `/slickfab:tickets <Spec>`.
+
+### Protokoll Hand-Durchlauf (2026-11-24)
+
+Wegwerf-Repos unter `/tmp` (Python-CLI `notiz`, wie beim Tracer). Aufrufe mit `claude -p --model sonnet --plugin-dir <worktree> --strict-mcp-config --mcp-config '{"mcpServers":{}}'`, Claude Code 2.1.331. Ohne MCP-Server, damit kein Testlauf in Linear schreibt; damit ist Linear in allen Läufen „nicht erreichbar“.
+
+| Szenario | Eingabe | Was passierte |
+|---|---|---|
+| Laden | `sag nur ok` | `slash_commands` enthält `slickfab:spec`, `:prototype`, `:challenge`, `:tickets` (und `:grill`); keine Linear-Werkzeuge. |
+| A: spec ohne Grundlage | `/slickfab:spec Notizen mit anderen teilen` | Keine Spec. Meldet fehlende Grundlage, nennt Beispiele offener Entscheidungen, „Nächster Schritt: `/slickfab:grill …`“. `git status` leer. |
+| B: tickets ohne Konfiguration | `/slickfab:tickets EX-999` | Stoppt: `.slickfab/config` fehlt, „Tickets lege ich nur im Tracker an und schreibe keine Ersatzdatei“. `git status` leer. |
+| C: spec mit offener Produktfrage | bestätigtes „Ergebnis grill“ (ohne Aussage, wie man die Nummer einer Notiz erfährt), dann `/slickfab:spec`; `.slickfab/config` vorhanden | Findet die Lücke selbst („`list` zeigt heute keine Nummern“), schreibt sie nicht still hinein, empfiehlt `grill` mit genau dieser Frage. Meldet getrennt: Linear nicht erreichbar, Spec nur im Chat. Listet, was es als umkehrbar selbst entscheiden würde. `git status` leer. |
+| D: challenge mit Spec als Text | `/slickfab:challenge <Spec-Text>` in frischer Session | Prüft selbst (frische Session). Urteil `bauen` mit Grund, 3 Einwände mit Empfehlung, „Nur der Mensch“: 1 Frage, Stapel 1: 2, Stapel 2: 5. „Kommentar: nur im Chat“. `git status` leer. |
+
+| E: tickets ohne Auto-Modus (nach A1) | `--permission-mode default`, gültige `.slickfab/config`, `/slickfab:tickets EX-999` | Keine Berechtigungsabfrage (`permission_denials` leer). Liest die Konfiguration, meldet Linear als nicht erreichbar, „keine Ticket-, Plan- oder State-Datei … weil der Vertrag das ausschließt“, letzte Zeile `SLICKFAB-STATUS: BLOCKED`. `git status` leer. |
+
+Kosten: rund 0,75 USD.
+
+### Protokoll Hand-Durchlauf prototype (2026-11-25)
+
+Wegwerf-Repos in `.test-tmp/` des Worktrees, Plugin als Kopie daneben (`git ls-files` per `tar`), je Lauf eine frische Session per `claude -p --model sonnet --plugin-dir <kopie> --setting-sources user,local --permission-mode acceptEdits`, Bash nur für `git`, `python3`, `make`, `ls`, `cat`, ohne MCP-Server, Claude Code 2.1.332. `--setting-sources user,local`, weil Claude Code sonst die `CLAUDE.md` des umgebenden slickfab-Worktrees mitlädt (per Probe belegt); so kam nur die globale `CLAUDE.md` des Maintainers mit, wie bei den Läufen unter `/tmp`. Die Ergebnisse gingen nur als Text im Argument in den nächsten Lauf. Endausgaben wörtlich: `docs/features/belege/prototype-hand.md`.
+
+- **proto-ui:** statische Notiz-Seite (`index.html`, `app.js`, `notes.json` mit 4 Notizen, `make serve`). Frage: Karten, Tabelle oder kompakte Liste mit Tags?
+- **proto-logik:** `ausleihe.py` (Exemplar verfügbar/ausgeliehen/vorgemerkt, `gesperrt()`). Frage: Was passiert bei Rückgabe, wenn der erste Vormerker gesperrt ist?
+
+| Lauf | Was passierte |
+|---|---|
+| 1 UI (vor dem Fix) | Wegwerf-Branch `prototype/notizliste-layout`, 3 Varianten auf der bestehenden Seite mit echten Daten, `?variant=` und schwebende Leiste, Startbefehl und Vergleichspunkte. Endet mit „Sag mir, welche Variante es wird“: **kein „Nächster Schritt“, kein Marker.** Repo bleibt auf dem Wegwerf-Branch, `app.js` und `style.css` uncommittet. |
+| 1 Logik (vor dem Fix) | Wegwerfskript `prototype_vormerker.py` spielt 3 Fälle durch 4 Varianten (Ist, A, B, C) und gibt den Zustand nach jedem Schritt aus. Findet nebenbei, dass `ausleihen` aus `vorgemerkt` nie herauskommt. Endet mit der Frage nach dem Urteil: **kein „Nächster Schritt“, kein Marker,** Skript uncommittet. |
+| 2 UI (nach dem Fix, Repo neu) | Prototyp-Dateien `prototype-app.js`/`prototype.css`, committet vor dem Vorführen. Endet mit Vorlage „wartet auf Urteil“: Start, Vergleichen, „Repo steht auf: prototype/notizliste-darstellung (Prototyp committet)“, nächster Schritt, `SLICKFAB-STATUS: NEEDS_CONTEXT`. |
+| 2 Logik (nach dem Fix, Repo neu) | Wie Lauf 1 Logik, Skript committet, gleiche Vorlage, `NEEDS_CONTEXT`. |
+| 3 UI (Urteil in neuer Session) | Argument „Frage … Urteil: Karten.“ Erkennt den bestehenden Wegwerf-Branch, Commit mit Urteil, zurück auf `main`, `git status` leer. „Nächster Schritt: `/slickfab:spec`“, `SLICKFAB-STATUS: DONE`. |
+| 3 Logik (Urteil in neuer Session) | Urteil mit offener Abholfrist. Hält fest, zurück auf `main`, nennt die neuen Fragen und „Nächster Schritt: `/slickfab:grill`“, `DONE`. |
+| 4 UI (nach Review-Fix, Start von `ex-200`) | Commit-Text nennt den Ausgangs-Branch, Vorlage „wartet auf Urteil“ mit „angelegt von `ex-200`“ und dem fertigen Fortsetzungsbefehl `… Branch: prototype/notizliste-darstellung von ex-200`, `NEEDS_CONTEXT`. |
+| 5 UI (nach `git switch ex-200`, neue Session) | Argument mit Frage, Urteil und Branch. Wechselt auf den Wegwerf-Branch, committet dort das Urteil, kehrt auf `ex-200` zurück (unverändert). `/slickfab:spec`, `DONE`. |
+| 4 Logik (Urteil ohne Branch, kein Prototyp) | Findet keinen `prototype/*`-Branch, committet und wechselt nichts, fragt nach dem Branch, `NEEDS_CONTEXT`. Nennt den Befehl mit Branch, aber nicht als Zeile „Nächster Schritt:“ (Lücke, siehe Historie). |
+| 6 Logik (wie 4, mit Vorlage „Rückfrage Branch“) | Vorlage mit Fehlt, „Nichts geändert … Repo steht auf ex-201“, Zeile „Nächster Schritt:“ mit dem vollständigen Befehl, `NEEDS_CONTEXT`. Kein Commit. |
+
+Kosten: 1,52 USD für die zehn prototype-Läufe und den fab-Lauf (unten), dazu 0,01 USD für zwei Proben.
+
+Ohne Vorwissen: Kein Lauf hatte Zugriff auf eine frühere Session; die Urteile in Lauf 3 kamen nur über das Argument. In jedem Lauf wurde ein zusammengesetzter Befehl (`git switch -c … && cat > …`) von der Werkzeugfreigabe abgelehnt; der Schritt wich auf einzelne Befehle und Write aus. Das liegt an der Freigabe im Test, nicht am Schritt.
+
+**fab im Repo slickfab** (Kopie mit `.slickfab/config`, `/slickfab:fab`, frische Session): „`.slickfab/config` ist vollständig (`TRACKER=linear`, Team „Example“, Projekt „Example“, `CHECK_TEST="sh tests/run.sh"`)“. Fehlen nur noch Linear-Werkzeuge, `gh` und Remote (in der Testsession absichtlich weg). Die Konfiguration meldet fab nicht mehr als fehlend.
+
+## Grenzen & offene Punkte
+
+- **Nicht von Hand erprobt:** Anlegen im echten Linear (`spec` Schritt 6, `tickets` Schritt 7), die Zerlegungsprüfung mit zwei Runden und die Sub-Agent-Variante von `challenge` in einer Session, die das Gespräch kennt. Grund: Ein Testlauf hätte Issues im echten Team angelegt. Gehört in den Pilot.
+- **`prototype`:** Hand-Durchlauf inzwischen (oben). Nicht erprobt: Kommentar an ein echtes Spec-Issue (Schritt 6, gehört in den Pilot) und die Enden der Vorlage „Halt“ (Schritt 1 und Branch-Prüfung in Schritt 5). Sie haben seit Review PR #21 eine Vorlage, sind aber nicht von Hand gelaufen.
+- Eingebettete Blöcke machen die Schritte länger (je 40–100 Zeilen Vertrag). Ein Generator-Skript wäre die Alternative; bewusst nicht gebaut, der Gleichheitstest reicht.
+- Die Tests sehen Vertragsbegriffe und Pflichtteile, nicht die Verhaltensqualität; dafür sind Pressure-Szenarien je Rolle geplant.
+- Der Planer- und Challenger-Agent (Hüllen um diese Schritte) ist ein eigenes Ticket.
+- `implement`, auf das `tickets` verweist, gibt es inzwischen (siehe `bau-schritte.md`).
+
+## Historie
+
+- 2026-11-24: angelegt
+- 2026-11-24 (Review PR #2, Runde 1): Ohne Auto-Modus kam der Vertrag nicht an → die Schritte verwiesen auf Dateien außerhalb des Projekts → Vertrag wörtlich eingebettet plus Gleichheitstest (A1). Marker-Regel widersprüchlich → „genau eine Zeile“ gegen „zusätzlich davor“ → STATUS letzte, VERDICT vorletzte Zeile (A2). Label-Suche in Linear fand `slickfab:rework` nicht → der Name in Linear ist `rework` in der Gruppe → Satz ergänzt (A3). 18 von 21 Mutationen überlebten → nur Begriffe waren getestet, nicht die Fehlerfall-Regeln → Ankersätze je Regel (R1).
+- 2026-11-25 (Befunde aus dem Hand-Durchlauf): **tickets** endete bei einer Rückfrage (Dublette, `NEEDS_CONTEXT`) ohne „Nächster Schritt“, und der Marker stand in einem Codeblock → die Ergebnis-Vorlage hatte nur den Fall „Tickets angelegt“ und gar keine STATUS-Zeile → zweite Vorlage „Ergebnis tickets (Rückfrage)“ mit „Nächster Schritt“ und `NEEDS_CONTEXT`, STATUS-Zeile auch in der Haupt-Vorlage, Satz: Marker als letzte Zeile außerhalb jedes Codeblocks. **grill** wollte in Runde 1 für dieselbe Entscheidung einen ADR, in Runde 2 nicht → die Regel hatte drei Bedingungen, davon eine reines Ermessen („echte Abwägung“) → feste Regel mit genau zwei Kriterien (schwer umkehrbar und ohne Begründung überraschend oder wieder aufgerollt), beide müssen zutreffen. Tests: `TicketsStepTest.test_question_ending_…`, `GrillAdrRuleTest`.
+- 2026-11-25 (Review PR #17, A1): Die neue Rückfrage-Vorlage von tickets empfahl fest `tickets` erneut, Schritt 1 verlangt bei fehlender Spec oder einer Entscheidung, die nicht in der Spec steht, `spec`; und für einen Tracker-Abbruch mitten im Anlegen gab es keine Vorlage mit `BLOCKED` (die Hauptvorlage erlaubt nur `DONE`/`DONE_WITH_CONCERNS`) → nächster Schritt in der Rückfrage-Vorlage nach dem Grund (spec, challenge, tickets erneut), eigene Vorlage „Abbruch beim Anlegen“ mit schon und nicht angelegten Tickets, Fehlermeldung und `BLOCKED`; Schritt 7 verweist darauf. Tests `test_question_next_step_matches_the_reason`, `test_tracker_abort_while_creating_has_blocked_template`.
+- 2026-11-25 (Re-Review PR #17, Regression des Rework 1): Ein Abbruch in Schritt 1 (Konfiguration fehlt, Tracker nicht erreichbar) hatte keine Vorlage mehr, weil die Rückfrage-Vorlage auf Spec und Entscheidungen eingegrenzt war und die Abbruch-Vorlage nur Schritt 7 kannte → Abbruch-Vorlage gilt für Schritt 1 und 7 (`BLOCKED`, nächster Schritt nennt, was der Mensch tun muss, dann `tickets` erneut); neue Tabelle „Wo tickets endet“ im Ergebnis mit allen 7 Enden. Ankertest `TicketsEveryEndingHasTemplateTest`: Jeder Ablauf-Schritt mit einer Stopp-Formulierung (hör auf, empfiehl, wartest du, legst du dem Menschen vor) braucht eine Zeile, jede Zeile eine Vorlage mit STATUS und nächstem Schritt. Mutationsprobe auf den Fix: 14 Mutationen, 0 überlebt (im ersten Durchgang überlebte ohne Referenz der Verweis in Schritt 7; dafür ein Ankersatz). Nicht als Ende aufgenommen: fehlendes Label (Vertrag sagt nur „meldet er das“, kein Halt) und „Urteil `nicht bauen`“ (steht unter „Wann“, nicht im Ablauf).
+- 2026-11-25 (Review PR #17, O1 und O2): (1) Eine Fehlerantwort des Trackers bei der Dublettensuche in Schritt 6 hatte kein Ende, obwohl der Vertrag „Zugang“ dort aufhören lässt; der Ankertest sah nur Stoppwörter im Ablauf, nicht das „hört auf“ des Vertrags → Zeile „Schritt 6 | Tracker antwortet bei der Dublettensuche mit einem Fehler | Abbruch | `BLOCKED`“, Halt-Satz in Schritt 6, „Wo“ der Abbruch-Vorlage um Schritt 6 erweitert; neuer Test erkennt Tracker-Schritte an ihren Aufrufen. (2) Urteil `nicht bauen` war über fab Zeile 19 erreichbar, tickets hatte dafür weder Halt noch Ende → Halt-Satz in Schritt 1, Zeile in der Tabelle, Weg in der Rückfrage-Vorlage; fab hat dafür eine eigene Zeile. Mutationsprobe siehe `docs/features/fab-wegweiser.md` (Historie).
+- 2026-11-25 (Review PR #19, Rework 1): A1: challenge nannte bei `nicht bauen` nur „endet die Planung hier“ → „Der Mensch setzt die Spec auf `Canceled`“. A2: Das Feld „Fehlermeldung“ der tickets-Abbruch-Vorlage kannte nur Datei oder Schlüssel, obwohl die Vorlage jetzt zwei Tracker-Fehlerantworten abdeckt; „Nicht angelegt“ sprach in Schritt 6 von einer bestätigten Liste, die es dort noch nicht gibt → beide Felder angepasst, Tests vorher rot.
+- 2026-11-25 (Review PR #19, Rework 2, N1): spec schrieb beim Überarbeiten nur „einen Kommentar, was sich geändert hat“, ohne festen Anfang; fab konnte ihn nicht von anderen Kommentaren unterscheiden → erste Zeile genau `## Spec überarbeitet`. Im Tracker-Vertrag stand der Kommentar nicht, dort ändert sich nichts.
+- 2026-11-25 (Hand-Durchlauf prototype): Beide Läufe (UI und Logik) endeten in Schritt 5 beim Warten auf das Urteil ohne „Nächster Schritt“ und ohne Marker. Der Prototyp lag uncommittet auf dem Wegwerf-Branch. Ursache: Die einzige Ergebnis-Vorlage setzte ein Urteil voraus und hatte keine STATUS-Zeile; der Commit kam erst in Schritt 6. Fix: Commit vor dem Vorführen, Vorlage „wartet auf Urteil“ (`NEEDS_CONTEXT`, wo das Repo steht, wie es weitergeht), Fortsetzung mit Urteil im Argument in Schritt 6, STATUS-Zeile `DONE` in der Haupt-Vorlage, Marker außerhalb jedes Codeblocks. Test `PrototypeEndingsTest` vorher rot, Referenz per `rules_golden.py --update`. Nachlauf grün (Lauf 2 und 3 oben). Dazu `.slickfab/config` im Repo, gelesen von `tests/test_repo_config.py`.
+- 2026-11-25 (Pre-Push-Review): Die Fortsetzung in neuer Session nahm an, das Repo stehe schon auf dem Wegwerf-Branch. Folgte der Mensch dem „zurück mit `git switch`“, wäre das Urteil auf dem Hauptzweig committet worden. Den Ausgangs-Branch kannte die neue Session nicht. → Commit-Text und Vorlage nennen den Ausgangs-Branch, der Fortsetzungsbefehl trägt `Branch: prototype/<slug> von <Branch>`, Schritt 6 wechselt auf den Wegwerf-Branch, hört ohne beide Branches mit `NEEDS_CONTEXT` auf und committet nie außerhalb von `prototype/`. Tests vorher rot, Nachlauf Lauf 4/5 oben. Mutationsprobe: 25 Mutationen an Config, Prüfer und prototype-Regeln. Ein erster Durchgang war ungültig, weil `test_rule_golden` vom Repo-Root aus nicht importierbar war und jeder Lauf rot zählte. Im gültigen Durchgang überlebten 2 (`CHECK_LINT` mit Wert, den slickrails nicht kennt) → Test verlangt solche `CHECK_*` leer; danach 0.
+- 2026-11-25 (Pre-Push-Review 2): Die neue Rückfrage nach dem Branch in Schritt 6 hatte keine Vorlage. Im Nachlauf endete sie ohne Zeile „Nächster Schritt:“, der Befehl stand nur im Text → Vorlage „Rückfrage Branch“ (Fehlt, Nichts geändert, nächster Schritt mit Branch, `NEEDS_CONTEXT`). Test vorher rot, Mutationsprobe 5/5 gefangen (Basis vorher grün geprüft), Nachlauf Lauf 6 Logik.
+- 2026-11-25 (Review PR #21, Rework 1): R1: Die Prüfung „keine Geheimnisse“ verwarf `#`-Zeilen, bevor sie nach Tokens suchte; ein Token im Kommentar blieb grün → jede Kommentarzeile wird mit geprüft. R2: `git check-ignore` meldet eine getrackte Datei nie als ignoriert; `.slickfab/` in `.gitignore` blieb grün → `--no-index`, eigene Funktion mit Fehlerfall-Test in einem Wegwerf-Repo. A1: Der neue Commit in Schritt 5 prüfte den Branch nicht selbst; schlug der Branchwechsel still fehl, landete er auf dem Ausgangs-Branch → Prüfung mit `git branch --show-current` vor dem Commit, sonst Halt (`BLOCKED`). A3: Die Enden in Schritt 1 hatten keine Vorlage → Vorlage „Halt“ mit Tabelle (keine Frage, Ein-Satz-Frage, offene Änderungen, dazu Schritt 5). Je Punkt Test vorher rot, Referenz per `--update`. Mutationsprobe 15 Mutationen, Basis grün geprüft: zuerst überlebte das Weglassen von `--no-index` (nur der eine Test trug es), nach dem Fehlerfall-Test 0. Nicht umgesetzt (nicht im Rework-Auftrag): A2, R3, R4, R5.

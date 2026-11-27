@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 460" width="880" height="460" role="img" aria-labelledby="t d">
+  <title id="t">slickfab: Schritte und Gates des Menschen</title>
+  <desc id="d">Planen, einmal je Vorhaben: grill, spec, challenge, tickets, dann gibst du die Tickets frei. Bauen, je Ticket: implement, review, bei Bedarf Nachbessern, dann mergst du. Abschließen nach dem letzten Ticket: verify, retro. Außerdem entscheidest du Einwände, die Zerlegung, door:one-way und needs-human. Jederzeit: fab, prototype, debug, handoff, docs-lookup.</desc>
+  <style>
+    .card { fill: #ffffff; stroke: #d0d7de; }
+    .title { fill: #1f2328; font: 600 17px -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+    .lane { fill: #59636e; font: 600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; letter-spacing: 0.04em; }
+    .note { fill: #59636e; font: 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+    .step { fill: #f6f8fa; stroke: #8c959f; stroke-width: 1.2; }
+    .steptext { fill: #1f2328; font: 600 14px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .sub { fill: #59636e; font: 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+    .gate { fill: #fff8c5; stroke: #9a6700; stroke-width: 1.4; }
+    .gatetext { fill: #3b2300; font: 600 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+    .gatesub { fill: #4d2d00; font: 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+    .brake { fill: #ffebe9; stroke: #cf222e; stroke-width: 1.2; }
+    .braketext { fill: #82071e; font: 600 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+    .brakesub { fill: #5c0011; font: 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+    .line { stroke: #6e7781; stroke-width: 1.5; fill: none; }
+    .dash { stroke: #6e7781; stroke-width: 1.3; fill: none; stroke-dasharray: 5 4; }
+    .head { fill: #6e7781; }
+    @media (prefers-color-scheme: dark) {
+      .card { fill: #0d1117; stroke: #3d444d; }
+      .title { fill: #f0f6fc; }
+      .lane, .note, .sub { fill: #9198a1; }
+      .step { fill: #151b23; stroke: #656c76; }
+      .steptext { fill: #f0f6fc; }
+      .gate { fill: #2e2410; stroke: #d29922; }
+      .gatetext { fill: #f2cc60; }
+      .gatesub { fill: #e3c77a; }
+      .brake { fill: #2d1316; stroke: #f85149; }
+      .braketext { fill: #ff9492; }
+      .brakesub { fill: #f0b4b1; }
+      .line, .dash { stroke: #9198a1; }
+      .head { fill: #9198a1; }
+    }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path class="head" d="M0,0 L10,5 L0,10 z"/>
+    </marker>
+  </defs>
+  <rect class="card" x="0.5" y="0.5" width="879" height="459" rx="10"/>
+  <text class="title" x="24" y="34">Schritte und Gates des Menschen</text>
+
+  <!-- Plan -->
+  <text class="lane" x="24" y="66">PLANEN · EINMAL JE VORHABEN</text>
+  <rect class="step" x="24" y="76" width="130" height="50" rx="6"/>
+  <text class="steptext" x="89" y="98" text-anchor="middle">grill</text>
+  <text class="sub" x="89" y="115" text-anchor="middle">Befragung</text>
+  <rect class="step" x="184" y="76" width="130" height="50" rx="6"/>
+  <text class="steptext" x="249" y="98" text-anchor="middle">spec</text>
+  <text class="sub" x="249" y="115" text-anchor="middle">in den Tracker</text>
+  <rect class="step" x="344" y="76" width="130" height="50" rx="6"/>
+  <text class="steptext" x="409" y="98" text-anchor="middle">challenge</text>
+  <text class="sub" x="409" y="115" text-anchor="middle">frischer Blick</text>
+  <rect class="step" x="504" y="76" width="130" height="50" rx="6"/>
+  <text class="steptext" x="569" y="98" text-anchor="middle">tickets</text>
+  <text class="sub" x="569" y="115" text-anchor="middle">dünn, widerlegbar</text>
+  <rect class="gate" x="664" y="76" width="192" height="50" rx="6"/>
+  <text class="gatetext" x="760" y="98" text-anchor="middle">Du gibst Tickets frei</text>
+  <text class="gatesub" x="760" y="115" text-anchor="middle">Backlog → Todo</text>
+  <path class="line" d="M154,101 H182" marker-end="url(#arrow)"/>
+  <path class="line" d="M314,101 H342" marker-end="url(#arrow)"/>
+  <path class="line" d="M474,101 H502" marker-end="url(#arrow)"/>
+  <path class="line" d="M634,101 H662" marker-end="url(#arrow)"/>
+
+  <!-- Build -->
+  <path class="line" d="M760,126 V182 H89 V196" marker-end="url(#arrow)"/>
+  <text class="lane" x="24" y="168">BAUEN · JE TICKET</text>
+  <rect class="step" x="24" y="198" width="130" height="50" rx="6"/>
+  <text class="steptext" x="89" y="220" text-anchor="middle">implement</text>
+  <text class="sub" x="89" y="237" text-anchor="middle">TDD → Pull Request</text>
+  <rect class="step" x="204" y="198" width="130" height="50" rx="6"/>
+  <text class="steptext" x="269" y="220" text-anchor="middle">review</text>
+  <text class="sub" x="269" y="237" text-anchor="middle">frische Session</text>
+  <rect class="gate" x="384" y="198" width="150" height="50" rx="6"/>
+  <text class="gatetext" x="459" y="220" text-anchor="middle">Du mergst</text>
+  <text class="gatesub" x="459" y="237" text-anchor="middle">den Pull Request</text>
+  <path class="line" d="M154,223 H202" marker-end="url(#arrow)"/>
+  <path class="line" d="M334,223 H382" marker-end="url(#arrow)"/>
+  <path class="dash" d="M269,248 V270 H120 V250" marker-end="url(#arrow)"/>
+  <text class="sub" x="280" y="274">nachbessern</text>
+
+  <!-- Finish -->
+  <path class="line" d="M459,248 V318 H89 V332" marker-end="url(#arrow)"/>
+  <text class="lane" x="24" y="304">ABSCHLUSS · NACH DEM LETZTEN TICKET</text>
+  <rect class="step" x="24" y="334" width="130" height="50" rx="6"/>
+  <text class="steptext" x="89" y="356" text-anchor="middle">verify</text>
+  <text class="sub" x="89" y="373" text-anchor="middle">Ziel erreicht?</text>
+  <rect class="step" x="204" y="334" width="130" height="50" rx="6"/>
+  <text class="steptext" x="269" y="356" text-anchor="middle">retro</text>
+  <text class="sub" x="269" y="373" text-anchor="middle">Fehler → Checks</text>
+  <path class="line" d="M154,359 H202" marker-end="url(#arrow)"/>
+
+  <!-- Other gates -->
+  <rect class="gate" x="560" y="198" width="296" height="186" rx="6"/>
+  <text class="gatetext" x="578" y="224">Außerdem entscheidest du</text>
+  <text class="gatesub" x="578" y="252">• Einwände aus challenge</text>
+  <text class="gatesub" x="578" y="276">• die Zerlegung in Tickets</text>
+  <text class="gatesub" x="578" y="300">• alles mit door:one-way</text>
+  <text class="gatesub" x="590" y="318">(Migration, Auth, Zahlung, Löschen, Deploy)</text>
+  <text class="gatesub" x="578" y="342">• alles mit needs-human</text>
+  <text class="gatesub" x="590" y="360">(ein Agent hielt an, statt zu raten)</text>
+
+  <!-- Any time -->
+  <text class="lane" x="24" y="420">JEDERZEIT</text>
+  <text class="note" x="24" y="442">fab: wo stehe ich, was kommt? · prototype · debug · handoff · docs-lookup</text>
+</svg>

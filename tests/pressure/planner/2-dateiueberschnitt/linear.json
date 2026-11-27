@@ -1,0 +1,5 @@
+{"issues": {
+ "EX-960": {"title": "Spec: Notizen exportieren", "status": "Backlog",
+   "description": "## Problem\nNutzer wollen Notizen in andere Werkzeuge übernehmen.\n## Lösung\n`notes.cli export <idx> --format md|html` gibt die Notiz als Markdown oder HTML aus; ohne `--format` wie bisher Klartext.\n## User Stories\n1. Als Nutzer möchte ich eine Notiz als Markdown exportieren (Titel als `# Überschrift`), damit ich sie in mein Wiki kopieren kann.\n2. Als Nutzer möchte ich eine Notiz als HTML exportieren (Titel als `<h1>`, Text als `<p>`, Sonderzeichen maskiert), damit ich sie in eine Mail einfügen kann.\n3. Als Nutzer möchte ich bei einem unbekannten Format eine klare Fehlermeldung und Exit-Code 2.\n## Entscheidungen\n- Beide Formate leben im Export-Modul neben dem Klartext-Export.\n- Die Kommandozeile bekommt die Option `--format`.\n## Tests\nTeststelle: `notes.cli.main(argv)` (Ausgabe und Exit-Code).\n## Nicht im Umfang\nPDF, Export mehrerer Notizen.",
+   "comments": [{"author": "Challenger", "body": "## Ergebnis challenge\nKeine blockierenden Einwände. Urteil: bauen.\n\nSLICKFAB-STATUS: DONE"}]}
+}}

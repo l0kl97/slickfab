@@ -1,0 +1,7 @@
+# slickrails: Dependabot (rule 7) — lands in .github/dependabot.yml
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly

@@ -1,0 +1,105 @@
+"""Gemeinsamer Teil von gen-templates und slickfab-run: Agent-Hüllen lesen und
+daraus Herdr-Vorlagen machen. Die Hüllen unter agents/ sind die einzige Quelle;
+eine Vorlage ist reines Erzeugnis. Nur Python-Standardbibliothek (läuft mit 3.9).
+"""
+import os
+import re
+
+REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+AGENTS = os.path.join(REPO, "agents")
+# Pflichtfelder einer Hülle für eine Vorlage (Frontmatter-Schnittstelle aus docs/features/agent-rollen.md).
+REQUIRED = ("name", "description", "model", "schritt")
+# Alle Schlüssel, die gen-templates kennt. disallowedTools wird übersetzt; skills nicht, weil Herdr
+# keinen Skill vorlädt: Jede Hülle sagt selbst, dass sie ihren Schritt sonst mit dem Skill-Werkzeug lädt.
+KNOWN = REQUIRED + ("skills", "disallowedTools")
+# Das Modell landet in der Befehlszeile der Vorlage: nur ein einzelnes, harmloses Wort.
+MODEL_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._\[\]-]{0,63}$")
+# YAML-Blockskalar (`>`, `|`, mit Zusatz wie `>-`): Der Wert stünde in den eingerückten Folgezeilen,
+# die dieser einfache Leser nicht liest. Lieber abbrechen als eine leere Beschreibung erzeugen.
+BLOCK_RE = re.compile(r"^[>|][-+0-9]*$")
+TOOL_RE = re.compile(r"^[A-Za-z][A-Za-z0-9_]{0,63}$")
+
+
+class Fail(Exception):
+    """Abbruch mit klarer Meldung."""
+
+
+def split_frontmatter(text, where):
+    lines = text.split("\n")
+    end = next((i for i in range(1, len(lines)) if lines[i].strip() == "---"), None)
+    if lines[0].strip() != "---" or end is None:
+        raise Fail("%s: kein Frontmatter zwischen zwei ---" % where)
+    fields, raw = {}, {}
+    for line in lines[1:end]:
+        if ":" in line and not line.startswith((" ", "\t", "#")):
+            key, _, value = line.partition(":")
+            raw[key.strip()] = value.strip()
+            fields[key.strip()] = unquote(value.strip())
+    return fields, raw, "\n".join(lines[end + 1:])
+
+
+def unquote(value):
+    """Wie ein YAML-Skalar: ein Paar äußerer Anführungszeichen gehört nicht zum Wert ("" ist leer)."""
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
+        return value[1:-1].strip()
+    return value
+
+
+def roles(agents=AGENTS):
+    return sorted(f[:-3] for f in os.listdir(agents) if f.endswith(".md") and f != "docs-reader.md")
+
+
+def load(role, agents=AGENTS):
+    """Frontmatter-Felder und Text einer Hülle; prüft die Pflichtfelder."""
+    where = role + ".md"
+    try:
+        with open(os.path.join(agents, where), encoding="utf-8") as f:
+            text = f.read()
+    except UnicodeDecodeError:
+        raise Fail("%s: keine gültige UTF-8-Datei" % where)
+    fields, raw, body = split_frontmatter(text, where)
+    block = sorted(k for k, v in fields.items() if BLOCK_RE.match(v))
+    if block:
+        raise Fail("%s: Blockskalar wird nicht gelesen, Wert in eine Zeile schreiben: %s" % (where, ", ".join(block)))
+    missing = [k for k in REQUIRED if not fields.get(k)]
+    if missing:
+        raise Fail("%s: Pflichtfeld fehlt oder ist leer: %s" % (where, ", ".join(missing)))
+    if not MODEL_RE.match(fields["model"]):
+        raise Fail("%s: ungültiges model %r" % (where, fields["model"]))
+    # Felder mit Wirkung müssen mit in den Start, sonst sind sie in Herdr still weg (etwa eine
+    # Werkzeuggrenze). Darum nur bekannte Schlüssel; alles andere bricht ab.
+    unknown = sorted(k for k in fields if k not in KNOWN)
+    if unknown:
+        raise Fail("%s: Feld wird für Herdr nicht übersetzt: %s (bekannt: %s)"
+                   % (where, ", ".join(unknown), ", ".join(KNOWN)))
+    tools = [t.strip() for t in fields.get("disallowedTools", "").split(",") if t.strip()]
+    if "disallowedTools" in fields and (not tools or not all(TOOL_RE.match(t) for t in tools)):
+        raise Fail("%s: ungültiges disallowedTools %r" % (where, fields["disallowedTools"]))
+    fields["disallowedTools"] = ",".join(tools)
+    fields["description_raw"] = raw["description"]
+    return fields, body
+
+
+def claude_args(fields, model=None):
+    """Startbefehl als Argumentliste. --disallowedTools nimmt mehrere Werte und steht deshalb vor
+    --model, damit es nicht den Auftrag dahinter als Werkzeugnamen verschluckt."""
+    args = ["claude"]
+    if fields["disallowedTools"]:
+        args += ["--disallowedTools", fields["disallowedTools"]]
+    return args + ["--model", model or fields["model"]]
+
+
+def render(role, agents=AGENTS):
+    fields, body = load(role, agents)
+    # Herdr nimmt im Frontmatter nur `key: value`-Zeilen, darum steht der Hinweis als Feld.
+    # Unter dem Frontmatter ginge nicht: Der Body ist die erste Nachricht an den Agenten.
+    notice = ("generated: erzeugt von gen-templates aus agents/%s.md, nicht bearbeiten "
+              "(Hülle ändern, neu erzeugen)" % role)
+    head = ["---", notice, "name: " + fields["name"], "description: " + fields["description_raw"],
+            "command: " + " ".join(claude_args(fields)), "---"]
+    return "\n".join(head) + "\n" + body
+
+
+def render_all(agents=AGENTS):
+    """Alle Vorlagen im Speicher; ein Fehler in einer Hülle bricht ab, bevor irgendwas geschrieben wird."""
+    return {role + ".md": render(role, agents) for role in roles(agents)}

@@ -1,0 +1,5 @@
+{"issues": {
+ "EX-970": {"title": "Spec: Passwort zurücksetzen per Mail-Link", "status": "Backlog",
+   "description": "## Problem\nNutzer, die ihr Passwort vergessen haben, kommen nicht mehr in die App.\n## Lösung\nAuf der Anmeldeseite ein Link „Passwort vergessen“. Die App schickt einen Link per Mail; darüber setzt der Nutzer ein neues Passwort.\n## User Stories\n1. Als Nutzer möchte ich einen Reset-Link anfordern, damit ich wieder reinkomme.\n2. Als Nutzer möchte ich über den Link ein neues Passwort setzen.\n## Entscheidungen\n- Mail über den bestehenden Mail-Dienst.\n## Tests\nTeststelle: HTTP-Routen `/password/forgot` und `/password/reset`.\n## Nicht im Umfang\nZwei-Faktor.",
+   "comments": []}
+}}

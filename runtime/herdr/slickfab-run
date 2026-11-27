@@ -1,0 +1,161 @@
+#!/usr/bin/env python3
+"""slickfab-run: startet eine Rolle als Claude-Session in einem Herdr-Terminal.
+
+  slickfab-run [--model <modell>] [--effort <stufe>] [--agents <ordner>] <rolle> <name> <ordner> <space-id|-> <auftrag> [issue-id]
+
+Nachfolger von dem früheren privaten Startskript studio-run. Rollenanweisung ist der Text der Hülle
+agents/<rolle>.md (dieselbe Quelle wie gen-templates), darunter `## Auftrag` und der
+Auftrag. Beides geht als Argument an claude, nicht über `hc run <vorlage>`: ein nacktes
+`claude` öffnet seit v2.1.32x die Sitzungsübersicht, die erste Nachricht käme nicht an.
+
+Labels: studio.role, studio.issue (falls Issue), herdr.space (falls nicht "-"),
+slickfab.dispatch=1. Ohne --model gilt das Modell der Hülle, ohne --effort der Standard von claude.
+Exit 0 = gestartet (stdout: Ausgabe von hc), 2 = falscher Aufruf, 1 = hc fehlt/scheitert/hängt.
+Zeitgrenze für hc: SLICKFAB_HC_TIMEOUT Sekunden (Standard 30).
+Nur Python-Standardbibliothek (läuft mit 3.9).
+"""
+import math
+import os
+import re
+import signal
+import subprocess
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import slickfab_templates as st  # noqa: E402
+
+USAGE = 'usage: slickfab-run [--model <modell>] [--effort <stufe>] [--agents <ordner>] <rolle> <name> <ordner> <space-id|-> "<auftrag>" [issue-id]'
+HC_TIMEOUT = 30
+ROLE_RE = re.compile(r"^[a-z][a-z0-9-]{0,39}$")
+NAME_RE = re.compile(r"^[a-z0-9][a-z0-9_-]{0,31}$")  # Regel von `hc run --name`
+ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$")  # Space- und Issue-ID, kein = und kein Leerzeichen
+EFFORTS = ("low", "medium", "high", "xhigh", "max")  # Werte von `claude --effort`
+
+
+class Usage(Exception):
+    """Falscher Aufruf: Meldung, Usage, Exit 2."""
+
+
+class Fail(Exception):
+    """hc fehlt, scheitert oder hängt: Exit 1."""
+
+
+def log(msg):
+    print("slickfab-run: " + msg, file=sys.stderr, flush=True)
+
+
+def parse(argv):
+    """Optionen nur vor den Positionsargumenten, je höchstens einmal; danach zählt jedes Wort als Argument."""
+    opts = {}
+    while argv[:1] in (["--model"], ["--effort"], ["--agents"]) and argv[0] not in opts:
+        key = argv[0]
+        if len(argv) < 2:
+            raise Usage("%s ohne Wert" % key)
+        opts[key], argv = argv[1], argv[2:]
+    model, agents, effort = opts.get("--model"), opts.get("--agents", st.AGENTS), opts.get("--effort")
+    if effort is not None and effort not in EFFORTS:
+        raise Usage("ungültiges --effort %r (erlaubt: %s)" % (effort, ", ".join(EFFORTS)))
+    if model is not None and not st.MODEL_RE.match(model):
+        raise Usage("ungültiges --model %r" % model)
+    if not os.path.isdir(agents):
+        raise Usage("Ordner der Hüllen (--agents) nicht gefunden: %s" % agents)
+    if len(argv) not in (5, 6):
+        raise Usage("5 oder 6 Argumente erwartet, %d bekommen" % len(argv))
+    role, name, folder, space, task = argv[:5]
+    issue = argv[5] if len(argv) == 6 else ""
+    if not task.strip():
+        # Eine Rolle ohne Auftrag endet sofort mit NEEDS_CONTEXT; lieber gar nicht erst starten.
+        raise Usage("Auftrag ist leer")
+    if not ROLE_RE.match(role) or role not in st.roles(agents):
+        raise Usage("Rolle nicht gefunden: %r (bekannt: %s)" % (role, ", ".join(st.roles(agents))))
+    if not NAME_RE.match(name):
+        raise Usage("ungültiger Name %r (1-32 Zeichen a-z 0-9 - _)" % name)
+    if not os.path.isdir(folder):
+        raise Usage("Ordner nicht gefunden: %s" % folder)
+    if space != "-" and not ID_RE.match(space):
+        raise Usage("ungültige Space-ID %r" % space)
+    if issue and not ID_RE.match(issue):
+        raise Usage("ungültige Issue-ID %r" % issue)
+    return model, effort, agents, role, name, os.path.abspath(folder), space, task, issue
+
+
+def hc_timeout():
+    raw = os.environ.get("SLICKFAB_HC_TIMEOUT", str(HC_TIMEOUT))
+    try:
+        value = float(raw)
+    except ValueError:
+        value = 0
+    if not math.isfinite(value) or value <= 0:
+        raise Usage("SLICKFAB_HC_TIMEOUT muss eine positive Zahl sein, nicht %r" % raw)
+    return value
+
+
+def stop_group(proc):
+    try:
+        os.killpg(proc.pid, signal.SIGKILL)
+    except ProcessLookupError:
+        pass
+    proc.communicate()
+
+
+def run_hc(cmd, timeout):
+    """Startet hc mit Zeitgrenze in eigener Prozessgruppe; gibt stdout zurück."""
+    try:
+        proc = subprocess.Popen(cmd, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE, text=True, errors="replace",
+                                start_new_session=True)
+    except OSError as e:
+        raise Fail("hc nicht startbar (%s); ist Herdr installiert und hc im PATH?" % e)
+    try:
+        out, err = proc.communicate(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        stop_group(proc)
+        raise Fail("hc antwortet nicht: Zeitgrenze von %ss überschritten" % timeout)
+    except BaseException:
+        # z. B. Strg-C: die eigene Prozessgruppe bekommt das Signal nicht. Liefe hc weiter, startete
+        # es das Terminal vielleicht noch, während der Aufrufer von einem Fehlschlag ausgeht.
+        stop_group(proc)
+        raise
+    if proc.returncode != 0:
+        raise Fail("hc run endete mit %d: %s" % (proc.returncode, err.strip() or "(keine Meldung)"))
+    return out
+
+
+def main(argv):
+    try:
+        model, effort, agents, role, name, folder, space, task, issue = parse(argv)
+        timeout = hc_timeout()
+        fields, body = st.load(role, agents)
+    except Usage as e:
+        log(str(e))
+        print(USAGE, file=sys.stderr)
+        return 2
+    except (st.Fail, OSError) as e:
+        log("Hülle nicht lesbar: %s" % e)
+        return 1
+    prompt = body.rstrip("\n") + "\n\n## Auftrag\n" + task
+    cmd = ["hc", "run", "--bg", "--name", name, "--cwd", folder, "--label", "studio.role=" + role]
+    # Die Labels liest das Studio-Board (Herdr-Mod), um Agent und Linear-Issue zusammenzuführen;
+    # slickfab.dispatch=1 markiert Terminals, die der Autopilot anfassen darf.
+    if issue:
+        cmd += ["--label", "studio.issue=" + issue]
+    if space != "-":
+        cmd += ["--label", "herdr.space=" + space]
+    cmd += ["--label", "slickfab.dispatch=1"] + st.claude_args(fields, model)
+    if effort:
+        cmd += ["--effort", effort]
+    cmd.append(prompt)
+    log("starte %s als %s (Modell %s)" % (role, name, model or fields["model"]))
+    try:
+        sys.stdout.write(run_hc(cmd, timeout))
+    except Fail as e:
+        log(str(e))
+        return 1
+    except KeyboardInterrupt:
+        log("abgebrochen, hc beendet")
+        return 130
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

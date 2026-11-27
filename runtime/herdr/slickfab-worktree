@@ -1,0 +1,688 @@
+#!/usr/bin/env python3
+"""slickfab-worktree: startklare Worktrees für Umsetzer und Reviewer.
+
+  slickfab-worktree add <name>   neuer Worktree + Branch vom Hauptzweig, Hooks an,
+                                 Abhängigkeiten, .env* kopiert, Baseline grün
+  slickfab-worktree review <pr>  Worktree detached am Head-Commit des Pull Requests
+  slickfab-worktree rm <name>    Worktree und Branch aufräumen
+
+Worktrees liegen unter <root>/<repo>/<name> (Standard-Root ~/.herdr/worktrees).
+Die letzte Zeile auf stdout ist bei Erfolg der Pfad; alles andere geht nach stderr.
+Nur Python-Standardbibliothek (läuft mit 3.9).
+"""
+import argparse
+import contextlib
+import fcntl
+import filecmp
+import json
+import os
+import re
+import shlex
+import shutil
+import signal
+import subprocess
+import sys
+
+DEFAULT_ROOT = os.path.join("~", ".herdr", "worktrees")
+GIT_TIMEOUT = 120
+NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$")
+BASE_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._/-]{0,199}$")
+
+
+class Fail(Exception):
+    """Abbruch mit klarer Meldung und Exit 1."""
+
+
+def log(msg):
+    print("slickfab-worktree: " + msg, file=sys.stderr, flush=True)
+
+
+def run(cmd, cwd, timeout, what, shell=False):
+    """Startet einen externen Befehl mit Zeitgrenze; gibt (exit, ausgabe) zurück.
+
+    Eigene Prozessgruppe, damit bei Zeitüberschreitung auch Kindprozesse enden
+    und nichts an den Pipes hängen bleibt.
+    """
+    shown = cmd if shell else " ".join(shlex.quote(c) for c in cmd)
+    log("%s: %s" % (what, shown))
+    args = ["sh", "-c", cmd] if shell else cmd
+    try:
+        proc = subprocess.Popen(args, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                stdin=subprocess.DEVNULL, text=True, errors="replace",
+                                start_new_session=True)
+    except OSError as e:
+        raise Fail("%s: konnte nicht gestartet werden (%s)" % (what, e))
+    try:
+        out, _ = proc.communicate(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        stop_group(proc)
+        raise Fail("%s: Zeitgrenze von %ss überschritten" % (what, timeout))
+    except BaseException:
+        # z. B. Strg-C: die eigene Prozessgruppe bekommt das Signal nicht, also selbst beenden,
+        # bevor das Aufräumen den Ordner löscht.
+        stop_group(proc)
+        raise
+    return proc.returncode, out
+
+
+def stop_group(proc):
+    try:
+        os.killpg(proc.pid, signal.SIGKILL)
+    except OSError:
+        pass
+    proc.communicate()
+
+
+def git(args, cwd, what="git", ok=True):
+    code, out = run(["git"] + args, cwd, GIT_TIMEOUT, what)
+    if ok and code != 0:
+        raise Fail("%s fehlgeschlagen (Exit %d):\n%s" % (what, code, out.strip()))
+    return code, out.strip()
+
+
+# --- Projekt ---------------------------------------------------------------
+
+def toplevel(path):
+    code, out = run(["git", "rev-parse", "--path-format=absolute", "--git-common-dir"],
+                    path, GIT_TIMEOUT, "Git-Repo prüfen")
+    if code != 0:
+        raise Fail("kein Git-Repo: %s" % path)
+    common = out.strip().splitlines()[-1]
+    if os.path.basename(common) != ".git":
+        raise Fail("Haupt-Checkout nicht gefunden (Git-Verzeichnis %s)" % common)
+    return os.path.dirname(common)
+
+
+def read_checks(main, override):
+    """Prüfbefehle: --check, sonst CHECK_TYPECHECK/CHECK_TEST aus .slickrails/config.sh.
+
+    Die Datei wird gelesen, nicht ausgeführt.
+    """
+    if override:
+        return [override]
+    cfg = os.path.join(main, ".slickrails", "config.sh")
+    values = {}
+    if os.path.isfile(cfg):
+        with open(cfg, encoding="utf-8") as f:
+            for line in f:
+                m = re.match(r"^\s*(CHECK_TYPECHECK|CHECK_TEST)=(.*)$", line)
+                if not m:
+                    continue
+                try:
+                    parts = shlex.split(m.group(2), comments=True)
+                except ValueError:
+                    raise Fail("%s: Zeile für %s nicht lesbar" % (cfg, m.group(1)))
+                values[m.group(1)] = " ".join(parts).strip()
+    checks = [values[k] for k in ("CHECK_TYPECHECK", "CHECK_TEST") if values.get(k)]
+    if not checks:
+        raise Fail("keine Prüfbefehle: weder --check noch CHECK_TEST/CHECK_TYPECHECK "
+                   "in .slickrails/config.sh")
+    return checks
+
+
+def base_ref(main, base):
+    """Startpunkt: --base, sonst der Hauptzweig von origin (vorher fetch), sonst lokal main/master."""
+    code, _ = git(["remote", "get-url", "origin"], main, "origin suchen", ok=False)
+    if code == 0:
+        git(["fetch", "-q", "origin"], main, "git fetch origin")
+        if base:
+            return "origin/" + base
+        code, out = git(["symbolic-ref", "-q", "--short", "refs/remotes/origin/HEAD"], main,
+                        "Hauptzweig von origin", ok=False)
+        if code == 0 and out:
+            return out
+        for b in ("main", "master"):
+            if git(["rev-parse", "-q", "--verify", "refs/remotes/origin/" + b], main,
+                   "origin/" + b + " suchen", ok=False)[0] == 0:
+                return "origin/" + b
+        raise Fail("Hauptzweig von origin nicht gefunden; --base angeben")
+    if base:
+        return base
+    for b in ("main", "master"):
+        if git(["rev-parse", "-q", "--verify", "refs/heads/" + b], main, b + " suchen", ok=False)[0] == 0:
+            return b
+    raise Fail("Hauptzweig nicht gefunden; --base angeben")
+
+
+def enable_hooks(main, path):
+    """Wie slickrails: liegt .githooks/ im Repo und ist core.hooksPath leer, einschalten."""
+    code, current = git(["config", "--get", "core.hooksPath"], path, "core.hooksPath lesen", ok=False)
+    if code == 0 and current:
+        log("Hooks aktiv (core.hooksPath = %s)" % current)
+        return
+    if os.path.isdir(os.path.join(path, ".githooks")):
+        git(["config", "core.hooksPath", ".githooks"], path, "Hooks einschalten")
+        log("Hooks eingeschaltet (core.hooksPath = .githooks)")
+    else:
+        log("kein .githooks/ im Repo; Standard-Hooks aus .git/hooks gelten")
+
+
+def copy_env(main, path):
+    """Kopiert nicht eingecheckte .env*-Dateien aus dem Haupt-Checkout (gleiche relative Pfade)."""
+    _, out = git(["ls-files", "--others", "--directory", "-z"], main, ".env*-Dateien suchen")
+    copied = []
+    for rel in out.split("\0"):
+        if not rel or rel.endswith("/") or not os.path.basename(rel).startswith(".env"):
+            continue
+        src = os.path.join(main, rel)
+        dst = os.path.join(path, rel)
+        if os.path.islink(src) or not os.path.isfile(src) or os.path.lexists(dst):
+            continue
+        os.makedirs(os.path.dirname(dst), exist_ok=True)
+        shutil.copy2(src, dst)
+        copied.append(rel)
+    log(".env* kopiert: %s" % (", ".join(copied) if copied else "keine"))
+
+
+# Lockdatei → Installationsbefehl, der genau den Lock-Stand installiert.
+LOCKFILES = [
+    ("pnpm-lock.yaml", ["pnpm", "install", "--frozen-lockfile"]),
+    ("yarn.lock", ["yarn", "install", "--frozen-lockfile"]),
+    ("bun.lock", ["bun", "install", "--frozen-lockfile"]),
+    ("bun.lockb", ["bun", "install", "--frozen-lockfile"]),
+    ("package-lock.json", ["npm", "ci"]),
+    ("uv.lock", ["uv", "sync", "--frozen"]),
+    ("poetry.lock", ["poetry", "install", "--no-interaction"]),
+    ("Gemfile.lock", ["bundle", "install"]),
+]
+
+
+def install(path, override, timeout):
+    if override:
+        cmd, shell = override, True
+    else:
+        found = [c for f, c in LOCKFILES if os.path.isfile(os.path.join(path, f))]
+        if not found:
+            log("keine Lockdatei gefunden; keine Abhängigkeiten installiert")
+            return
+        cmd, shell = found[0], False
+    code, out = run(cmd, path, timeout, "Installation", shell=shell)
+    if code != 0:
+        tail = "\n".join(out.strip().splitlines()[-30:])
+        raise Fail("Installation fehlgeschlagen (Exit %d):\n%s" % (code, tail))
+
+
+def run_baseline(checks, cwd, timeout):
+    outs = []
+    for cmd in checks:
+        code, out = run(cmd, cwd, timeout, "Baseline", shell=True)
+        outs.append(out)
+        if code != 0:
+            tail = "\n".join(out.strip().splitlines()[-30:])
+            raise Fail("Baseline rot: '%s' endete mit Exit %d. Ein Umsetzer startet nicht auf "
+                       "kaputtem Stand.\n%s" % (cmd, code, tail))
+    return "\n".join(outs)
+
+
+# Zählt ausgeführte (nicht übersprungene) Tests in gängigen Ausgaben:
+# unittest "Ran N tests" minus "skipped=N"; pytest/jest/vitest "N passed"/"N failed";
+# node --test "# pass N"/"# fail N".
+_COUNT_PLUS = [r"\bRan (\d+) tests?\b", r"\b(\d+) passed\b", r"\b(\d+) failed\b",
+               r"^# pass (\d+)\s*$", r"^# fail (\d+)\s*$"]
+_COUNT_MINUS = [r"\bskipped=(\d+)"]
+
+
+def executed_tests(output):
+    """Anzahl ausgeführter Tests oder None, wenn die Ausgabe keine Zahl verrät."""
+    found = False
+    total = 0
+    for pat in _COUNT_PLUS:
+        for m in re.finditer(pat, output, re.M):
+            found = True
+            total += int(m.group(1))
+    if not found:
+        return None
+    for pat in _COUNT_MINUS:
+        for m in re.finditer(pat, output, re.M):
+            total -= int(m.group(1))
+    return total
+
+
+def ensure_comparable(main, want, start):
+    """Der Haupt-Checkout taugt nur als Referenz, wenn er genau am Startcommit (SHA want,
+    aufgelöst aus start) steht und eingecheckte Dateien unverändert sind; sonst zählt er
+    andere Tests als der Worktree."""
+    _, head = git(["rev-parse", "HEAD"], main, "HEAD des Haupt-Checkouts")
+    hint = ("Vergleich auf übersprungene Tests nicht möglich. Haupt-Checkout auf %s bringen "
+            "oder ausdrücklich ohne Vergleich: --no-compare" % start)
+    if head != want:
+        raise Fail("Haupt-Checkout steht auf %s, der Worktree startet auf %s (%s). %s"
+                   % (head[:12], want[:12], start, hint))
+    _, dirty = git(["status", "--porcelain", "--untracked-files=no"], main,
+                   "Änderungen im Haupt-Checkout prüfen")
+    if dirty:
+        raise Fail("Haupt-Checkout hat Änderungen an eingecheckten Dateien:\n%s\n%s" % (dirty, hint))
+
+
+def compare_with_main(checks, main, wt_output, timeout):
+    """Laufen im Worktree weniger Tests als im Haupt-Checkout, wurden welche still übersprungen."""
+    here = executed_tests(wt_output)
+    outs = [run(cmd, main, timeout, "Vergleichslauf im Haupt-Checkout", shell=True)[1]
+            for cmd in checks]
+    there = executed_tests("\n".join(outs))
+    if here is None or there is None:
+        log("WARNUNG: Testanzahl nicht erkennbar (Worktree %s, Haupt-Checkout %s); "
+            "Vergleich auf übersprungene Tests nicht möglich" % (here, there))
+        return
+    if here < there:
+        raise Fail("im Worktree liefen %d Tests, im Haupt-Checkout %d: Tests wurden übersprungen, "
+                   "vermutlich fehlen nicht eingecheckte Testdaten. Das gilt nicht als grün."
+                   % (here, there))
+    log("Testanzahl: Worktree %d, Haupt-Checkout %d" % (here, there))
+
+
+@contextlib.contextmanager
+def repo_lock(main, what, name="slickfab-worktree.lock"):
+    """Sperre im gemeinsamen Git-Verzeichnis, damit parallele Aufrufe sich nicht ins Gehege
+    kommen. Zwei Sperrdateien: eine für die kurzen Git-Änderungen (Worktree anlegen/entfernen,
+    Config), eine für Testläufe im Haupt-Checkout. Installation und Baseline im Worktree
+    bleiben parallel."""
+    lock = os.path.join(main, ".git", name)
+    with open(lock, "a") as f:
+        try:
+            fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            log("warte auf Sperre (%s): ein anderer slickfab-worktree-Aufruf arbeitet" % what)
+            fcntl.flock(f, fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(f, fcntl.LOCK_UN)
+
+
+# --- Befehle ---------------------------------------------------------------
+
+def wt_path(root, main, name):
+    return os.path.join(os.path.abspath(os.path.expanduser(root)), os.path.basename(main), name)
+
+
+def ensure_free(main, path, branch):
+    if find_worktree(main, path):
+        raise Fail("%s existiert schon als registrierter Worktree (Ordner evtl. verschoben); "
+                   "nichts angelegt. Prüfen mit: git worktree list" % path)
+    if os.path.lexists(path):
+        raise Fail("%s existiert schon; nichts angelegt (aufräumen: slickfab-worktree rm %s)"
+                   % (path, os.path.basename(path)))
+    if branch and git(["rev-parse", "-q", "--verify", "refs/heads/" + branch], main,
+                      "Branch suchen", ok=False)[0] == 0:
+        raise Fail("Branch %s existiert schon; nichts angelegt" % branch)
+
+
+def cmd_add(a):
+    if not NAME_RE.match(a.name):
+        raise Fail("ungültiger Name '%s' (erlaubt: Buchstaben, Ziffern, . _ -)" % a.name)
+    if a.base is not None and (not BASE_RE.match(a.base) or ".." in a.base):
+        raise Fail("ungültiger Startzweig '%s'" % a.base)
+    main = toplevel(a.repo)
+    checks = read_checks(main, a.check)
+    path = wt_path(a.root, main, a.name)
+    ensure_free(main, path, a.name)  # früh und billig; verbindlich erst unter der Sperre
+    start = base_ref(main, a.base)
+    # Genau einmal zur SHA auflösen: ein paralleler fetch darf den Startpunkt nicht verschieben.
+    _, sha = git(["rev-parse", "--verify", "-q", start + "^{commit}"], main, "Startcommit auflösen")
+    if a.no_compare:
+        log("WARNUNG: --no-compare: kein Vergleich mit dem Haupt-Checkout, still übersprungene "
+            "Tests fallen nicht auf")
+    else:
+        ensure_comparable(main, sha, start)
+    owned = False
+    try:
+        # Prüfen, Anlegen und ggf. Aufräumen unter derselben Sperre: solange sie gehalten wird,
+        # kann kein paralleler Aufruf an Pfad oder Branch arbeiten. Erst wenn der Worktree
+        # nachweislich angelegt ist, gilt er als eigen (owned) für spätere Fehler.
+        with repo_lock(main, "Worktree anlegen"):
+            ensure_free(main, path, a.name)
+            try:
+                git(["worktree", "add", "-q", "-b", a.name, path, sha], main, "Worktree anlegen")
+                ensure_registered(main, path)
+                enable_hooks(main, path)
+            except BaseException:
+                cleanup_failed_create(main, a.root, path, a.name, sha)  # noch unter der Sperre
+                raise
+        owned = True
+        copy_env(main, path)
+        install(path, a.install, a.timeout)
+        out = run_baseline(checks, path, a.timeout)
+        if not a.no_compare:
+            # eigene Sperrdatei: Anlegen, Aufräumen und rm warten nicht auf ganze Testläufe
+            with repo_lock(main, "Vergleichslauf", "slickfab-worktree-compare.lock"):
+                # erneut prüfen: der Haupt-Checkout kann sich seit dem Anlegen bewegt haben
+                ensure_comparable(main, sha, start)
+                compare_with_main(checks, main, out, a.timeout)
+                # und danach: wurde er während des Vergleichslaufs umgestellt, zählte er
+                # einen anderen Stand (Re-Review PR #3, A1'')
+                ensure_comparable(main, sha, start)
+    except BaseException:
+        if owned:
+            rollback(main, path, a.name)
+        raise
+    log("bereit: Branch %s ab %s (%s)" % (a.name, start, sha[:12]))
+    print(path)
+
+
+def pr_head(main, pr):
+    """Head-Commit des PR laut GitHub (gh)."""
+    code, out = run(["gh", "pr", "view", pr, "--json", "headRefOid"], main, GIT_TIMEOUT,
+                    "PR %s nachschlagen" % pr)
+    if code != 0:
+        raise Fail("PR %s nicht gefunden:\n%s" % (pr, out.strip()))
+    try:
+        head = json.loads(out.strip().splitlines()[-1])["headRefOid"]
+    except (ValueError, KeyError, IndexError, TypeError):
+        raise Fail("PR %s: unerwartete Antwort von gh:\n%s" % (pr, out.strip()))
+    if not re.match(r"^[0-9a-f]{40}([0-9a-f]{24})?$", head or ""):
+        raise Fail("PR %s: ungültiger Head-Commit '%s'" % (pr, head))
+    return head
+
+
+def cmd_review(a):
+    if not re.match(r"^[1-9][0-9]{0,8}$", a.pr):
+        raise Fail("ungültige PR-Nummer '%s'" % a.pr)
+    main = toplevel(a.repo)
+    name = "pr-" + a.pr
+    path = wt_path(a.root, main, name)
+    ensure_free(main, path, None)
+    head = pr_head(main, a.pr)
+    git(["fetch", "-q", "origin", "refs/pull/%s/head" % a.pr], main, "PR-Head holen")
+    if git(["cat-file", "-e", head + "^{commit}"], main, "PR-Head prüfen", ok=False)[0] != 0:
+        raise Fail("PR %s: Head-Commit %s ist lokal nicht vorhanden" % (a.pr, head))
+    owned = False
+    try:
+        with repo_lock(main, "Worktree anlegen"):
+            ensure_free(main, path, None)
+            try:
+                git(["worktree", "add", "-q", "--detach", path, head], main,
+                    "Review-Worktree anlegen")
+                ensure_registered(main, path)
+            except BaseException:
+                cleanup_failed_create(main, a.root, path, None, head)  # noch unter der Sperre
+                raise
+        owned = True
+        _, now = git(["rev-parse", "HEAD"], path, "Commit prüfen")
+        if now != head:
+            raise Fail("Worktree steht auf %s, PR-Head ist %s" % (now, head))
+    except BaseException:
+        if owned:
+            rollback(main, path, None)
+        raise
+    log("bereit: PR %s detached am Head %s" % (a.pr, head[:12]))
+    print(path)
+
+
+def list_worktrees(main):
+    """Alle Einträge aus `git worktree list`: {"path", "branch" (oder None), "head"}."""
+    _, out = git(["worktree", "list", "--porcelain"], main, "Worktrees auflisten")
+    entries, entry = [], None
+    for line in out.splitlines() + [""]:
+        if line.startswith("worktree "):
+            entry = {"path": line[len("worktree "):], "branch": None, "head": None}
+        elif line.startswith("HEAD ") and entry is not None:
+            entry["head"] = line[len("HEAD "):]
+        elif line.startswith("branch ") and entry is not None:
+            entry["branch"] = line[len("branch "):].replace("refs/heads/", "", 1)
+        elif not line and entry is not None:
+            entries.append(entry)
+            entry = None
+    return entries
+
+
+def worktree_entry(main, path):
+    want = os.path.realpath(path)
+    for entry in list_worktrees(main):
+        if os.path.realpath(entry["path"]) == want:
+            return entry
+    return None
+
+
+def find_worktree(main, path):
+    """Eintrag aus `git worktree list` für path: (pfad, branch oder None) oder None."""
+    entry = worktree_entry(main, path)
+    return (entry["path"], entry["branch"]) if entry else None
+
+
+def unsaved(path, branch):
+    """Gründe, warum Löschen Arbeit vernichten würde (leer = gesichert)."""
+    reasons = []
+    _, status = git(["status", "--porcelain", "--untracked-files=all"], path, "Änderungen prüfen")
+    if status:
+        reasons.append("nicht committete Änderungen:\n" + status)
+    rev = ["rev-list", "HEAD", "--not", "--remotes"]
+    if branch is None:
+        # Review-Worktree: Ausgangspunkt ist der erste Eintrag im HEAD-Reflog.
+        _, refl = git(["reflog", "--format=%H", "HEAD"], path, "Reflog lesen", ok=False)
+        if refl:
+            rev.append(refl.splitlines()[-1])
+    _, ahead = git(rev, path, "nicht gepushte Commits suchen")
+    if ahead:
+        reasons.append("%d Commit(s) nicht gepusht" % len(ahead.splitlines()))
+    return reasons
+
+
+def cmd_rm(a):
+    if not NAME_RE.match(a.name):
+        raise Fail("ungültiger Name '%s'" % a.name)
+    main = toplevel(a.repo)
+    path = wt_path(a.root, main, a.name)
+    found = find_worktree(main, path)
+    if not found:
+        raise Fail("kein Worktree %s unter %s; nichts zu tun" % (a.name, path))
+    path, branch = found
+    reasons = unsaved(path, branch)
+    if reasons and not a.force:
+        raise Fail("nicht gelöscht, %s hat ungesicherte Arbeit: %s\n"
+                   "Wirklich verwerfen: slickfab-worktree rm %s --force"
+                   % (path, "; ".join(reasons), a.name))
+    with repo_lock(main, "Worktree entfernen"):
+        git(["worktree", "remove"] + (["--force"] if a.force else []) + [path], main,
+            "Worktree entfernen")
+        if branch:
+            git(["branch", "-D", branch], main, "Branch löschen")
+    log("entfernt: %s%s" % (path, " und Branch " + branch if branch else ""))
+
+
+def unregister(main, path):
+    """Entfernt nur die Registrierung für path, falls sie nach `worktree remove` noch steht
+    (z. B. Abbruch mitten im Anlegen). Andere verwaiste Worktrees bleiben unangetastet."""
+    if not find_worktree(main, path):
+        return
+    admin_root = os.path.join(main, ".git", "worktrees")
+    want = os.path.realpath(os.path.join(path, ".git"))
+    for entry in os.listdir(admin_root) if os.path.isdir(admin_root) else []:
+        gitdir = os.path.join(admin_root, entry, "gitdir")
+        try:
+            with open(gitdir, encoding="utf-8") as f:
+                target = f.read().strip()
+        except OSError:
+            continue
+        if os.path.realpath(target) == want:
+            log("entferne Registrierung %s" % os.path.join(admin_root, entry))
+            shutil.rmtree(os.path.join(admin_root, entry), ignore_errors=True)
+
+
+def ensure_registered(main, path):
+    if not find_worktree(main, path):
+        raise Fail("%s ist nach git worktree add nicht registriert" % path)
+
+
+def cleanup(main, path, branch):
+    """Räumt einen nachweislich eigenen Worktree samt Branch ab (über rollback() oder
+    cleanup_failed_create())."""
+    log("räume angefangenen Worktree ab: %s" % path)
+    git(["worktree", "remove", "--force", path], main, "Worktree entfernen", ok=False)
+    if os.path.lexists(path):
+        shutil.rmtree(path, ignore_errors=True)
+    unregister(main, path)  # gezielt statt repo-weitem prune: fremde Einträge bleiben
+    if branch:
+        git(["branch", "-D", branch], main, "Branch löschen", ok=False)
+
+
+def cleanup_failed_create(main, root, path, branch, sha):
+    """Aufräumen, wenn das Anlegen unter der Sperre scheitert. Jemand außerhalb der Sperre
+    (von Hand, IDE) kann im Fenster zwischen Prüfung und `git worktree add` Ordner oder Branch
+    angelegt haben; gelöscht wird nur, was nachweislich von diesem Aufruf stammt:
+    - Worktree: siehe own_worktree(); ein nicht registrierter Ordner nur, wenn er leer ist;
+    - Branch: zeigt auf sha (dann geht kein Commit verloren); ist er irgendwo ausgecheckt,
+      verweigert git das Löschen ohnehin.
+    Alles andere bleibt und wird gemeldet. Läuft dabei selbst etwas schief, bleibt alles stehen,
+    und die eigentliche Ursache (die laufende Ausnahme) geht unverändert weiter."""
+    try:
+        _cleanup_failed_create(main, root, path, branch, sha)
+    except (Fail, OSError) as e:
+        log("WARNUNG: nicht gelöscht, Herkunft nicht prüfbar (%s). Prüfen mit: git worktree list; "
+            "git branch" % str(e).splitlines()[0])
+
+
+def own_worktree(main, root, entry, path, branch, sha):
+    """Ein registrierter Worktree gilt nur als eigen, wenn alles zutrifft (Review PR #18):
+    - weder path noch ein Ordner zwischen Root und path ist ein Symlink, und git führt genau
+      diesen Pfad (git löst Symlinks im Pfad auf, deshalb gilt der aufgelöste Elternordner plus
+      Name, nicht realpath(path); Symlinks oberhalb des Roots wie /var -> /private/var bleiben erlaubt);
+    - HEAD ist der erwartete Commit und der Branch ist dieser (bei review: detached);
+    - es gibt nichts zu verlieren: keine .git-Datei im Ordner (Abbruch mitten im Anlegen) oder
+      `git status` ohne Änderungen, neue und ignorierte Dateien. Ignoriert und erlaubt sind nur
+      .env*-Dateien, die byte-gleich mit der Quelle im Haupt-Checkout sind, die add kopiert.
+    Ein Branchname oder ein Commit allein belegt kein Eigentum."""
+    top = os.path.abspath(os.path.expanduser(root))
+    parent = os.path.dirname(path)
+    while parent != top and parent.startswith(top + os.sep):
+        if os.path.islink(parent):
+            return False
+        parent = os.path.dirname(parent)
+    literal = os.path.join(os.path.realpath(os.path.dirname(path)), os.path.basename(path))
+    if os.path.islink(path) or entry["path"] != literal:
+        return False
+    if entry["head"] != sha or entry["branch"] != branch:
+        return False
+    if not os.path.isfile(os.path.join(path, ".git")):
+        return True
+    code, status = git(["status", "--porcelain", "-z", "--ignored", "--untracked-files=all"], path,
+                       "Änderungen im angefangenen Worktree prüfen", ok=False)
+    if code != 0:
+        return False
+    # -z: Einträge "XY pfad", durch NUL getrennt, ohne Quoting. Alles außer "!!" (ignoriert) ist fremd.
+    if not all(e.startswith("!! ") and copied_env(main, path, e[3:])
+               for e in status.split("\0") if e):
+        return False
+    return nothing_hidden(path, sha)
+
+
+def nothing_hidden(path, sha):
+    """Arbeit, die `git status` nicht zeigt und die mit dem Worktree verschwände (Review PR #18,
+    Runde 2 und 3). Ein frisch angelegter Worktree hat nichts davon; jeder Fehlercode heißt fremd.
+    - Änderungen an Dateien mit skip-worktree ("S") oder assume-unchanged ("h"): nur "H " ist frisch;
+    - ein initialisiertes Submodul (bei `ignore = all` zeigt status es gar nicht; seine Commits
+      liegen im Verwaltungsordner dieses Worktrees): frisch ist jeder Submodul-Ordner leer;
+    - Commits, die nur am HEAD-Reflog dieses Worktrees hängen (Commit, dann `reset --hard`);
+    - Refs, die nur zu diesem Worktree gehören (refs/worktree, refs/bisect, refs/rewritten)."""
+    code, files = git(["ls-files", "-v", "-s", "-z"], path, "Versteckte Änderungen prüfen", ok=False)
+    if code != 0:
+        return False
+    for e in files.split("\0"):
+        if not e:
+            continue
+        # "<tag> <mode> <objekt> <stufe>\t<pfad>"
+        if not e.startswith("H "):
+            return False
+        meta, rel = e.split("\t", 1)
+        if meta.split(" ")[1] == "160000":
+            sub = os.path.join(path, rel)
+            if os.path.lexists(sub) and (not os.path.isdir(sub) or os.path.islink(sub) or os.listdir(sub)):
+                return False
+    code, log = git(["reflog", "show", "--format=%H", "HEAD", "--"], path, "HEAD-Reflog prüfen", ok=False)
+    if code != 0 or any(line != sha for line in log.split()):
+        return False
+    code, refs = git(["for-each-ref", "--format=%(refname)", "refs/worktree", "refs/bisect", "refs/rewritten"],
+                     path, "Refs dieses Worktrees prüfen", ok=False)
+    return code == 0 and not refs.strip()
+
+
+def copied_env(main, path, rel):
+    """Ist rel im Worktree eine Kopie, wie copy_env() sie anlegt (.env*, byte-gleich zur Quelle)?"""
+    src, dst = os.path.join(main, rel), os.path.join(path, rel)
+    if not os.path.basename(rel).startswith(".env"):
+        return False
+    if os.path.islink(src) or os.path.islink(dst) or not os.path.isfile(src) or not os.path.isfile(dst):
+        return False
+    return filecmp.cmp(src, dst, shallow=False)
+
+
+def _cleanup_failed_create(main, root, path, branch, sha):
+    kept = []
+    entry = worktree_entry(main, path)
+    if entry and own_worktree(main, root, entry, path, branch, sha):
+        cleanup(main, path, None)
+    elif entry:
+        kept.append("Worktree %s (Branch %s, Stand %s) ist nicht nachweislich von diesem Aufruf"
+                    % (entry["path"], entry["branch"], (entry["head"] or "?")[:12]))
+    elif os.path.isdir(path) and not os.path.islink(path) and not os.listdir(path):
+        os.rmdir(path)  # leer: eigener Rest eines Abbruchs vor der Registrierung, oder nichts verloren
+    elif os.path.lexists(path):
+        kept.append("Ordner %s stammt nicht von diesem Aufruf" % path)
+    if branch:
+        code, at = git(["rev-parse", "-q", "--verify", "refs/heads/" + branch], main,
+                       "Branch suchen", ok=False)
+        if code == 0 and at != sha:
+            kept.append("Branch %s zeigt auf %s, nicht auf den Startcommit" % (branch, at[:12]))
+        elif code == 0:
+            git(["branch", "-D", branch], main, "Branch löschen", ok=False)
+    if kept:
+        log("WARNUNG: nicht gelöscht, weil nicht nachweislich von diesem Aufruf angelegt: %s. "
+            "Prüfen mit: git worktree list; git branch" % "; ".join(kept))
+
+
+def rollback(main, path, branch):
+    """Räumt einen nachweislich eigenen Worktree (kein halber Zustand) unter der Sperre ab."""
+    with repo_lock(main, "aufräumen"):
+        cleanup(main, path, branch)
+
+
+def main(argv=None):
+    ap = argparse.ArgumentParser(prog="slickfab-worktree", description=__doc__.split("\n\n")[0])
+    ap.add_argument("--root", default=os.environ.get("SLICKFAB_WORKTREE_ROOT", DEFAULT_ROOT),
+                    help="Ordner für Worktrees (Standard ~/.herdr/worktrees)")
+    sub = ap.add_subparsers(dest="cmd", required=True)
+
+    p = sub.add_parser("add", help="Worktree + Branch für ein Ticket")
+    p.add_argument("name", help="Name von Ordner und Branch, z. B. ex-12-worktree")
+    p.add_argument("--repo", default=".", help="Pfad im Projekt (Standard: aktueller Ordner)")
+    p.add_argument("--base", help="Startzweig (Standard: Hauptzweig von origin)")
+    p.add_argument("--check", help="Prüfbefehl statt .slickrails/config.sh")
+    p.add_argument("--install", help="Installationsbefehl statt Erkennung über die Lockdatei")
+    p.add_argument("--timeout", type=int, default=1200, help="Zeitgrenze je Schritt in Sekunden")
+    p.add_argument("--no-compare", action="store_true",
+                   help="ohne Vergleichslauf im Haupt-Checkout (übersprungene Tests fallen nicht auf)")
+    p.set_defaults(fn=cmd_add)
+    adds = [p]
+
+    p = sub.add_parser("review", help="Worktree detached am Head eines Pull Requests")
+    p.add_argument("pr", help="PR-Nummer")
+    p.add_argument("--repo", default=".", help="Pfad im Projekt (Standard: aktueller Ordner)")
+    p.set_defaults(fn=cmd_review)
+    adds.append(p)
+
+    p = sub.add_parser("rm", help="Worktree und Branch aufräumen")
+    p.add_argument("name", help="Name aus add bzw. pr-<nummer> aus review")
+    p.add_argument("--repo", default=".", help="Pfad im Projekt (Standard: aktueller Ordner)")
+    p.add_argument("--force", action="store_true",
+                   help="auch nicht committete oder nicht gepushte Arbeit verwerfen")
+    p.set_defaults(fn=cmd_rm)
+    adds.append(p)
+
+    # --root auch nach dem Unterbefehl erlauben
+    for sp in adds:
+        sp.add_argument("--root", default=argparse.SUPPRESS)
+
+    a = ap.parse_args(argv)
+    try:
+        a.fn(a)
+    except Fail as e:
+        log("FEHLER: " + str(e))
+        return 1
+    except KeyboardInterrupt:
+        log("abgebrochen (Strg-C)")
+        return 130
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

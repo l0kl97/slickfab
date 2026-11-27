@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 440" width="880" height="440" role="img" aria-labelledby="t d">
+  <title id="t">slickfab und slickrails: wo die Bremsen greifen</title>
+  <desc id="d">slickfab bringt die Arbeit voran: implement in der Agent-Session, Commit und Push, review am Pull Request, du mergst. slickrails bremst an jeder Stelle: Stop-Gate und Bash-Wächter in der Session, Hooks pre-commit und commit-msg, pre-push mit lokalem AI-Review, CI am Pull Request, Branch Protection beim Merge.</desc>
+  <style>
+    .card { fill: #ffffff; stroke: #d0d7de; }
+    .title { fill: #1f2328; font: 600 17px -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+    .lane { fill: #59636e; font: 600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; letter-spacing: 0.04em; }
+    .note { fill: #59636e; font: 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+    .step { fill: #f6f8fa; stroke: #8c959f; stroke-width: 1.2; }
+    .steptext { fill: #1f2328; font: 600 14px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .sub { fill: #59636e; font: 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+    .gate { fill: #fff8c5; stroke: #9a6700; stroke-width: 1.4; }
+    .gatetext { fill: #3b2300; font: 600 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+    .gatesub { fill: #4d2d00; font: 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+    .brake { fill: #ffebe9; stroke: #cf222e; stroke-width: 1.2; }
+    .braketext { fill: #82071e; font: 600 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+    .brakesub { fill: #5c0011; font: 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+    .line { stroke: #6e7781; stroke-width: 1.5; fill: none; }
+    .dash { stroke: #6e7781; stroke-width: 1.3; fill: none; stroke-dasharray: 5 4; }
+    .head { fill: #6e7781; }
+    @media (prefers-color-scheme: dark) {
+      .card { fill: #0d1117; stroke: #3d444d; }
+      .title { fill: #f0f6fc; }
+      .lane, .note, .sub { fill: #9198a1; }
+      .step { fill: #151b23; stroke: #656c76; }
+      .steptext { fill: #f0f6fc; }
+      .gate { fill: #2e2410; stroke: #d29922; }
+      .gatetext { fill: #f2cc60; }
+      .gatesub { fill: #e3c77a; }
+      .brake { fill: #2d1316; stroke: #f85149; }
+      .braketext { fill: #ff9492; }
+      .brakesub { fill: #f0b4b1; }
+      .line, .dash { stroke: #9198a1; }
+      .head { fill: #9198a1; }
+    }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path class="head" d="M0,0 L10,5 L0,10 z"/>
+    </marker>
+  </defs>
+  <rect class="card" x="0.5" y="0.5" width="879" height="439" rx="10"/>
+  <text class="title" x="24" y="34">Wo slickrails bremst</text>
+
+  <!-- Stages -->
+  <text class="lane" x="24" y="68">AGENT-SESSION</text>
+  <text class="lane" x="196" y="68">COMMIT</text>
+  <text class="lane" x="368" y="68">PUSH</text>
+  <text class="lane" x="540" y="68">PULL REQUEST</text>
+  <text class="lane" x="712" y="68">MERGE</text>
+  <path class="line" d="M24,80 H854" marker-end="url(#arrow)"/>
+
+  <!-- slickfab -->
+  <text class="lane" x="24" y="112">SLICKFAB · BRINGT DIE ARBEIT VORAN</text>
+  <rect class="step" x="24" y="122" width="494" height="54" rx="6"/>
+  <text class="steptext" x="271" y="145" text-anchor="middle">implement</text>
+  <text class="sub" x="271" y="164" text-anchor="middle">TDD je Ticket, erst rot, dann grün, bis zum Pull Request</text>
+  <rect class="step" x="540" y="122" width="150" height="54" rx="6"/>
+  <text class="steptext" x="615" y="145" text-anchor="middle">review</text>
+  <text class="sub" x="615" y="164" text-anchor="middle">frische Session</text>
+  <rect class="gate" x="712" y="122" width="144" height="54" rx="6"/>
+  <text class="gatetext" x="784" y="145" text-anchor="middle">Du mergst</text>
+  <text class="gatesub" x="784" y="164" text-anchor="middle">Gate des Menschen</text>
+  <path class="line" d="M518,149 H538" marker-end="url(#arrow)"/>
+  <path class="line" d="M690,149 H710" marker-end="url(#arrow)"/>
+
+  <!-- slickrails -->
+  <text class="lane" x="24" y="214">SLICKRAILS · HÄLT AUF, WAS NICHT FERTIG IST</text>
+  <rect class="brake" x="24" y="224" width="150" height="116" rx="6"/>
+  <text class="braketext" x="36" y="248">Stop-Gate</text>
+  <text class="brakesub" x="36" y="268">kein „fertig“, solange</text>
+  <text class="brakesub" x="36" y="285">Checks rot sind</text>
+  <text class="braketext" x="36" y="312">Bash-Wächter</text>
+  <text class="brakesub" x="36" y="330">sperrt --no-verify</text>
+  <rect class="brake" x="196" y="224" width="150" height="116" rx="6"/>
+  <text class="braketext" x="208" y="248">pre-commit</text>
+  <text class="brakesub" x="208" y="268">Secrets, .env-Dateien</text>
+  <text class="braketext" x="208" y="294">commit-msg</text>
+  <text class="brakesub" x="208" y="314">große Commits</text>
+  <text class="brakesub" x="208" y="331">brauchen ein Warum</text>
+  <rect class="brake" x="368" y="224" width="150" height="116" rx="6"/>
+  <text class="braketext" x="380" y="248">pre-push</text>
+  <text class="brakesub" x="380" y="268">Typecheck und Tests</text>
+  <text class="braketext" x="380" y="294">AI-Review</text>
+  <text class="brakesub" x="380" y="314">des ausgehenden Diffs</text>
+  <rect class="brake" x="540" y="224" width="150" height="116" rx="6"/>
+  <text class="braketext" x="552" y="248">CI</text>
+  <text class="brakesub" x="552" y="268">dieselben Checks</text>
+  <text class="brakesub" x="552" y="285">noch einmal, dazu</text>
+  <text class="brakesub" x="552" y="302">Security, PR-Größe</text>
+  <rect class="brake" x="712" y="224" width="144" height="116" rx="6"/>
+  <text class="braketext" x="724" y="248">Branch</text>
+  <text class="braketext" x="724" y="266">Protection</text>
+  <text class="brakesub" x="724" y="288">rote Checks</text>
+  <text class="brakesub" x="724" y="305">sperren den Merge</text>
+
+  <!-- Shared -->
+  <text class="lane" x="24" y="378">ZUSAMMENSPIEL</text>
+  <text class="note" x="24" y="400">Ein Satz Prüfbefehle (.slickrails/config.sh) · review liest, was slickrails schon gemeldet hat</text>
+  <text class="note" x="24" y="420">retro macht aus wiederkehrenden Fehlern Vorschläge für neue Checks, angewendet nur mit deinem OK</text>
+</svg>

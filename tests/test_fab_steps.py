@@ -447,5 +447,34 @@ class BrokenCopyTest(unittest.TestCase):
         self.assertTrue(any("betriebsarten.md" in f and "/slickfab:start" in f for f in cf.check(self.tmp)))
 
 
+def block(text, name):
+    """Inhalt zwischen <!-- name --> und <!-- /name -->, sonst ''."""
+    m = re.search(r"<!-- %s -->\n(.*?)<!-- /%s -->" % (re.escape(name), re.escape(name)), text, re.S)
+    return m.group(1) if m else ""
+
+
+class SlickrailsChecksTest(unittest.TestCase):
+    """Schnellstart slickrails + slickfab: In einem Repo mit `.slickrails/config.sh` gelten
+    dessen Prüfbefehle, nicht die aus `.slickfab/config`. fab führt keine Prüfung aus; es
+    erkennt slickrails und schlägt `.slickfab/config` dann ohne eigene Prüfbefehle vor.
+    Im Durchlauf (docs/features/schnellstart-slickrails.md) zeigte fab genau das."""
+
+    path = os.path.join(ROOT, FAB)
+
+    def setUp(self):
+        self.text = read(self.path)
+
+    def test_fab_reads_slickrails_config_as_text(self):
+        repo = block(self.text, "regel:repo-lesen")
+        self.assertIn("ob `.slickrails/config.sh` existiert", repo)
+        self.assertIn("Beide liest du als Text.", repo)
+
+    def test_fab_contract_gives_slickrails_checks_precedence(self):
+        fmt = block(self.text, "vertrag:config-format")
+        self.assertIn("# Check commands, only without slickrails "
+                      "(otherwise the ones from .slickrails/config.sh apply)", fmt)
+        self.assertIn("| `CHECK_TEST=` | yes, without slickrails |", fmt)
+
+
 if __name__ == "__main__":
     unittest.main()

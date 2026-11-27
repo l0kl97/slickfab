@@ -59,6 +59,15 @@ REQUIRED.update({"agents/%s" % role: ("frontmatter", "einleitung", "eingang", "a
                  for role in ("planner", "challenger", "implementer", "reviewer",
                               "debugger", "verifier", "retro")})
 
+# Vertragsblöcke der Quellen (Review PR #1): Einzelanker fingen 12 gleichmäßig in Quelle und
+# Kopien eingebaute Schwächungen nicht; jetzt ist jeder Block ganz eingefroren.
+REQUIRED.update({
+    "tracker/linear.md": tuple("vertrag:" + n for n in
+                               ("zugang", "issues", "status", "labels", "marker", "rulings")),
+    "docs/projektkonfiguration.md": tuple("vertrag:" + n for n in
+                                          ("config-format", "config-slickrails", "config-fehlt")),
+})
+
 
 class RuleGoldenTest(unittest.TestCase):
     def test_markers_well_formed(self):
@@ -80,6 +89,44 @@ class RuleGoldenTest(unittest.TestCase):
         if expected != actual:
             self.fail("Regelabschnitte weichen von der Referenz ab. Gewollt? "
                       "python3 tests/rules_golden.py --update\n" + rg.diff(expected, actual))
+
+
+class ContractBlocksFrozenTest(unittest.TestCase):
+    """Eine Änderung an einem Vertragsblock der Quelle ändert die Referenz, auch wenn sie
+    gleichmäßig in alle Kopien übernommen wird (dann bliebe test_contract_blocks grün)."""
+
+    def setUp(self):
+        import shutil, tempfile
+        self.tmp = tempfile.mkdtemp(prefix="slickfab-golden-")
+        self.addCleanup(shutil.rmtree, self.tmp)
+        for sub in ("skills", "agents", "tracker", "docs"):
+            shutil.copytree(os.path.join(rg.ROOT, sub), os.path.join(self.tmp, sub))
+
+    def mutate(self, rel, old, new):
+        path = os.path.join(self.tmp, rel)
+        text = rg.read(rel, self.tmp)
+        self.assertEqual(text.count(old), 1, old)
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(text.replace(old, new))
+
+    def test_copy_renders_like_the_repo(self):
+        self.assertEqual(rg.render(rg.regions(self.tmp)), rg.render(rg.regions()))
+
+    def test_weakened_contract_rule_changes_the_reference(self):
+        cases = (("tracker/linear.md", "always a human gate, never auto-merge", "usually a human gate"),
+                 ("docs/projektkonfiguration.md", "follows slickrails.", "follows `.slickfab/config`."))
+        before = rg.render(rg.regions(self.tmp))
+        for rel, old, new in cases:
+            with self.subTest(file=rel):
+                self.mutate(rel, old, new)
+                self.assertNotEqual(rg.render(rg.regions(self.tmp)), before)
+                self.mutate(rel, new, old)
+
+    def test_text_outside_the_blocks_stays_free(self):
+        # Nur die Blöcke sind Vertrag; Einleitung und Überschriften der Quelle nicht.
+        before = rg.render(rg.regions(self.tmp))
+        self.mutate("tracker/linear.md", "# Tracker contract: Linear\n", "# Tracker contract for Linear\n")
+        self.assertEqual(rg.render(rg.regions(self.tmp)), before)
 
 
 class SingleToolTest(unittest.TestCase):

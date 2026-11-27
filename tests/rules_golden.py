@@ -50,14 +50,20 @@ CONTRACT = re.compile(r"<!-- (/?)vertrag:([a-z-]+) -->")
 # Zeichen, an denen str.splitlines trennt, außer \n. test_contract_blocks sieht nur
 # \n; ein Marker vor einem dieser Zeichen wäre für beide Leser verschieden.
 LINE_BREAKS = "\r\x0b\x0c\x1c\x1d\x1e\x85\u2028\u2029"
+# Quellen der Vertragsblöcke (wie test_contract_blocks). Ihre Blöcke werden ganz eingefroren:
+# Eine gleichmäßig in Quelle und alle Kopien eingebaute Schwächung hielt der Gleichheitstest
+# nicht auf, Einzelanker nur an ihren Sätzen (Review PR #1, 12 überlebende Mutationen).
+CONTRACT_SOURCES = ("tracker/linear.md", "docs/projektkonfiguration.md")
+CONTRACT_BLOCK = re.compile(r"<!-- vertrag:([a-z-]+) -->\n(.*?)<!-- /vertrag:\1 -->", re.S)
 CONTRACT_LIKE = re.compile(r"<!--\s*/?\s*vertrag:")
 
 HEADER = """# Eingefrorene Regeln der Schritte und Rollen
 
 Erzeugt mit `python3 tests/rules_golden.py --update` aus den Abschnitten
 `<!-- regel:NAME -->` … `<!-- /regel:NAME -->` in allen `skills/*/SKILL.md`
-(dazu je Schritt Frontmatter und Gliederung) sowie den
-Agent-Rollen in `agents/`. Nicht von Hand bearbeiten.
+(dazu je Schritt Frontmatter und Gliederung), den Agent-Rollen in
+`agents/` und den Vertragsblöcken `<!-- vertrag:NAME -->` der Quellen
+`tracker/linear.md` und `docs/projektkonfiguration.md`. Nicht von Hand bearbeiten.
 
 Ändert sich eine Regel, wird `tests/test_rule_golden.py` rot. Ist die
 Änderung gewollt, Skript mit `--update` laufen lassen und diese Datei
@@ -245,6 +251,9 @@ def regions(root=ROOT):
             out.append((label, "frontmatter", frontmatter(text)))
         for name, body in extract(text):
             out.append((label, name, body))
+    for rel in CONTRACT_SOURCES:
+        for name, body in CONTRACT_BLOCK.findall(read(rel, root)):
+            out.append((rel, "vertrag:" + name, body))
     return out
 
 

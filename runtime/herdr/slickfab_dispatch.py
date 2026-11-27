@@ -23,6 +23,8 @@ SAME_IMPLEMENTER_ROUNDS = 2
 MAX_REWORK_ROUNDS = 3
 DEFAULT_MAX_PARALLEL = 3
 CLOSED_STATE_TYPES = ("completed", "canceled", "duplicate")
+# Specs in diesen Linear-Statustypen bekommen keinen Verifier mehr (duplicate bewusst nicht)
+CLOSED_SPEC_STATE_TYPES = ("completed", "canceled")
 ACTIVE_STATUSES = ("In Progress", "In Review")
 DISPATCH_LABEL = ("slickfab.dispatch", "1")
 STATUSES = ("DONE", "DONE_WITH_CONCERNS", "BLOCKED", "NEEDS_CONTEXT")
@@ -378,7 +380,7 @@ def _project_actions(name, proj, specs, tickets, by_issue, bad_issues):
         if not isinstance(spec.get("verified"), bool):
             actions.append(_needs_human({"id": spec_id, "project": name}, "Spec unlesbar: verified fehlt"))
             continue
-        if spec["verified"] or spec.get("state_type") in ("completed", "canceled"):
+        if spec["verified"] or spec.get("state_type") in CLOSED_SPEC_STATE_TYPES:
             continue  # selbst verifiziert oder in Linear schon geschlossen
         children = [t for t in tickets if t.get("spec") == spec_id]
         statuses = [t.get("status") for t in children]

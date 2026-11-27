@@ -313,6 +313,19 @@ class ReadFailures(unittest.TestCase):
         self.assertIn("Zeitgrenze", e.log())
         no_writes(self, e)
 
+    def test_spec_without_state_is_a_read_error_not_an_open_spec(self):
+        # Fehlt der Status der Spec (Schlüssel fehlt oder null), rät der tick nicht "offen" und
+        # startet nichts, auch keinen Verifier; der nächste tick mit Status läuft normal.
+        for broken in ({"identifier": "EX-100"}, {"identifier": "EX-100", "state": None}):
+            def break_it(e, broken=broken):
+                e.linear.issues["Alpha"][0]["parent"] = dict(broken)
+
+            def heal(e):
+                e.linear.issues["Alpha"][0]["parent"] = {"identifier": "EX-100",
+                                                         "state": {"type": "started"}}
+            with self.subTest(parent=broken):
+                self.check(break_it, heal, "Linear-Issue im Projekt alpha unlesbar")
+
     def test_unreadable_second_comment_page_stops_tick(self):
         # Re-Review PR #16 (:317): sonst fehlen still REWORK-Marker, und die Runden-Bremse greift nicht.
         e = Env(self)

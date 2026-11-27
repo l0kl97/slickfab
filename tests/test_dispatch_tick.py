@@ -443,6 +443,18 @@ class SingleActionFails(unittest.TestCase):
         roles = sorted(c[c.index("--label") + 1] for c in runs)
         self.assertEqual(roles, ["studio.role=debugger", "studio.role=retro", "studio.role=verifier"])
 
+    def test_closed_spec_in_linear_starts_no_verify(self):
+        # Eine Spec, die in Linear schon Done oder Canceled ist, bekommt keinen Verifier, auch
+        # wenn die Buchführung sie nicht als verifiziert kennt.
+        for spec_state in ("completed", "canceled"):
+            e = Env(self)
+            e.linear.issues["Alpha"] = [issue("EX-9", "Done", "completed", parent="EX-200",
+                                              parent_state=spec_state)]
+            self.assertEqual(e.run("tick").returncode, 0)
+            runs = [c for c in e.calls("hc") if c[0] == "run"]
+            self.assertNotIn("studio.role=verifier",
+                             [c[c.index("--label") + 1] for c in runs], spec_state)
+
     def test_unexpected_error_in_one_action_does_not_stop_the_others(self):
         # Pre-Push-Review: nicht nur ActionError; die folgende Aktion (EX-7) läuft trotzdem.
         e = Env(self)

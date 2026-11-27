@@ -378,8 +378,8 @@ def _project_actions(name, proj, specs, tickets, by_issue, bad_issues):
         if not isinstance(spec.get("verified"), bool):
             actions.append(_needs_human({"id": spec_id, "project": name}, "Spec unlesbar: verified fehlt"))
             continue
-        if spec["verified"]:
-            continue
+        if spec["verified"] or spec.get("state_type") in ("completed", "canceled"):
+            continue  # selbst verifiziert oder in Linear schon geschlossen
         children = [t for t in tickets if t.get("spec") == spec_id]
         statuses = [t.get("status") for t in children]
         if ("Done" in statuses and all(st in CLOSED_STATUSES for st in statuses)

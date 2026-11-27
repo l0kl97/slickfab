@@ -102,11 +102,13 @@ Der übliche Weg: `grill` → `spec` → `challenge` → `tickets` → du setzt 
 | `handoff` | Übergabe bei Kontextwechsel |
 | `docs-lookup` | Aktuelle Library-Doku, versionsgenau, ohne den Kontext zu füllen |
 
-Welcher Schritt in welcher Session läuft (gleiches Gespräch oder frisch): `docs/betriebsarten.md`, Abschnitt „Die Schritte“.
+Welcher Schritt in welcher Session läuft (gleiches Gespräch oder frisch): `docs/betriebsarten.md`, Abschnitt „The steps“ (englisch).
 
 ## Betriebsarten
 
 Es sind immer dieselben 13 Schritte; die Betriebsart legt nur fest, wer sie startet. Ausführlich mit Einrichtung: `docs/betriebsarten.md`.
+
+Nur der Autopilot braucht [Herdr](https://herdr.dev/); Hand und Assistiert laufen ohne.
 
 - **Hand:** Du rufst `/slickfab:<schritt>` selbst auf, in deiner Session. Geht in jedem Claude Code, ohne weitere Werkzeuge.
 - **Assistiert:** Eine Session, die Schritte laufen als frische Subagents in den sieben Rollen. Du gibst jeder Rolle nur ihren Eingang (Ticket, PR, Spec-Issue) und entscheidest in der Haupt-Session, wenn sie `NEEDS_CONTEXT` oder `BLOCKED` meldet. Wächter-Hooks begrenzen die Bash-Befehle der prüfenden Rollen und des Doku-Lesers; context-guard warnt Rollen in Herdr-Terminals, wenn der Kontext voll wird.

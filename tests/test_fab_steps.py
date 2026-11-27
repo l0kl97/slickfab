@@ -77,9 +77,9 @@ class RetroHasEndTest(unittest.TestCase):
         # Review PR #17 (Optional, vom Master mitgenommen): Die Doku endete bei `retro`; wer danach
         # arbeitet, setzt die Spec nicht auf Done, und fab empfiehlt wieder retro.
         path = [l for l in read(os.path.join(ROOT, "docs", "betriebsarten.md")).splitlines()
-                if l.startswith("Der übliche Weg:")]
+                if l.startswith("The usual path:")]
         self.assertEqual(len(path), 1)
-        self.assertIn("→ `retro` → du setzt die Spec auf `Done`.", path[0])
+        self.assertIn("→ `retro` → you set the spec to `Done`.", path[0])
 
 
 class NotBuildVerdictTest(unittest.TestCase):

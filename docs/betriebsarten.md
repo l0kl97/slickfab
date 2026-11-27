@@ -23,27 +23,27 @@ Fehlt etwas davon, bricht kein Schritt ab, ohne es zu sagen: Jeder nennt, welche
 
 Das Projekt, in dem du arbeitest, darf nicht im Plugin-Ordner liegen, egal ob installiert oder mit `--plugin-dir`. Claude Code schützt Dateien im Plugin-Ordner als „sensitive file“, und dann darf kein Schritt dort schreiben (gefunden im Probelauf). Für Arbeit an slickfab selbst heißt das: Ist es aus dem Checkout installiert, entstehen Änderungen in einem Worktree außerhalb davon (`git worktree add` oder `runtime/herdr/slickfab-worktree add`), und der gemergte Stand kommt per `git pull` in den Checkout.
 
-## Die Schritte
+## The steps
 
-| Schritt | Wofür | Kontext |
+| Step | What for | Context |
 |---|---|---|
-| `/slickfab:fab` | Wegweiser: wo stehe ich, was kommt als Nächstes | beliebig |
-| `/slickfab:grill` | offene Entscheidungen in Runden klären | Gespräch mit dir |
-| `/slickfab:spec` | Spezifikation aus dem geklärten Gespräch, im Tracker | selbes Gespräch wie grill |
-| `/slickfab:prototype` | Fragen klären, die man nicht erfragen kann | selbes Gespräch, danach spec |
-| `/slickfab:challenge` | frischer Blick auf Spec und Zerlegung | frische Session |
-| `/slickfab:tickets` | Spec in dünne, vertikale Tickets schneiden | frische Session |
-| `/slickfab:implement` | ein Ticket per TDD bis zum Pull Request | frische Session je Ticket |
-| `/slickfab:review` | Pull Request auf zwei Achsen prüfen | frische Session |
-| `/slickfab:debug` | Fehler mit roter Schleife finden | frische Session |
-| `/slickfab:verify` | Ziel der Spec über alle Tickets prüfen | frische Session |
-| `/slickfab:retro` | aus wiederkehrenden Fehlern Regeln machen | frische Session |
-| `/slickfab:handoff` | Übergabe, bevor der Kontext voll ist | am Ende der laufenden Session |
-| `/slickfab:docs-lookup` | versionsgenaue Library-Doku | aus dem laufenden Schritt |
+| `/slickfab:fab` | signpost: where am I, what comes next | any |
+| `/slickfab:grill` | settle open decisions in rounds | conversation with you |
+| `/slickfab:spec` | specification from the settled conversation, in the tracker | same conversation as grill |
+| `/slickfab:prototype` | settle questions that cannot be answered by asking | same conversation, then spec |
+| `/slickfab:challenge` | fresh look at spec and split | fresh session |
+| `/slickfab:tickets` | cut the spec into thin, vertical tickets | fresh session |
+| `/slickfab:implement` | one ticket via TDD up to the pull request | fresh session per ticket |
+| `/slickfab:review` | check a pull request on two axes | fresh session |
+| `/slickfab:debug` | find a bug with a red loop | fresh session |
+| `/slickfab:verify` | check the spec's goal across all tickets | fresh session |
+| `/slickfab:retro` | turn recurring mistakes into rules | fresh session |
+| `/slickfab:handoff` | handoff before the context is full | at the end of the running session |
+| `/slickfab:docs-lookup` | version-exact library docs | from within the running step |
 
-Der übliche Weg: `grill` → `spec` → `challenge` → `tickets` → du setzt Tickets auf `Todo` → je Ticket `implement` → `review` → du mergst → nach dem letzten Ticket `verify` → `retro` → du setzt die Spec auf `Done`. Jeder Schritt nennt am Ende den nächsten. Bist du unsicher, frag `/slickfab:fab`.
+The usual path: `grill` → `spec` → `challenge` → `tickets` → you set tickets to `Todo` → per ticket `implement` → `review` → you merge → after the last ticket `verify` → `retro` → you set the spec to `Done`. Every step names the next one at its end. If you are unsure, ask `/slickfab:fab`.
 
-Prüfende Schritte laufen in einer frischen Session, damit der Prüfer nicht weiß, wie das Artefakt entstanden ist. Wird die laufende Session lang (Warnung von context-guard, rund zwei Drittel des Kontexts), schreib mit `/slickfab:handoff` eine Übergabe ans Ticket und mach frisch weiter.
+Checking steps run in a fresh session, so that the checker does not know how the artifact came about. If the running session gets long (warning from context-guard, at about two thirds of the context), write a handoff to the ticket with `/slickfab:handoff` and continue fresh.
 
 ## Hand
 

@@ -1,91 +1,91 @@
 ---
 name: verify
-description: Verwenden, wenn alle Tickets einer Spec gemergt sind und geprüft werden soll, ob das Ziel der Spec wirklich erreicht ist, oder wenn jemand „ist das Feature fertig?“ fragt.
-argument-hint: "<Spec-Issue>"
+description: Use when all tickets of a spec are merged and it should be checked whether the spec's goal is really reached, or when someone asks “is the feature done?”.
+argument-hint: "<spec issue>"
 ---
 
 <!-- regel:grenzen -->
-# verify: Ist das Ziel der Spec erreicht?
+# verify: Is the spec's goal reached?
 
-Ziel: Nach dem letzten Ticket festzustellen, ob das, was die Spec unter „Muss wahr sein“ verspricht, im Code auf dem Hauptzweig wirklich gilt, nicht nur, ob alle Tickets erledigt sind. Erledigte Tickets beweisen nichts; jedes einzelne kann bestanden haben, während die Teile nicht miteinander verbunden sind.
+Goal: After the last ticket, establish whether what the spec promises under “Muss wahr sein” (must be true) really holds in the code on the main branch, not just whether all tickets are done. Completed tickets prove nothing; each one can have passed while the parts are not connected to each other.
 
-Du änderst keinen Code. Dein Ergebnis ist ein Bericht und, nach Bestätigung, Fix-Tickets.
+You do not change any code. Your result is a report and, after confirmation, fix tickets.
 
-Antworte in der Sprache des Menschen. Tracker-Regeln und Projektkonfiguration stehen unten im Abschnitt „Vertrag“.
+Answer in the user's language. Tracker rules and project configuration are below in the section “Vertrag”.
 <!-- /regel:grenzen -->
 
 ## Wann
 
 <!-- regel:wann -->
-- Wenn alle Tickets einer Spec `Done` sind (gemergt).
-- Wieder, nachdem Fix-Tickets aus einem früheren Lauf gemergt sind.
-- Nicht für einen einzelnen Pull Request; dafür gibt es `/slickfab:review`.
+- When all tickets of a spec are `Done` (merged).
+- Again, after fix tickets from an earlier run have been merged.
+- Not for a single pull request; for that there is `/slickfab:review`.
 <!-- /regel:wann -->
 
 ## Ablauf
 
 <!-- regel:ablauf -->
-### 1. Voraussetzung prüfen
+### 1. Check the precondition
 
-- Du brauchst das Spec-Issue (Argument). Fehlt es, frag danach und hör auf.
-- Lies `.slickfab/config` und das Spec-Issue mit allen Kommentaren und Sub-Issues, mit den Linear-Werkzeugen der Session (in Claude Code per Werkzeugsuche `+linear` laden). Fehlt die Konfiguration, gilt der Vertrag unten (Abschnitt „wenn sie fehlt“). Ist der Tracker nicht erreichbar, sag das mit der Fehlermeldung. Liegt die Spec als Text im Argument vor, prüfst du dagegen und zeigst das Ergebnis im Chat; Fix-Tickets bleiben dann eine Liste im Chat (Schritt 5). Das Ergebnis endet dann mit `DONE_WITH_CONCERNS` und nennt darüber „Tracker nicht geprüft“, auch bei `bestanden`, sofern geprüft werden konnte, sonst mit `BLOCKED` (Vertrag, Abschnitt Zugang). Liegt sie nicht vor, hörst du auf und meldest das mit `SLICKFAB-STATUS: NEEDS_CONTEXT`. Du schreibst keine Plan-, Ticket- oder Ergebnisdatei ins Repo als Ersatz.
-- Sind noch Tickets offen, nenne sie. Weiter nur, wenn der Mensch ausdrücklich trotzdem prüfen will; offene Tickets erklären dann Lücken nicht weg.
-- Prüf auf dem aktuellen Hauptzweig mit sauberem Arbeitsstand (`git status --short` leer). Nenne den Commit, den du prüfst. Steht deine Session nicht schon sauber auf dem Hauptzweig, bewegst du keinen fremden Checkout (kein `git checkout`), sondern legst nach `git fetch` wie bei review einen Worktree im detached-Zustand im Arbeitsverzeichnis an (`git worktree add --detach .slickfab-verify-<Spec> origin/<Hauptzweig>`), lässt die Prüfbefehle dort laufen und entfernst ihn danach in jedem Fall (`git worktree remove --force`).
+- You need the spec issue (argument). If it is missing, ask for it and stop.
+- Read `.slickfab/config` and the spec issue with all comments and sub-issues, with the session's Linear tools (in Claude Code, load them via tool search `+linear`). If the configuration is missing, the contract below applies (section “when it is missing”). If the tracker is unreachable, say so with the error message. If the spec is available as text in the argument, you check against it and show the result in the chat; fix tickets then stay a list in the chat (step 5). The result then ends with `DONE_WITH_CONCERNS` and states “Tracker not checked” above it, even with `bestanden`, provided checking was possible, otherwise with `BLOCKED` (contract, section access). If it is not available, you stop and report that with `SLICKFAB-STATUS: NEEDS_CONTEXT`. You write no plan, ticket or result file into the repo as a substitute.
+- If tickets are still open, name them. Continue only if the human explicitly wants to check anyway; open tickets then do not explain gaps away.
+- Check on the current main branch with a clean working state (`git status --short` empty). Name the commit you check. If your session is not already cleanly on the main branch, you do not move anyone else's checkout (no `git checkout`); instead, after `git fetch`, you create a worktree in detached state in the working directory as in review (`git worktree add --detach .slickfab-verify-<spec> origin/<main branch>`), run the check commands there and remove it afterwards in any case (`git worktree remove --force`).
 
-### 2. Aussagen sammeln
+### 2. Collect statements
 
-Nimm aus der Spec jede Zeile unter „Muss wahr sein“ und jede unter „Kritische Verbindungen“ als eigene Aussage, wörtlich. Erledigte Tickets, PR-Texte und Berichte der Umsetzer sind keine Belege; du gehst davon aus, dass das Ziel nicht erreicht ist, bis der Code das Gegenteil zeigt. Hat die Spec keinen Abschnitt „Muss wahr sein“, sag das und leite die Aussagen aus Problem und User Stories ab, gekennzeichnet als abgeleitet.
+Take every line from the spec under “Muss wahr sein” and every one under “Kritische Verbindungen” (critical connections) as a statement of its own, verbatim. Completed tickets, PR texts and the implementers' reports are not evidence; you assume that the goal is not reached until the code shows the opposite. If the spec has no section “Muss wahr sein”, say so and derive the statements from problem and user stories, marked as derived.
 
-### 3. Je „Muss wahr sein“ vier Ebenen prüfen
+### 3. Per “Muss wahr sein” statement, check four levels
 
-Für jede Aussage: Welche Dateien, Funktionen, Routen oder Befehle müssen es tragen? Dann der Reihe nach, und eine Ebene zählt erst, wenn die davor erfüllt ist:
+For every statement: Which files, functions, routes or commands have to carry it? Then in order, and a level only counts once the one before it is met:
 
-1. **existiert:** Die tragenden Teile sind auf dem Hauptzweig da (Datei, Funktion, Route, Befehl).
-2. **echt:** Sie tun etwas, statt nur da zu sein. Kein Stub: keine leere Funktion, kein `return null`/fester Rückgabewert ohne Logik, kein `TODO`/`Platzhalter`/„not implemented“, kein Handler, der nur loggt, keine Oberfläche, die festen Beispieltext zeigt.
-3. **verdrahtet:** Der Produktivcode ruft sie auf, auf dem Weg, den die Aussage beschreibt (Import und Aufruf, registrierte Route, Eintrag im Menü, Hook in der Konfiguration). Such die Aufrufer; Tests zählen hier nicht als Aufrufer.
-4. **Daten fließen:** Echte Eingaben kommen durch: Verfolge einen Wert von der Quelle (Nutzereingabe, Datenbank, API) bis zur Ausgabe. Endet die Kette in einem festen Wert, einem Mock oder einer leeren Liste, ist die Ebene nicht erfüllt. Wo es geht, führ den Weg aus (Befehl, Test über die öffentliche Schnittstelle, Aufruf der Route) und notiere Befehl und Ausgabe.
+1. **exists:** The carrying parts are there on the main branch (file, function, route, command).
+2. **real:** They do something, instead of just being there. No stub: no empty function, no `return null`/fixed return value without logic, no `TODO`/`placeholder`/“not implemented”, no handler that only logs, no UI that shows fixed sample text.
+3. **wired:** The production code calls them, on the path that the statement describes (import and call, registered route, menu entry, hook in the configuration). Look for the callers; tests do not count as callers here.
+4. **data flows:** Real inputs get through: Follow a value from the source (user input, database, API) to the output. If the chain ends in a fixed value, a mock or an empty list, the level is not met. Where possible, run the path (command, test through the public interface, call of the route) and note command and output.
 
-Existiert eine Datei oder Funktion, aber nichts im Produktivcode ruft sie auf, ist die Aussage nicht erfüllt, auch wenn ihre eigenen Tests grün sind. Vorhandensein ist kein Verhalten.
+If a file or function exists but nothing in the production code calls it, the statement is not met, even if its own tests are green. Being present is not behaviour.
 
-Lass zum Schluss die Prüfbefehle des Repos laufen (aus `.slickrails/config.sh`, sonst `.slickfab/config`). Rot ist eine Lücke, auch wenn sie keine Aussage direkt betrifft.
+At the end, run the repo's check commands (from `.slickrails/config.sh`, otherwise `.slickfab/config`). Red is a gap, even if it does not directly concern a statement.
 
-Je Aussage ein Ergebnis: `erfüllt` (alle vier Ebenen mit Beleg), `nicht erfüllt` (Ebene nennen, an der es scheitert, mit `Datei:Zeile` oder Befehl und Ausgabe) oder `unklar` (lässt sich nicht maschinell prüfen, etwa Aussehen, Gefühl, Verhalten gegen ein fremdes System, das du nicht erreichst; sag, was ein Mensch prüfen müsste). Wähle `unklar` nicht, wenn das Fehlen beobachtbar ist; dann ist es `nicht erfüllt`.
+Per statement one result: `met` (all four levels with evidence), `not met` (name the level where it fails, with `file:line` or command and output) or `unclear` (cannot be checked by machine, such as look, feel, behaviour against a third-party system that you cannot reach; say what a human would have to check). Do not choose `unclear` if the absence is observable; then it is `not met`.
 
 ### 4. Status
 
-Genau ein Status für die Spec:
+Exactly one status for the spec (the values stay as written, `/slickfab:fab` reads them):
 
-| Status | Wann |
+| Status | When |
 |---|---|
-| `bestanden` | jede Aussage `erfüllt`, Prüfbefehle grün |
-| `Lücken gefunden` | mindestens eine Aussage `nicht erfüllt` oder ein Prüfbefehl rot |
-| `Mensch nötig` | keine Aussage `nicht erfüllt`, aber mindestens eine `unklar` |
+| `bestanden` | every statement `met`, check commands green |
+| `Lücken gefunden` | at least one statement `not met` or a check command red |
+| `Mensch nötig` | no statement `not met`, but at least one `unclear` |
 
-`bestanden` nur, wenn jede Aussage alle vier Ebenen erfüllt. Ein hoher Anteil erfüllter Aussagen macht die übrigen nicht leichter; prüf die letzte so genau wie die erste.
+`bestanden` only if every statement meets all four levels. A high share of met statements does not make the rest any easier; check the last one as closely as the first.
 
-### 5. Fix-Tickets vorschlagen
+### 5. Propose fix tickets
 
-Nur bei `Lücken gefunden`. Je Lücke ein Ticket-Vorschlag: Titel (Verb + Ergebnis), die Aussage aus der Spec wörtlich, die Ebene, an der es scheitert, mit Beleg, ein Kriterium mit „Widerlegt, wenn“, Größe `S`, `M` oder `L`, und unter „Agent notes“ die betroffenen Dateien. Lücken, die dieselbe Ursache haben, fasst du zu einem Ticket zusammen.
+Only with `Lücken gefunden`. Per gap one ticket proposal: title (verb + outcome), the statement from the spec verbatim, the level where it fails, with evidence, a criterion with “Widerlegt, wenn” (refuted if), size `S`, `M` or `L`, and under “Agent notes” the affected files. Gaps that have the same cause you combine into one ticket.
 
-1. Zeig dem Menschen die Vorschläge als nummerierte Liste.
-2. Prüf auf Dubletten: offene und erledigte Issues im Projekt mit ähnlichem Titel. Treffer nennst du an der Stelle in der Liste.
-3. Angelegt wird erst nach einem ausdrücklichen Ja zur Liste (ganz oder zu einzelnen Nummern). Ohne Ja legst du kein Issue an; Schweigen, „klingt gut“ zu etwas anderem oder ein Ja aus einem früheren Gespräch zählen nicht.
-4. Erst nach dem Ja: Lege die bestätigten Tickets als Sub-Issues der Spec in `Backlog` an, nach dem Vertrag unten (Abschnitt Issues). Kein Fix-Ticket setzt du auf `Todo`; die Freigabe zum Bauen gibt der Mensch. Den Status anderer Issues änderst du nicht.
+1. Show the human the proposals as a numbered list.
+2. Check for duplicates: open and completed issues in the project with a similar title. You name matches at their place in the list.
+3. Nothing is created until there is an explicit yes to the list (as a whole or to single numbers). Without a yes you create no issue; silence, “sounds good” to something else, or a yes from an earlier conversation do not count.
+4. Only after the yes: Create the confirmed tickets as sub-issues of the spec in `Backlog`, according to the contract below (section issues). You set no fix ticket to `Todo`; the approval to build is given by the human. You do not change the status of other issues.
 
-Ist der Tracker nicht erreichbar, bleibt die Liste im Chat; du legst keine Datei als Ersatz an.
+If the tracker is unreachable, the list stays in the chat; you create no file as a substitute.
 
-### 6. Festhalten
+### 6. Record
 
-Schreib das Ergebnis als Kommentar an das Spec-Issue (wenn der Tracker erreichbar ist), letzte Zeile die STATUS-Zeile nach Vertrag: `DONE` bei `bestanden`, `DONE_WITH_CONCERNS` bei `Lücken gefunden` oder `Mensch nötig`, `BLOCKED`, wenn du nicht prüfen konntest. Ohne Tracker, gegen die Spec als Text, kein Kommentar: Das Ergebnis steht im Chat, nennt „Tracker nicht geprüft“ und endet mit `DONE_WITH_CONCERNS`, sofern geprüft werden konnte, sonst mit `BLOCKED`. Den Status des Spec-Issues änderst du nicht.
+Write the result as a comment on the spec issue (if the tracker is reachable), the last line being the STATUS line according to the contract: `DONE` with `bestanden`, `DONE_WITH_CONCERNS` with `Lücken gefunden` or `Mensch nötig`, `BLOCKED` if you could not check. Without a tracker, against the spec as text, no comment: The result is in the chat, states “Tracker not checked” and ends with `DONE_WITH_CONCERNS`, provided checking was possible, otherwise with `BLOCKED`. You do not change the status of the spec issue.
 <!-- /regel:ablauf -->
 
 ## Vertrag
 
 <!-- regel:vertrag-quelle -->
-Wörtlich aus `tracker/linear.md` und `docs/projektkonfiguration.md` des slickfab-Plugins. Es steht hier, damit du nichts außerhalb des Projekts lesen musst; es gilt genau so.
+Verbatim from `tracker/linear.md` and `docs/projektkonfiguration.md` of the slickfab plugin. It is here so that you do not have to read anything outside the project; it applies exactly as written.
 <!-- /regel:vertrag-quelle -->
 
-### Tracker: Zugang
+### Tracker: access
 
 <!-- vertrag:zugang -->
 - Linear is accessed through the session's Linear tools (in Claude Code, load them via tool search `+linear`).
@@ -95,7 +95,7 @@ Wörtlich aus `tracker/linear.md` und `docs/projektkonfiguration.md` des slickfa
 Answer in the user's language.
 <!-- /vertrag:zugang -->
 
-### Projektkonfiguration: Format
+### Project configuration: format
 
 <!-- vertrag:config-format -->
 `.slickfab/config` in the repo root: one line per value, `KEY="value"`. Blank lines and lines starting with `#` do not count.
@@ -125,7 +125,7 @@ The file is read as text, not executed as a shell script (no `source`), so that 
 Answer in the user's language.
 <!-- /vertrag:config-format -->
 
-### Projektkonfiguration: Prüfbefehle mit slickrails
+### Project configuration: check commands with slickrails
 
 <!-- vertrag:config-slickrails -->
 If the repo has `.slickrails/config.sh`, the check commands come from there: all non-empty `CHECK_*` values, the same way slickrails uses them in its hooks. `CHECK_*` entries in `.slickfab/config` are then not used; if they hold different values, the step names the contradiction once and follows slickrails. `.slickrails/config.sh` is also read only as text.
@@ -133,7 +133,7 @@ If the repo has `.slickrails/config.sh`, the check commands come from there: all
 Answer in the user's language.
 <!-- /vertrag:config-slickrails -->
 
-### Projektkonfiguration: wenn sie fehlt
+### Project configuration: when it is missing
 
 <!-- vertrag:config-fehlt -->
 If `.slickfab/config` is missing, a required value is missing, or `TRACKER=` names an unknown tracker, the step reports exactly that (which file, which key) and stops at the point where it would need the tracker. It writes no plan, ledger or state file and no ticket list into the repo as a substitute; whatever it has already worked out, it shows in the chat.
@@ -143,7 +143,7 @@ It offers to create `.slickfab/config` and shows the content with the values it 
 Answer in the user's language.
 <!-- /vertrag:config-fehlt -->
 
-### Tracker: Issues
+### Tracker: issues
 
 <!-- vertrag:issues -->
 | Kind | Title | Location | Initial status |
@@ -158,7 +158,7 @@ Answer in the user's language.
 Answer in the user's language.
 <!-- /vertrag:issues -->
 
-### Tracker: Marker
+### Tracker: marker
 
 <!-- vertrag:marker -->
 Every comment that a slickfab step or role writes, and every report to a caller, ends with the marker block, with no text after it:
@@ -197,18 +197,18 @@ Answer in the user's language.
 ```
 ## Ergebnis verify
 
-**Spec:** <Issue> · **Geprüft am Commit:** <SHA auf dem Hauptzweig>
+**Spec:** <issue> · **Checked at commit:** <SHA on the main branch>
 **Status:** bestanden | Lücken gefunden | Mensch nötig
 
-| Aussage (wörtlich) | existiert | echt | verdrahtet | Daten fließen | Ergebnis | Beleg |
+| Statement (verbatim) | exists | real | wired | data flows | Result | Evidence |
 |---|---|---|---|---|---|---|
-| <Zeile aus „Muss wahr sein“> | ✓ | ✓ | ✗ | – | nicht erfüllt | `<Datei:Zeile>` / `<Befehl>` → <Ausgabe> |
+| <line from “Muss wahr sein”> | ✓ | ✓ | ✗ | – | not met | `<file:line>` / `<command>` → <output> |
 
-**Prüfbefehle:** `<Befehl>` → <Ergebnis>
-**Mensch prüft:** <was, wie> (bei `unklar`)
-**Fix-Tickets:** <Vorschläge, nummeriert> · angelegt: <Links> oder „warten auf Ja“
+**Check commands:** `<command>` → <result>
+**Human checks:** <what, how> (with `unclear`)
+**Fix tickets:** <proposals, numbered> · created: <links> or “waiting for a yes”
 
-Nächster Schritt: `/slickfab:implement <Fix-Ticket>` | `/slickfab:retro`
+Nächster Schritt: `/slickfab:implement <fix ticket>` | `/slickfab:retro`
 
 SLICKFAB-STATUS: DONE|DONE_WITH_CONCERNS|BLOCKED|NEEDS_CONTEXT
 ```
@@ -217,7 +217,7 @@ SLICKFAB-STATUS: DONE|DONE_WITH_CONCERNS|BLOCKED|NEEDS_CONTEXT
 ## Nächster Schritt
 
 <!-- regel:naechster-schritt -->
-- `bestanden`: `/slickfab:retro`, um aus den Fehlern dieses Features Regeln zu machen.
-- `Lücken gefunden`: die Fix-Tickets freigeben (`Todo`) und mit `/slickfab:implement <Fix-Ticket>` bauen, danach wieder `/slickfab:verify <Spec-Issue>`.
-- `Mensch nötig`: der Mensch prüft die genannten Punkte; danach `/slickfab:verify <Spec-Issue>` erneut.
+- `bestanden`: `/slickfab:retro`, to turn the mistakes of this feature into rules.
+- `Lücken gefunden`: approve the fix tickets (`Todo`) and build them with `/slickfab:implement <fix ticket>`, then `/slickfab:verify <spec issue>` again.
+- `Mensch nötig`: the human checks the named points; then `/slickfab:verify <spec issue>` again.
 <!-- /regel:naechster-schritt -->

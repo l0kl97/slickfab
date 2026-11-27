@@ -1,122 +1,122 @@
 ---
 name: debug
-description: Verwenden, wenn etwas kaputt ist, einen Fehler wirft, falsch rechnet oder langsam ist und die Ursache unbekannt ist, oder wenn jemand „debug das“ sagt.
-argument-hint: "<Fehlerbeschreibung oder Ticket>"
+description: Use when something is broken, throws an error, calculates wrongly or is slow and the cause is unknown, or when someone says “debug this”.
+argument-hint: "<bug description or ticket>"
 ---
 
 <!-- regel:einleitung -->
-# debug: Fehler mit roter Schleife finden
+# debug: find a bug with a red loop
 
-Ziel: Die Ursache eines Fehlers belegt finden, beheben und mit einem Regressionstest festnageln. Raten ist nicht erlaubt; jede Aussage stützt sich auf einen Lauf.
+Goal: Find the cause of a bug with evidence, fix it and pin it down with a regression test. Guessing is not allowed; every statement rests on a run.
 
-Antworte in der Sprache des Menschen. Projektkonfiguration und Marker stehen unten im Abschnitt „Vertrag“.
+Answer in the user's language. Project configuration and marker are below in the section “Vertrag”.
 <!-- /regel:einleitung -->
 
 ## Wann
 
 <!-- regel:wann -->
-- Wenn ein Verhalten falsch ist und die Ursache nicht offensichtlich ist.
-- Wenn `/slickfab:implement` nach drei Fix-Versuchen an derselben Stelle gestoppt hat.
+- When a behaviour is wrong and the cause is not obvious.
+- When `/slickfab:implement` has stopped after three fix attempts at the same place.
 <!-- /regel:wann -->
 
 ## Ablauf
 
 <!-- regel:voraussetzung -->
-### 1. Voraussetzung prüfen
+### 1. Check the precondition
 
-- Du brauchst die Beschreibung des Fehlers: was passiert, was stattdessen passieren soll.
-- Ein Ticket ist nicht nötig. Gibt es eins, liest du es mit allen Kommentaren. Gibt es ein Ticket und ist der Tracker nicht erreichbar, gilt der Vertrag „Zugang“: melden und aufhören, keine Datei als Ersatz.
-- Lies `.slickfab/config` und, falls vorhanden, `.slickrails/config.sh`, beide nur als Text (Regeln im Vertrag). Prüfbefehle nimmst du nur aus `.slickrails/config.sh` oder `.slickfab/config`; du rätst keine aus `package.json`, `Makefile` oder der Gewohnheit. Fehlt ein Prüfbefehl, sagst du, welcher, und dass du ihn nicht ausführen kannst. Der rote Befehl aus Schritt 2 ist kein Prüfbefehl: Den baust du selbst, für genau diesen Fehler.
+- You need the description of the bug: what happens, what should happen instead.
+- A ticket is not needed. If there is one, you read it with all comments. If there is a ticket and the tracker is unreachable, the contract “access” applies: report and stop, no file as a substitute.
+- Read `.slickfab/config` and, if present, `.slickrails/config.sh`, both only as text (rules in the contract). You take check commands only from `.slickrails/config.sh` or `.slickfab/config`; you do not guess any from `package.json`, `Makefile` or habit. If a check command is missing, you say which one, and that you cannot run it. The red command from step 2 is not a check command: You build it yourself, for exactly this bug.
 <!-- /regel:voraussetzung -->
 
 <!-- regel:rote-schleife -->
-### 2. Rote Schleife bauen
+### 2. Build a red loop
 
-Das ist der Kern des Schritts. Bau einen Befehl, der auf genau diesen Fehler rot wird und grün, sobald er behoben ist. Mögliche Formen, ungefähr in dieser Reihenfolge: ein fehlschlagender Test an der Stelle, die den Fehler erreicht; ein `curl` gegen einen laufenden Dienst; ein CLI-Aufruf mit fester Eingabe, verglichen mit der erwarteten Ausgabe; ein Browser-Skript; ein abgespielter mitgeschnittener Aufruf; ein kleines Wegwerf-Gerüst um den betroffenen Pfad; bei „manchmal falsch“ eine Schleife über viele Eingaben; bei „ging früher“ ein `git bisect run` mit diesem Befehl.
+This is the core of the step. Build a command that turns red on exactly this bug and green as soon as it is fixed. Possible forms, roughly in this order: a failing test at the place that reaches the bug; a `curl` against a running service; a CLI call with fixed input, compared with the expected output; a browser script; a replayed recorded call; a small throwaway harness around the affected path; for “sometimes wrong”, a loop over many inputs; for “used to work”, a `git bisect run` with this command.
 
-Fertig ist die Schleife, wenn du **einen** Befehl nennen kannst, den du schon einmal ausgeführt hast (Befehl und Ausgabe zeigen, Geheimnisse durch `<REDACTED>` ersetzt), und der
+The loop is done when you can name **one** command that you have already run once (show command and output, with secrets replaced by `<REDACTED>`), and that
 
-- genau das Symptom prüft, das gemeldet wurde, nicht „läuft ohne Fehler“,
-- bei jedem Lauf dasselbe Urteil liefert (bei sporadischen Fehlern: eine hohe, feste Trefferquote),
-- in Sekunden läuft und ohne Menschen auskommt.
+- checks exactly the symptom that was reported, not “runs without errors”,
+- gives the same verdict on every run (for intermittent bugs: a high, fixed hit rate),
+- runs in seconds and needs no human.
 
-Ohne einen Befehl, der auf genau diesen Fehler rot wird, keine Ursachensuche und keine Korrektur. Ertappst du dich dabei, Code zu lesen, um eine Theorie zu bauen, bevor dieser Befehl existiert: zurück an den Anfang dieses Abschnitts.
+Without a command that turns red on exactly this bug, no search for the cause and no fix. If you catch yourself reading code to build a theory before this command exists: back to the start of this section.
 
-Gelingt dir kein roter Befehl, hörst du auf: Du nennst, was du versucht hast, und fragst nach dem, was fehlt. Du schlägst keine Korrektur vor. Was fehlen kann: Zugang zu der Umgebung, in der es passiert; ein mitgeschnittenes Beispiel (Log, Anfrage, Datei); die Erlaubnis für vorübergehende Messpunkte. Status `NEEDS_CONTEXT`. Vor dem Aufhören gilt Schritt 7.
+If you do not manage to get a red command, you stop: You name what you have tried and ask for what is missing. You do not suggest a fix. What may be missing: access to the environment where it happens; a recorded example (log, request, file); permission for temporary measurement points. Status `NEEDS_CONTEXT`. Before stopping, step 7 applies.
 
-| Ausrede | Realität |
+| Excuse | Reality |
 |---|---|
-| „Die Ursache ist offensichtlich, ich sehe es im Code.“ | Dann ist der rote Befehl in zwei Minuten gebaut und beweist es. Ohne ihn weißt du nach dem Fix nicht, ob er wirkt. |
-| „Ich kann es nicht nachstellen, aber diese Änderung schadet nicht.“ | Eine Korrektur ohne roten Befehl ist geraten. Melden, nicht raten. |
+| “The cause is obvious, I can see it in the code.” | Then the red command is built in two minutes and proves it. Without it, after the fix you do not know whether it works. |
+| “I can't reproduce it, but this change does no harm.” | A fix without a red command is a guess. Report, don't guess. |
 <!-- /regel:rote-schleife -->
 
 <!-- regel:nachstellen-und-minimieren -->
-### 3. Nachstellen und minimieren
+### 3. Reproduce and minimize
 
-Lass den Befehl laufen und vergleich die Ausgabe mit der Meldung: Ist es derselbe Fehler, nicht ein benachbarter? Dann verkleinere den Fall Stück für Stück (Eingaben, Aufrufer, Konfiguration, Daten), nach jedem Schnitt neu laufen lassen, bis jedes übrige Teil nötig ist, damit es rot bleibt.
+Run the command and compare the output with the report: Is it the same bug, not a neighbouring one? Then shrink the case piece by piece (inputs, callers, configuration, data), running it again after every cut, until every remaining part is needed for it to stay red.
 <!-- /regel:nachstellen-und-minimieren -->
 
 <!-- regel:hypothesen -->
-### 4. Hypothesen
+### 4. Hypotheses
 
-Schreib 3 bis 5 Hypothesen auf, nach Wahrscheinlichkeit geordnet, bevor du eine prüfst. Jede muss widerlegbar sein, in der Form: „Wenn <X> die Ursache ist, dann macht <Änderung Y> den Fehler weg und <Änderung Z> schlimmer.“ Kannst du die Vorhersage nicht nennen, ist es keine Hypothese. Zeig die Liste dem Menschen, falls er da ist; er weiß oft, was schon ausgeschlossen ist. Warte nicht auf ihn.
+Write down 3 to 5 hypotheses, ordered by likelihood, before you check one. Each must be falsifiable, in the form: “If <X> is the cause, then <change Y> makes the bug go away and <change Z> makes it worse.” If you cannot name the prediction, it is not a hypothesis. Show the list to the human, if they are there; they often know what has already been ruled out. Do not wait for them.
 
-Führ zwei Listen und hänge nur an: **Ausgeschlossen** (Hypothese, Beleg) und **Belege** (Befund, Befehl). So prüfst du keine Hypothese zweimal.
+Keep two lists and only append to them: **Ruled out** (hypothesis, evidence) and **Evidence** (finding, command). That way you never check a hypothesis twice.
 <!-- /regel:hypothesen -->
 
 <!-- regel:messen -->
-### 5. Messen
+### 5. Measure
 
-Prüf die Hypothesen der Reihe nach. Jede Messung gehört zu einer Vorhersage aus Schritt 4; du änderst eine Sache zur Zeit. Am liebsten mit Debugger oder REPL; sonst gezielte Ausgaben an den Stellen, die zwei Hypothesen unterscheiden, nie „alles loggen und suchen“.
+Check the hypotheses in order. Every measurement belongs to a prediction from step 4; you change one thing at a time. Preferably with a debugger or REPL; otherwise targeted output at the places that tell two hypotheses apart, never “log everything and search”.
 
-Wähl am Anfang einen kurzen Tag aus vier Zeichen, etwa `[DEBUG-a4f2]`, im Folgenden `[DEBUG-<tag>]`. Jeder Messpunkt trägt den Tag, ohne Ausnahme. Nur so findest du am Ende alle wieder.
+At the start, choose a short tag of four characters, such as `[DEBUG-a4f2]`, below `[DEBUG-<tag>]`. Every measurement point carries the tag, without exception. Only that way will you find them all again at the end.
 
-Bei Performance-Fehlern misst du zuerst eine Ausgangszahl (Zeitmessung, Profiler, Abfrageplan) und vergleichst danach; Logs helfen da selten.
+For performance bugs you first measure a baseline figure (timing, profiler, query plan) and compare afterwards; logs rarely help there.
 <!-- /regel:messen -->
 
 <!-- regel:regressionstest -->
-### 6. Regressionstest und Korrektur
+### 6. Regression test and fix
 
-Mach aus dem verkleinerten Fall einen Test an einer Teststelle, die den Fehler so trifft, wie er beim Aufrufer entsteht. Lass ihn laufen: Er muss rot sein, mit dem gemeldeten Symptom (Befehl und Ausgabe). Dann die Korrektur, und zwar die kleinste, die die belegte Ursache behebt. Lass den Test und den Befehl aus Schritt 2 laufen: beide grün (Befehl und Ausgabe). Prüfbefehle aus der Konfiguration laufen danach vollständig.
+Turn the minimized case into a test at a test seam that hits the bug the way it arises at the caller. Run it: It must be red, with the reported symptom (command and output). Then the fix, namely the smallest one that removes the proven cause. Run the test and the command from step 2: both green (command and output). The check commands from the configuration then run in full.
 
-Fehlt eine Teststelle, die den Fehler so trifft, wie er entsteht, ist das ein eigener Befund: Du schreibst keinen flachen Test, der nur so tut, sondern nennst, welche Teststelle fehlt und warum. Der rote Befehl aus Schritt 2 bleibt dann der Nachweis.
+If there is no test seam that hits the bug the way it arises, that is a finding of its own: You do not write a shallow test that only pretends; you name which test seam is missing and why. The red command from step 2 then remains the proof.
 
-Scheitert die Korrektur dreimal, ist meist die Ursache falsch verstanden: zurück zu Schritt 4 mit den neuen Belegen, nicht ein vierter Versuch an derselben Stelle. Zu Schritt 4 zurück gehst du höchstens einmal. Scheitern danach wieder drei Korrekturen, hörst du auf und meldest `BLOCKED` mit den Hypothesen, Belegen und Versuchen; dann entscheidet der Mensch.
+If the fix fails three times, the cause has usually been misunderstood: back to step 4 with the new evidence, not a fourth attempt at the same place. You go back to step 4 at most once. If three fixes fail again after that, you stop and report `BLOCKED` with the hypotheses, evidence and attempts; then the human decides.
 
-Für die Korrektur gelten dieselben Grenzen wie in `/slickfab:implement`:
+The fix is subject to the same limits as in `/slickfab:implement`:
 
-- **Stopp-Liste:** Berührt die Ursache oder die Korrektur einen dieser Punkte: Auth und Berechtigungen, destruktive Migrationen, Zahlungen, Löschungen von Daten, Deploys, Secrets, alles, was ein Revert nicht zurückholt, dann hörst du vor der Korrektur auf und meldest `BLOCKED` mit Ursache, Beleg und der Korrektur, die du vorschlägst. Gebaut wird erst mit einer Freigabe am Ticket.
-- **Bestehende Tests:** kein Überspringen, keine gelöschten oder gelockerten Assertions, keine gesenkten Schwellen. Steht ein bestehender Test im Weg, änderst du ihn nicht, sondern hörst auf und meldest ihn (Status `BLOCKED`), auch wenn du sicher bist, dass er falsch ist.
+- **Stop list:** If the cause or the fix touches one of these points: auth and permissions, destructive migrations, payments, deletions of data, deploys, secrets, anything a revert does not bring back, then you stop before the fix and report `BLOCKED` with cause, evidence and the fix you propose. It is only built with an approval on the ticket.
+- **Existing tests:** no skipping, no deleted or loosened assertions, no lowered thresholds. If an existing test is in the way, you do not change it; you stop and report it (status `BLOCKED`), even if you are sure that it is wrong.
 <!-- /regel:regressionstest -->
 
 <!-- regel:aufraeumen -->
-### 7. Aufräumen
+### 7. Clean up
 
-- Entferne jeden Messpunkt und prüf es mit `grep -rn "DEBUG-<tag>" .` (mit deinem Tag). Solange der Tag irgendwo steht, bist du nicht fertig.
-- Lösch Wegwerf-Gerüste und Hilfsdateien, die nicht zum Regressionstest gehören.
-- Lass den Befehl aus Schritt 2 gegen den ursprünglichen, nicht verkleinerten Fall laufen: grün.
+- Remove every measurement point and check it with `grep -rn "DEBUG-<tag>" .` (with your tag). As long as the tag appears anywhere, you are not done.
+- Delete throwaway harnesses and helper files that do not belong to the regression test.
+- Run the command from step 2 against the original, not minimized case: green.
 
-Hörst du vor Schritt 7 auf (`NEEDS_CONTEXT`, `BLOCKED`), räumst du trotzdem auf: Messpunkte und Wegwerf-Gerüste, auch außerhalb des Repos, löschst du, oder du nennst im Ergebnis jeden Pfad, der bleibt, und warum.
+If you stop before step 7 (`NEEDS_CONTEXT`, `BLOCKED`), you still clean up: You delete measurement points and throwaway harnesses, also outside the repo, or you name in the result every path that remains, and why.
 <!-- /regel:aufraeumen -->
 
 <!-- regel:warum-nicht-gefangen -->
-### 8. Warum nicht gefangen
+### 8. Why not caught
 
-Beantworte zwei Fragen und schreib sie ins Ergebnis, in den Commit und, falls es ein Ticket gibt, als Kommentar dorthin:
+Answer two questions and write them into the result, into the commit and, if there is a ticket, as a comment there:
 
-- **Warum nicht gefangen:** Welche Prüfung hätte den Fehler finden müssen und warum hat sie es nicht? (kein Test an der Stelle, Test prüfte etwas anderes, Fall nicht bedacht, Mock verdeckte ihn)
-- **Wiederholungs-Sperre:** Was verhindert, dass ein Fehler dieser Art wiederkommt? Der Regressionstest gilt nur für diesen Fall; nenne eine Prüfung oder Regel für die ganze Art und schlag sie als Vorschlag vor (für `/slickfab:retro`), statt sie ungefragt einzubauen.
+- **Why not caught:** Which check should have found the bug, and why did it not? (no test at that place, the test checked something else, case not considered, a mock hid it)
+- **Recurrence guard:** What prevents a bug of this kind from coming back? The regression test only covers this case; name a check or rule for the whole kind and put it forward as a proposal (for `/slickfab:retro`), instead of building it in unasked.
 
-Dann committest du (die Nachricht nennt die bestätigte Hypothese, damit der Nächste daraus lernt). Gehört der Fehler zu einem Ticket, das gerade gebaut wird, geht es dort weiter; sonst öffnest du einen Pull Request gegen den Hauptzweig, nicht mergen.
+Then you commit (the message names the confirmed hypothesis, so that the next person learns from it). If the bug belongs to a ticket that is being built right now, work continues there; otherwise you open a pull request against the main branch, do not merge.
 <!-- /regel:warum-nicht-gefangen -->
 
 ## Vertrag
 
 <!-- regel:vertrag-quelle -->
-Wörtlich aus `tracker/linear.md` und `docs/projektkonfiguration.md` des slickfab-Plugins. Es steht hier, damit du nichts außerhalb des Projekts lesen musst; es gilt genau so.
+Verbatim from `tracker/linear.md` and `docs/projektkonfiguration.md` of the slickfab plugin. It is here so that you do not have to read anything outside the project; it applies exactly as written.
 <!-- /regel:vertrag-quelle -->
 
-### Projektkonfiguration: Format
+### Project configuration: format
 
 <!-- vertrag:config-format -->
 `.slickfab/config` in the repo root: one line per value, `KEY="value"`. Blank lines and lines starting with `#` do not count.
@@ -146,7 +146,7 @@ The file is read as text, not executed as a shell script (no `source`), so that 
 Answer in the user's language.
 <!-- /vertrag:config-format -->
 
-### Projektkonfiguration: Prüfbefehle mit slickrails
+### Project configuration: check commands with slickrails
 
 <!-- vertrag:config-slickrails -->
 If the repo has `.slickrails/config.sh`, the check commands come from there: all non-empty `CHECK_*` values, the same way slickrails uses them in its hooks. `CHECK_*` entries in `.slickfab/config` are then not used; if they hold different values, the step names the contradiction once and follows slickrails. `.slickrails/config.sh` is also read only as text.
@@ -154,7 +154,7 @@ If the repo has `.slickrails/config.sh`, the check commands come from there: all
 Answer in the user's language.
 <!-- /vertrag:config-slickrails -->
 
-### Projektkonfiguration: wenn sie fehlt
+### Project configuration: when it is missing
 
 <!-- vertrag:config-fehlt -->
 If `.slickfab/config` is missing, a required value is missing, or `TRACKER=` names an unknown tracker, the step reports exactly that (which file, which key) and stops at the point where it would need the tracker. It writes no plan, ledger or state file and no ticket list into the repo as a substitute; whatever it has already worked out, it shows in the chat.
@@ -164,7 +164,7 @@ It offers to create `.slickfab/config` and shows the content with the values it 
 Answer in the user's language.
 <!-- /vertrag:config-fehlt -->
 
-### Tracker: Zugang
+### Tracker: access
 
 <!-- vertrag:zugang -->
 - Linear is accessed through the session's Linear tools (in Claude Code, load them via tool search `+linear`).
@@ -174,7 +174,7 @@ Answer in the user's language.
 Answer in the user's language.
 <!-- /vertrag:zugang -->
 
-### Tracker: Marker
+### Tracker: marker
 
 <!-- vertrag:marker -->
 Every comment that a slickfab step or role writes, and every report to a caller, ends with the marker block, with no text after it:
@@ -213,26 +213,26 @@ Answer in the user's language.
 ```
 ## Ergebnis debug
 
-**Fehler:** <ein Satz>
-**Roter Befehl:** `<Befehl>` → vorher <rot>, nachher <grün>
-**Ursache:** <die bestätigte Hypothese, mit Beleg>
-**Ausgeschlossen:** <Hypothesen mit Beleg>
-**Regressionstest:** <Test> | fehlt, Befund: <welche Teststelle fehlt>
-**Debug-Tag entfernt:** `grep -rn "DEBUG-<tag>" .` → kein Treffer
-**Liegen geblieben:** <Pfad und Grund> oder „nichts“
-**Warum nicht gefangen:** <…>
-**Wiederholungs-Sperre:** <Vorschlag>
+**Bug:** <one sentence>
+**Red command:** `<command>` → before <red>, after <green>
+**Cause:** <the confirmed hypothesis, with evidence>
+**Ruled out:** <hypotheses with evidence>
+**Regression test:** <test> | missing, finding: <which test seam is missing>
+**Debug tag removed:** `grep -rn "DEBUG-<tag>" .` → no match
+**Left behind:** <path and reason> or “nothing”
+**Why not caught:** <…>
+**Recurrence guard:** <proposal>
 
-Nächster Schritt: `/slickfab:review <Pull Request>` in einer frischen Session
+Nächster Schritt: `/slickfab:review <pull request>` in a fresh session
 
 SLICKFAB-STATUS: <DONE|DONE_WITH_CONCERNS|BLOCKED|NEEDS_CONTEXT>
 ```
 
-Die Zeile „Nächster Schritt“ fehlt nie, auch nicht bei `BLOCKED` oder `NEEDS_CONTEXT`. Ohne roten Befehl lautet sie `Nächster Schritt: /slickfab:debug <Fehler>, sobald <was fehlt> da ist`.
+The line “Nächster Schritt” is never missing, not even with `BLOCKED` or `NEEDS_CONTEXT`. Without a red command it reads `Nächster Schritt: /slickfab:debug <bug>, once <what is missing> is available`.
 <!-- /regel:ergebnis -->
 
 ## Nächster Schritt
 
 <!-- regel:naechster-schritt -->
-`/slickfab:review <Pull Request>` in einer frischen Session. Ist der Fix Teil eines Tickets, das noch nicht fertig ist: zurück zu `/slickfab:implement <Ticket>`.
+`/slickfab:review <pull request>` in a fresh session. If the fix is part of a ticket that is not finished yet: back to `/slickfab:implement <ticket>`.
 <!-- /regel:naechster-schritt -->

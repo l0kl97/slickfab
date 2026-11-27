@@ -136,7 +136,7 @@ class LookupTest(unittest.TestCase):
         self.npm_installed(version="3.22.4", readme="# zod\n\nUse z.string().email() to check emails.\n")
         r = self.lookup("zod", "email")
         self.assertIn("Version: 3.22.4 (package-lock.json)", r.stdout)
-        self.assertIn("Quelle: node_modules/zod/README.md", r.stdout)
+        self.assertIn("Source: node_modules/zod/README.md", r.stdout)
         self.assertIn("z.string().email()", r.stdout)
 
     def test_python_version_comes_from_poetry_lock(self):
@@ -148,7 +148,7 @@ class LookupTest(unittest.TestCase):
                    "Use requests.get(url, timeout=5) for a timeout.\n")
         r = self.lookup("requests", "timeout")
         self.assertIn("Version: 2.31.0 (poetry.lock)", r.stdout)
-        self.assertIn("Quelle: " + sp + "requests-2.31.0.dist-info/METADATA", r.stdout)
+        self.assertIn("Source: " + sp + "requests-2.31.0.dist-info/METADATA", r.stdout)
         self.assertIn("timeout=5", r.stdout)
 
 
@@ -178,14 +178,14 @@ class LookupTest(unittest.TestCase):
         r = self.lookup("left-padd", "pad", "--url", srv.url("/llms.txt"))
         self.assertIn("UNVERIFIED", r.stdout)
         self.assertIn("left-padd", r.stdout)
-        self.assertIn("nicht im Lockfile", r.stdout)
+        self.assertIn("not in the lockfile", r.stdout)
         self.assertEqual(srv.requests, [])
 
     def test_no_lockfile_is_unverified_even_if_installed(self):
         self.npm_installed(version="3.22.4", readme="email check: z.string().email()\n")
         r = self.lookup("zod", "email")
         self.assertIn("UNVERIFIED", r.stdout)
-        self.assertIn("kein Lockfile", r.stdout)
+        self.assertIn("no lockfile", r.stdout)
         self.assertIn("3.22.4", r.stdout)
 
     def test_invalid_package_name_is_rejected(self):
@@ -203,7 +203,7 @@ class LookupTest(unittest.TestCase):
         srv = self.server({"/llms.txt": "email from the net\n"})
         r = self.lookup("zod", "email", "--url", srv.url("/llms.txt"))
         self.assertIn("z.string().email()", r.stdout)
-        self.assertIn("ohne Netz", r.stdout)
+        self.assertIn("without network", r.stdout)
         self.assertNotIn("UNVERIFIED", r.stdout)
         self.assertEqual(srv.requests, [])
 
@@ -222,21 +222,21 @@ class LookupTest(unittest.TestCase):
         self.npm_lock(version="3.22.4")
         r = self.lookup("zod", "email", "--url", closed_port_url())
         self.assertIn("UNVERIFIED", r.stdout)
-        self.assertIn("Netz nicht erreichbar", r.stdout)
-        self.assertNotIn("--- Auszüge", r.stdout)
+        self.assertIn("network unreachable", r.stdout)
+        self.assertNotIn("--- Excerpts", r.stdout)
 
     def test_timeout_is_unverified(self):
         self.npm_lock(version="3.22.4")
         srv = self.server({"/llms.txt": "email docs\n"}, delay=3)
         r = self.lookup("zod", "email", "--url", srv.url("/llms.txt"), "--timeout", "0.5")
         self.assertIn("UNVERIFIED", r.stdout)
-        self.assertIn("Zeitüberschreitung", r.stdout)
+        self.assertIn("timeout after", r.stdout)
 
     def test_plain_http_to_foreign_host_is_refused(self):
         self.npm_lock(version="3.22.4")
         r = self.lookup("zod", "email", "--url", "http://example.com/llms.txt")
         self.assertIn("UNVERIFIED", r.stdout)
-        self.assertIn("nicht erlaubte Adresse", r.stdout)
+        self.assertIn("address not allowed", r.stdout)
 
     def test_local_service_cannot_be_read_without_test_switch(self):
         # Angriff aus dem Re-Review (B1): Agent liest per --url einen lokalen Dienst aus.
@@ -245,7 +245,7 @@ class LookupTest(unittest.TestCase):
         r = self.lookup("zod", "api_token", "--url", srv.url("/secret.txt"), allow_local=False)
         self.assertEqual(srv.requests, [])
         self.assertNotIn("sk-local-123", r.stdout)
-        self.assertIn("nicht erlaubte Adresse", r.stdout)
+        self.assertIn("address not allowed", r.stdout)
         self.assertIn("UNVERIFIED", r.stdout)
 
     def test_private_addresses_are_refused_even_over_https(self):
@@ -259,7 +259,7 @@ class LookupTest(unittest.TestCase):
                     "https://[fd00::1]/x", "https://198.18.0.1/x"):
             with self.subTest(url=url):
                 r = self.lookup("zod", "email", "--url", url, "--timeout", "2", allow_local=False)
-                self.assertIn("nicht erlaubte Adresse", r.stdout)
+                self.assertIn("address not allowed", r.stdout)
         self.assertEqual(srv.requests, [])
 
     def test_abbreviated_url_option_is_not_accepted(self):
@@ -273,7 +273,7 @@ class LookupTest(unittest.TestCase):
         srv = self.server({"/llms.txt": "# zod\n\nz.string().email() validates emails.\n"})
         r = self.lookup("zod", "email", "--url", srv.url("/llms.txt"))
         self.assertIn("Version: 3.22.4 (package-lock.json)", r.stdout)
-        self.assertIn("Quelle: " + srv.url("/llms.txt"), r.stdout)
+        self.assertIn("Source: " + srv.url("/llms.txt"), r.stdout)
         self.assertIn("z.string().email()", r.stdout)
         self.assertIn("UNVERIFIED", r.stdout)  # Online-Seite ist nicht an 3.22.4 gebunden
 
@@ -301,7 +301,7 @@ class LookupTest(unittest.TestCase):
         page = "".join("line %d mentions email and stuff\n" % i for i in range(5000))
         srv = self.server({"/llms.txt": page})
         r = self.lookup("zod", "email", "--url", srv.url("/llms.txt"))  # lookup() prüft ≤ 40
-        self.assertIn("--- Ende Auszüge ---", r.stdout)
+        self.assertIn("--- End of excerpts ---", r.stdout)
         self.assertNotIn("line 4999", r.stdout)
 
     # --- AK 4: zweiter Aufruf aus dem Cache --------------------------------------
@@ -314,7 +314,7 @@ class LookupTest(unittest.TestCase):
         srv.close()  # Netz weg: der zweite Aufruf darf es nicht brauchen
         second = self.lookup("zod", "email", "--url", srv.url("/llms.txt"))
         self.assertIn("z.string().email()", second.stdout)
-        self.assertIn("Cache", second.stdout)
+        self.assertIn("from the cache", second.stdout)
         self.assertEqual(len(srv.requests), 1)
         cache = os.path.join(self.home, ".cache", "slickfab-docs", "zod@3.22.4")
         self.assertTrue(os.path.isdir(cache), first.stdout)
@@ -328,7 +328,7 @@ class LookupTest(unittest.TestCase):
         second = self.lookup(*args)
         self.assertEqual(srv.requests, ["/missing.txt", "/full.txt"])
         self.assertIn("z.string().email()", second.stdout)
-        self.assertIn("Netz: diesmal 0 Abfragen", second.stdout)
+        self.assertIn("Network: this time 0 queries", second.stdout)
 
     def test_network_error_is_remembered_briefly(self):
         self.npm_lock(version="3.22.4")
@@ -336,8 +336,8 @@ class LookupTest(unittest.TestCase):
         self.lookup("zod", "email", "--url", url)
         second = self.lookup("zod", "email", "--url", url)
         self.assertIn("UNVERIFIED", second.stdout)
-        self.assertIn("Netz: diesmal 0 Abfragen", second.stdout)
-        self.assertIn("aus dem Cache", second.stdout)
+        self.assertIn("Network: this time 0 queries", second.stdout)
+        self.assertIn("from the cache", second.stdout)
 
     def test_expired_negative_entry_is_retried(self):
         self.npm_lock(version="3.22.4")
@@ -380,18 +380,18 @@ class LookupTest(unittest.TestCase):
             urls += ["--url", srv.url(path)]
         r = self.lookup("zod", "email", *urls)
         self.assertEqual(srv.requests, ["/a", "/b", "/c"])
-        self.assertIn("3 Abfragen ohne Treffer", r.stdout)
+        self.assertIn("3 queries without a match", r.stdout)
         self.assertIn("UNVERIFIED", r.stdout)
 
     def test_query_budget_spans_a_second_call(self):
         self.npm_lock(version="3.22.4")
         srv = self.server({})
         first = self.lookup("zod", "email", "--url", srv.url("/a"), "--url", srv.url("/b"))
-        self.assertIn("zusammen 2 von 3", first.stdout)
+        self.assertIn("in total 2 of 3", first.stdout)
         second = self.lookup("zod", "email", "--url", srv.url("/c"), "--url", srv.url("/d"),
                              "--url", srv.url("/e"))
         self.assertEqual(srv.requests, ["/a", "/b", "/c"])
-        self.assertIn("Suche beendet", second.stdout)
+        self.assertIn("search ended", second.stdout)
         self.assertIn("UNVERIFIED", second.stdout)
 
     def test_query_budget_frees_up_after_the_window(self):
@@ -417,7 +417,7 @@ class LookupTest(unittest.TestCase):
         self.assertIn("z.string().email()", r.stdout)
         self.assertNotIn("evil.sh", r.stdout)
         self.assertNotIn("rm -rf", r.stdout)
-        self.assertIn("eingebetteter Anweisung", r.stdout)
+        self.assertIn("embedded instruction", r.stdout)
 
     # --- Härtung aus dem Security-Review ------------------------------------------
 

@@ -1,172 +1,172 @@
 ---
 name: implement
-description: Verwenden, wenn ein freigegebenes Ticket gebaut werden soll, oder wenn jemand „bau das Ticket“ oder „setz EX-123 um“ sagt.
-argument-hint: "<Ticket>"
+description: Use when an approved ticket should be built, or when someone says “build the ticket” or “implement EX-123”.
+argument-hint: "<ticket>"
 ---
 
 <!-- regel:einleitung -->
-# implement: ein Ticket per TDD bis zum Pull Request
+# implement: one ticket via TDD up to the pull request
 
-Ziel: Ein Pull Request, der genau das Ticket erfüllt und für jedes Kriterium belegt, dass der Test erst rot und dann grün war. Nicht mehr, nicht weniger.
+Goal: A pull request that fulfils exactly the ticket and proves for every criterion that the test was red first and then green. No more, no less.
 
-Antworte in der Sprache des Menschen. Tracker-Regeln und Projektkonfiguration stehen unten im Abschnitt „Vertrag“.
+Answer in the user's language. Tracker rules and project configuration are below in the section “Vertrag”.
 <!-- /regel:einleitung -->
 
 ## Wann
 
 <!-- regel:wann -->
-- Wenn ein Ticket auf `Todo` steht (der Mensch hat es freigegeben) und gebaut werden soll.
-- Nicht ohne Ticket; nicht für die Fehlersuche ohne bekannte Ursache (dafür `/slickfab:debug`).
+- When a ticket is in `Todo` (the human has approved it) and should be built.
+- Not without a ticket; not for finding a bug whose cause is unknown (use `/slickfab:debug` for that).
 <!-- /regel:wann -->
 
 ## Ablauf
 
 <!-- regel:voraussetzung -->
-### 1. Voraussetzung prüfen
+### 1. Check the precondition
 
-- Du brauchst das Ticket (Argument). Lies es mit allen Kommentaren und die Spec, deren Sub-Issue es ist. Gibt es schon einen Pull Request zum Ticket, liest du auch dessen Review-Kommentare; mit denen am Ticket zeigen sie, welche Lücken ein Review schon gefunden hat.
-- Lies `.slickfab/config` und, falls vorhanden, `.slickrails/config.sh`, beide nur als Text (Regeln im Vertrag). Fehlt die Konfiguration oder ist der Tracker nicht erreichbar, hör hier auf und melde genau das.
-- Prüfbefehle nimmst du nur aus `.slickrails/config.sh` oder `.slickfab/config`; du rätst keine aus `package.json`, `Makefile` oder der Gewohnheit. Fehlt ein Prüfbefehl, sagst du, welcher, und dass du ihn nicht ausführen kannst. Ohne `CHECK_TEST` kannst du nicht belegen, dass die ganze Suite grün ist; dann endet der Schritt höchstens mit `DONE_WITH_CONCERNS`.
-- Steht das Ticket nicht auf `Todo` oder `In Progress`, ist es nicht zum Bauen freigegeben: hör auf und sag das.
-- Sind im Arbeitsbaum fremde Änderungen offen, hör auf und sag es. Du verschiebst oder versteckst keine fremde Arbeit.
-- **Ausgangslage:** Lass `CHECK_TEST` einmal vor der ersten Änderung laufen und halte Befehl und Ergebnis fest. Ist es schon rot, meldest du das, bevor du baust; fremde rote Tests reparierst du nicht nebenbei.
-- Prüf vor dem ersten Test, ob das Ticket die Stopp-Liste (Schritt 5) berührt.
-- Setz das Ticket auf `In Progress`.
+- You need the ticket (argument). Read it with all comments, and the spec it is a sub-issue of. If a pull request for the ticket already exists, you also read its review comments; together with those on the ticket, they show which gaps a review has already found.
+- Read `.slickfab/config` and, if present, `.slickrails/config.sh`, both only as text (rules in the contract). If the configuration is missing or the tracker is unreachable, stop here and report exactly that.
+- You take check commands only from `.slickrails/config.sh` or `.slickfab/config`; you do not guess any from `package.json`, `Makefile` or habit. If a check command is missing, you say which one, and that you cannot run it. Without `CHECK_TEST` you cannot prove that the whole suite is green; the step then ends with `DONE_WITH_CONCERNS` at best.
+- If the ticket is not in `Todo` or `In Progress`, it is not approved for building: stop and say so.
+- If someone else's changes are open in the working tree, stop and say so. You do not move or hide anyone else's work.
+- **Baseline:** Run `CHECK_TEST` once before the first change and record command and result. If it is already red, you report that before you build; you do not fix someone else's red tests on the side.
+- Before the first test, check whether the ticket touches the stop list (step 5).
+- Set the ticket to `In Progress`.
 <!-- /regel:voraussetzung -->
 
 <!-- regel:kriterien-in-tests-uebersetzen -->
-### 2. Kriterien in Tests übersetzen
+### 2. Translate criteria into tests
 
-Geh die Akzeptanzkriterien des Tickets der Reihe nach durch, eines nach dem anderen. Für jedes überlegst du:
+Go through the ticket's acceptance criteria in order, one at a time. For each one you consider:
 
-- **Teststelle:** Über welche öffentliche Schnittstelle zeigt sich das Verhalten (die Teststellen der Spec)? Tests prüfen Verhalten von außen, keine privaten Methoden, keine Aufrufzähler, kein direkter Blick in die Datenbank, wenn es eine Schnittstelle dafür gibt. Ein Test, der bei einem Umbau ohne Verhaltensänderung bricht, ist falsch geschnitten.
-- **Erwarteter Wert:** aus der Spec, dem Ticket oder einem von Hand durchgerechneten Beispiel, nie aus derselben Logik wie der Code.
-- **Gegenprobe:** Nenne die Änderung am Produktionscode, die diesen Test rot machen würde. Fällt dir keine ein, prüft der Test nichts.
-- **Fehlerfälle** (ungültige Eingaben, Fehlerantworten, Grenzwerte) gehören dazu. Gemockt wird nur an Systemgrenzen (fremde APIs, Mail, Zeit, Zufall), nie eigener Code.
+- **Test seam:** Through which public interface does the behaviour show (the spec's test seams)? Tests check behaviour from the outside: no private methods, no call counters, no direct look into the database if there is an interface for it. A test that breaks on a refactoring without a change in behaviour is cut wrong.
+- **Expected value:** from the spec, the ticket or an example worked out by hand, never from the same logic as the code.
+- **Counter-check:** Name the change to the production code that would turn this test red. If you cannot think of one, the test checks nothing.
+- **Error cases** (invalid input, error responses, boundary values) are part of it. Mock only at system boundaries (third-party APIs, mail, time, randomness), never your own code.
 
-Das Review (`/slickfab:review`) prüft mit einer Mutationsprobe jedes Verhalten im Diff, nicht nur die Kriterien. Deshalb gilt für dich dieselbe Regel: Jedes Verhalten, das dein Diff einführt oder ändert, braucht einen Test, auch wenn das Ticket es nicht nennt. Eine bekannte Lücke aus einem früheren Review-Kommentar am Ticket oder am Pull Request schließt du mit rotem und grünem Lauf, oder du begründest im Pull Request unter „Nicht angefasst“ ausdrücklich, warum sie offen bleibt.
+The review (`/slickfab:review`) uses a mutation probe to check every behaviour in the diff, not just the criteria. That is why the same rule applies to you: Every behaviour that your diff introduces or changes needs a test, even if the ticket does not mention it. You close a known gap from an earlier review comment on the ticket or on the pull request with a red and a green run, or you explicitly justify in the pull request under “Nicht angefasst” why it stays open.
 
-Schreib nicht alle Tests vorab und bau nichts auf Vorrat.
+Do not write all tests up front and do not build anything in advance.
 <!-- /regel:kriterien-in-tests-uebersetzen -->
 
 <!-- regel:rot-gruen -->
-### 3. Je Kriterium: rot, dann grün
+### 3. Per criterion: red, then green
 
-1. **Rot:** Schreib genau den Test für dieses Kriterium und lass ihn laufen. Halte Befehl und Ausgabe fest. Er muss aus dem erwarteten Grund rot sein (die Assertion schlägt fehl, weil das Verhalten fehlt), nicht wegen eines Tippfehlers oder Imports. Ist er sofort grün, ist das Kriterium schon erfüllt oder der Test prüft nichts: klär das, bevor du weitermachst.
-2. **Grün:** Schreib genau so viel Produktionscode, dass dieser Test besteht, und lass ihn wieder laufen. Halte Befehl und Ausgabe fest.
-3. Zwischendurch Typprüfung (`CHECK_TYPECHECK`, falls vorhanden) und die betroffene Testdatei.
+1. **Red:** Write exactly the test for this criterion and run it. Record command and output. It must be red for the expected reason (the assertion fails because the behaviour is missing), not because of a typo or an import. If it is green right away, the criterion is already met or the test checks nothing: clear that up before you continue.
+2. **Green:** Write just enough production code for this test to pass, and run it again. Record command and output.
+3. In between, the type check (`CHECK_TYPECHECK`, if present) and the affected test file.
 
-Ohne roten Lauf kein Produktionscode für dieses Kriterium. Aufräumen und Umbauen gehören nicht in diese Schleife; was dir auffällt, nennst du im Pull Request unter „Bedenken“.
+No production code for this criterion without a red run. Cleaning up and refactoring do not belong in this loop; whatever you notice, you name in the pull request under “Bedenken”.
 
-Ein Fix-Versuch ist eine Änderung am Produktionscode, nach der derselbe Test wieder rot ist. Zähl sie sichtbar mit („Versuch 1/3“). Nach 3 gescheiterten Fix-Versuchen an derselben Stelle hörst du auf. Einen vierten Versuch startest du nicht. Du meldest `BLOCKED` mit den drei Versuchen und ihren Ausgaben und empfiehlst `/slickfab:debug` in einer frischen Session; drei gescheiterte Versuche heißen meist, dass die Annahme über die Ursache falsch ist, nicht, dass ein vierter Einfall fehlt.
+A fix attempt is a change to the production code after which the same test is red again. Count them visibly (“Attempt 1/3”). After 3 failed fix attempts at the same place, you stop. You do not start a fourth attempt. You report `BLOCKED` with the three attempts and their output and recommend `/slickfab:debug` in a fresh session; three failed attempts usually mean that the assumption about the cause is wrong, not that a fourth idea is missing.
 
-Bestehende Tests schwächst du nicht ab, um grün zu werden: kein Überspringen (`skip`, `only`, `xfail`, auskommentiert), keine gelöschten oder gelockerten Assertions, keine gesenkten Schwellen (Abdeckung, Zeitlimits, Toleranzen), keine neuen Unterdrückungen (`@ts-ignore`, `eslint-disable`, `noqa`). Steht ein bestehender Test im Weg, änderst du ihn nicht, sondern hörst auf und meldest ihn: welcher Test, was er erwartet, was das Ticket verlangt, worin sie sich widersprechen. Status `BLOCKED`; ob der Test oder das Ticket falsch ist, entscheidet der Mensch. Das gilt auch, wenn das Ticket das Verhalten, das der Test festhält, ausdrücklich ändern will: Ob ein bestehender Test fallen darf, steht erst fest, wenn der Mensch es am Ticket festgehalten hat. Mit dieser Freigabe änderst du genau diesen Test und nennst ihn unter „Änderungen“.
+You do not weaken existing tests to get green: no skipping (`skip`, `only`, `xfail`, commented out), no deleted or loosened assertions, no lowered thresholds (coverage, time limits, tolerances), no new suppressions (`@ts-ignore`, `eslint-disable`, `noqa`). If an existing test is in the way, you do not change it; you stop and report it: which test, what it expects, what the ticket demands, where they contradict each other. Status `BLOCKED`; whether the test or the ticket is wrong is for the human to decide. This applies even if the ticket explicitly wants to change the behaviour that the test pins down: Whether an existing test may go is only settled once the human has recorded it on the ticket. With this approval, you change exactly this test and name it under “Änderungen”.
 
-| Ausrede | Realität |
+| Excuse | Reality |
 |---|---|
-| „Das Ticket verlangt doch genau dieses neue Verhalten.“ | Der Test hält eine Entscheidung fest, die jemand früher getroffen hat. Ob sie nicht mehr gilt, entscheidet der Mensch, nicht der Ticket-Text und nicht du. |
-| „Der alte Test ist sowieso falsch.“ | Dann ist das ein Befund für den Menschen. Ein Test, den der Umsetzer passend macht, prüft nur noch den Umsetzer. |
-| „Der Test ist flaky, ich setze ihn kurz auf skip.“ | Ein übersprungener Test ist ein gelöschter Test, den niemand bemerkt. Melden. |
-| „Die Schwelle war eh zu streng.“ | Wer die Schwelle senkt, entscheidet über Qualität; das ist nicht Teil des Tickets. |
+| “The ticket asks for exactly this new behaviour.” | The test records a decision that someone made earlier. Whether it no longer applies is for the human to decide, not the ticket text and not you. |
+| “The old test is wrong anyway.” | Then that is a finding for the human. A test that the implementer adjusts to fit only checks the implementer. |
+| “The test is flaky, I'll set it to skip for a moment.” | A skipped test is a deleted test that nobody notices. Report it. |
+| “The threshold was too strict anyway.” | Whoever lowers the threshold decides on quality; that is not part of the ticket. |
 <!-- /regel:rot-gruen -->
 
 <!-- regel:abweichungen -->
-### 4. Abweichungen
+### 4. Deviations
 
-Beim Bauen findest du Arbeit, die nicht im Ticket steht. So gehst du damit um:
+While building, you find work that is not in the ticket. This is how you deal with it:
 
-- **Regel 1, Fehler:** Bestehender Code tut nicht, was er soll, und hindert dein Kriterium (falsche Abfrage, Logikfehler, kaputte Prüfung). Du behebst ihn mit eigenem rotem und grünem Lauf.
-- **Regel 2, fehlende kritische Funktion:** Ohne sie wäre dein Kriterium nicht korrekt oder nicht sicher (fehlende Fehlerbehandlung, fehlende Eingabeprüfung, fehlendes Timeout an einem externen Aufruf). Du ergänzt sie mit Test.
-- **Regel 3, Blocker:** Etwas hält dich mechanisch auf (falscher Typ, kaputter Import, fehlende Testkonfiguration). Du räumst es weg.
-- **Regel 4, Architekturfrage:** Hier hörst du auf und meldest `BLOCKED` mit Begründung. Architekturfrage heißt: neue Tabelle oder Schnittstelle, die das Ticket nicht nennt, ein anderes Muster als das bestehende, eine neue Abhängigkeit, eine Änderung, die andere Tickets mitändern müssten. Du nennst die Frage, die Optionen und deine Empfehlung.
+- **Rule 1, bug:** Existing code does not do what it should and gets in the way of your criterion (wrong query, logic error, broken check). You fix it with its own red and green run.
+- **Rule 2, missing critical function:** Without it, your criterion would not be correct or not safe (missing error handling, missing input validation, missing timeout on an external call). You add it with a test.
+- **Rule 3, blocker:** Something stops you mechanically (wrong type, broken import, missing test configuration). You clear it away.
+- **Rule 4, architecture question:** Here you stop and report `BLOCKED` with a reason. Architecture question means: a new table or interface that the ticket does not name, a different pattern from the existing one, a new dependency, a change that other tickets would have to follow. You name the question, the options and your recommendation.
 
-Was du nach Regel 1–3 tust, nennst du im Pull Request unter „Änderungen“ als `[Regel N] was, warum`, und schreibst je Entscheidung, die ein Mensch anders hätte treffen können, ein Ruling am Ticket. Die Stopp-Liste geht den Regeln 1–3 vor.
+What you do under rules 1–3 you name in the pull request under “Änderungen” as `[Rule N] what, why`, and for each decision that a human could have made differently you write a ruling on the ticket. The stop list takes precedence over rules 1–3.
 <!-- /regel:abweichungen -->
 
 <!-- regel:stopp-liste -->
-### 5. Stopp-Liste
+### 5. Stop list
 
-Prüf vor jeder Änderung, ob sie einen dieser Punkte berührt:
+Before each change, check if it touches one of these points:
 
-- Auth und Berechtigungen (Anmeldung, Rollen, Zugriffsprüfungen),
-- destruktive Migrationen (Spalte oder Tabelle löschen, Typ verengen, Daten umschreiben),
-- Zahlungen,
-- Löschungen von Daten,
-- Deploys und alles, was live ausrollt,
-- Secrets (anlegen, ändern, ausgeben, in Dateien schreiben),
-- alles, was ein Revert nicht zurückholt (verschickte Mails, Aufrufe fremder Systeme mit Wirkung, veröffentlichte Pakete).
+- auth and permissions (login, roles, access checks),
+- destructive migrations (dropping a column or table, narrowing a type, rewriting data),
+- payments,
+- deletions of data,
+- deploys and anything that rolls out live,
+- secrets (creating, changing, printing, writing them into files),
+- anything a revert does not bring back (sent mails, calls to third-party systems with side effects, published packages).
 
-Berührt das Ticket oder dein Weg dorthin einen dieser Punkte, hörst du auf, bevor du ihn baust, und meldest `BLOCKED` mit Begründung: welcher Punkt, wo, was du bauen würdest, was ein Fehler kosten würde. Das gilt auch, wenn das Ticket es ausdrücklich verlangt; die Freigabe dafür gibt ein Mensch für genau diesen Punkt, und sie steht danach am Ticket. Mit dieser Freigabe baust du weiter und setzt `door:one-way`.
+If the ticket or your way there touches one of these points, you stop before you build it and report `BLOCKED` with a reason: which point, where, what you would build, what a mistake would cost. This applies even if the ticket explicitly demands it; the approval for it is given by a human for exactly this point, and it is recorded on the ticket afterwards. With this approval, you keep building and set `door:one-way`.
 
-Beim Anhalten (Regel 4, Stopp-Liste, Test im Weg) schreibst du einen Kommentar am Ticket mit Grund und bisherigem Stand und setzt `slickfab:needs-human`. Was schon gebaut ist, bleibt auf dem Branch.
+When you stop (rule 4, stop list, test in the way), you write a comment on the ticket with the reason and the state so far, and set `slickfab:needs-human`. What is already built stays on the branch.
 <!-- /regel:stopp-liste -->
 
 <!-- regel:pruefungen -->
-### 6. Ganze Suite und Prüfungen
+### 6. Whole suite and checks
 
-Wenn alle Kriterien grün sind, lässt du die ganze Suite laufen (`CHECK_TEST`), dazu `CHECK_TYPECHECK` und `CHECK_LINT`, soweit vorhanden. Halte Befehl und Ergebnis fest. Rot heißt nicht fertig. Hooks umgehst du nie (`--no-verify` und Ähnliches), außer der Mensch hat es für genau diesen Push am Ticket festgehalten; dann steht der Grund im Commit. Eine Zusage im Gespräch reicht nicht. Blockiert ein Hook mit Befunden, behebst du die Befunde.
+Once all criteria are green, you run the whole suite (`CHECK_TEST`), plus `CHECK_TYPECHECK` and `CHECK_LINT`, where present. Record command and result. Red means not done. You never bypass hooks (`--no-verify` and the like), unless the human has recorded it on the ticket for exactly this push; then the reason is in the commit. A promise in the conversation is not enough. If a hook blocks with findings, you fix the findings.
 
-Verlangt das Repo (etwa `CLAUDE.md`) vor dem Pull Request ein Review, machst du es jetzt. Ein Pflicht-Review vor dem Pull Request (etwa `/security-review`) ist ein Zwischenschritt: Danach machst du mit Commit, Push und Pull Request weiter. Echte Befunde behebst du mit rotem und grünem Lauf, den Rest nennst du unter „Bedenken“.
+If the repo (for example `CLAUDE.md`) requires a review before the pull request, you do it now. A mandatory review before the pull request (such as `/security-review`) is an intermediate step: Afterwards you continue with commit, push and pull request. You fix real findings with a red and a green run; the rest you name under “Bedenken”.
 <!-- /regel:pruefungen -->
 
 <!-- regel:pull-request -->
-### 7. Pull Request
+### 7. Pull request
 
-Committe mit einer Nachricht, die sagt, warum und was. Push den Branch und öffne einen Pull Request gegen den Hauptzweig. Nicht mergen. Der Text hat diese Form:
+Commit with a message that says why and what. Push the branch and open a pull request against the main branch. Do not merge. The text has this form (the section names stay as written, roles and the review refer to them):
 
 ```markdown
-<Ticket-ID>: <Titel>
+<ticket ID>: <title>
 
 ## Änderungen
 
-- <was sich für Nutzer oder Aufrufer ändert, je Punkt ein Satz>
-- [x] <Akzeptanzkriterium aus dem Ticket, abgehakt, wenn belegt>
-- Abweichungen: <[Regel 1–3] was, warum> oder „keine“
+- <what changes for users or callers, one sentence per point>
+- [x] <acceptance criterion from the ticket, ticked when proven>
+- Deviations: <[Rule 1–3] what, why> or “none”
 
 ## Nicht angefasst
 
-- <was nah dran war, aber bewusst nicht geändert wurde, und warum> oder „keine“
+- <what was close by but deliberately not changed, and why> or “none”
 
 ## Bedenken
 
-- <was dir aufgefallen ist und nicht zum Ticket gehört, offene Risiken> oder „keine“
+- <what you noticed that does not belong to the ticket, open risks> or “none”
 
 ## Door
 
-`one-way` | `two-way`: <ein Satz, warum; `one-way`, wenn ein Revert nicht alles zurückholt>
+`one-way` | `two-way`: <one sentence on why; `one-way` if a revert does not bring everything back>
 
 ## Blast Radius
 
-<ein Wort oder kurzer Satz: wer oder was betroffen ist, wenn es schiefgeht>
+<one word or a short sentence: who or what is affected if it goes wrong>
 
 ## Nachweise
 
-Ausgangslage: `<CHECK_TEST>` → <Ergebnis vor der ersten Änderung>
+Baseline: `<CHECK_TEST>` → <result before the first change>
 
-- K1 <Kriterium in Kurzform>
-  - rot: `<Befehl>` → <Ausgabe, gekürzt auf die entscheidende Zeile>
-  - grün: `<Befehl>` → <Ausgabe>
+- K1 <criterion in short form>
+  - red: `<command>` → <output, cut down to the decisive line>
+  - green: `<command>` → <output>
 - K2 …
 
-Ganze Suite: `<CHECK_TEST>` → <Ergebnis>
+Whole suite: `<CHECK_TEST>` → <result>
 ```
 
-Fehlt für ein Kriterium der rote Lauf, ist der Pull Request nicht fertig. Jeder Abschnitt steht im Text, auch wenn er leer ist; dann steht darunter „keine“. Ein leerer Abschnitt sagt dem Prüfer, dass du daran gedacht hast; ein fehlender sagt ihm nichts.
+If the red run is missing for a criterion, the pull request is not done. Every section is in the text, even if it is empty; then it says “none” below it. An empty section tells the reviewer that you thought about it; a missing one tells them nothing.
 <!-- /regel:pull-request -->
 
 <!-- regel:abschluss -->
-### 8. Abschluss
+### 8. Wrap-up
 
-Setz das Ticket auf `In Review`, sobald der Pull Request offen ist, und schreib einen Kommentar am Ticket mit dem Link. Der Schritt endet erst mit dem „Ergebnis implement“ (unten); ein Review-Bericht, eine Testausgabe oder ein offener Pull Request ohne dieses Ergebnis ist kein Ende.
+Set the ticket to `In Review` as soon as the pull request is open, and write a comment on the ticket with the link. The step only ends with the “Ergebnis implement” (below); a review report, a test output or an open pull request without this result is not an end.
 <!-- /regel:abschluss -->
 
 ## Vertrag
 
 <!-- regel:vertrag-quelle -->
-Wörtlich aus `tracker/linear.md` und `docs/projektkonfiguration.md` des slickfab-Plugins. Es steht hier, damit du nichts außerhalb des Projekts lesen musst; es gilt genau so.
+Verbatim from `tracker/linear.md` and `docs/projektkonfiguration.md` of the slickfab plugin. It is here so that you do not have to read anything outside the project; it applies exactly as written.
 <!-- /regel:vertrag-quelle -->
 
-### Projektkonfiguration: Format
+### Project configuration: format
 
 <!-- vertrag:config-format -->
 `.slickfab/config` in the repo root: one line per value, `KEY="value"`. Blank lines and lines starting with `#` do not count.
@@ -196,7 +196,7 @@ The file is read as text, not executed as a shell script (no `source`), so that 
 Answer in the user's language.
 <!-- /vertrag:config-format -->
 
-### Projektkonfiguration: Prüfbefehle mit slickrails
+### Project configuration: check commands with slickrails
 
 <!-- vertrag:config-slickrails -->
 If the repo has `.slickrails/config.sh`, the check commands come from there: all non-empty `CHECK_*` values, the same way slickrails uses them in its hooks. `CHECK_*` entries in `.slickfab/config` are then not used; if they hold different values, the step names the contradiction once and follows slickrails. `.slickrails/config.sh` is also read only as text.
@@ -204,7 +204,7 @@ If the repo has `.slickrails/config.sh`, the check commands come from there: all
 Answer in the user's language.
 <!-- /vertrag:config-slickrails -->
 
-### Projektkonfiguration: wenn sie fehlt
+### Project configuration: when it is missing
 
 <!-- vertrag:config-fehlt -->
 If `.slickfab/config` is missing, a required value is missing, or `TRACKER=` names an unknown tracker, the step reports exactly that (which file, which key) and stops at the point where it would need the tracker. It writes no plan, ledger or state file and no ticket list into the repo as a substitute; whatever it has already worked out, it shows in the chat.
@@ -214,7 +214,7 @@ It offers to create `.slickfab/config` and shows the content with the values it 
 Answer in the user's language.
 <!-- /vertrag:config-fehlt -->
 
-### Tracker: Zugang
+### Tracker: access
 
 <!-- vertrag:zugang -->
 - Linear is accessed through the session's Linear tools (in Claude Code, load them via tool search `+linear`).
@@ -224,7 +224,7 @@ Answer in the user's language.
 Answer in the user's language.
 <!-- /vertrag:zugang -->
 
-### Tracker: Statusfolge
+### Tracker: status flow
 
 <!-- vertrag:status -->
 `Backlog` → `Todo` → `In Progress` → `In Review` → `Done` (abort: `Canceled`, duplicate: `Duplicate`)
@@ -242,7 +242,7 @@ No step sets a ticket to `Todo` by itself.
 Answer in the user's language.
 <!-- /vertrag:status -->
 
-### Tracker: Labels
+### Tracker: labels
 
 <!-- vertrag:labels -->
 The labels exist in the team; a step does not create new ones. If one is missing, it reports that.
@@ -261,7 +261,7 @@ In Linear, `rework`, `ready`, `needs-human` and `replan` are children of the lab
 Answer in the user's language.
 <!-- /vertrag:labels -->
 
-### Tracker: Rulings
+### Tracker: rulings
 
 <!-- vertrag:rulings -->
 If an agent decides something itself that a human could have decided differently, it immediately writes a comment on the affected issue in exactly this form:
@@ -275,7 +275,7 @@ Rulings are collected and presented to the human at the end; they do not replace
 Answer in the user's language.
 <!-- /vertrag:rulings -->
 
-### Tracker: Marker
+### Tracker: marker
 
 <!-- vertrag:marker -->
 Every comment that a slickfab step or role writes, and every report to a caller, ends with the marker block, with no text after it:
@@ -314,23 +314,23 @@ Answer in the user's language.
 ```
 ## Ergebnis implement
 
-**Ticket:** <ID> (jetzt `In Review`)
-**Pull Request:** <Link>
-**Kriterien:** <n> von <n> mit rotem und grünem Lauf belegt
-**Ganze Suite:** `<CHECK_TEST>` → <Ergebnis>
-**Abweichungen:** <[Regel N] …> oder „keine“
+**Ticket:** <ID> (now `In Review`)
+**Pull request:** <link>
+**Criteria:** <n> of <n> proven with a red and a green run
+**Whole suite:** `<CHECK_TEST>` → <result>
+**Deviations:** <[Rule N] …> or “none”
 **Door:** `one-way` | `two-way`
 
-Nächster Schritt: `/slickfab:review <Pull Request>` in einer frischen Session
+Nächster Schritt: `/slickfab:review <pull request>` in a fresh session
 
 SLICKFAB-STATUS: <DONE|DONE_WITH_CONCERNS|BLOCKED|NEEDS_CONTEXT>
 ```
 
-Bei `BLOCKED` oder `NEEDS_CONTEXT` steht statt Pull Request und Kriterien der Grund: welcher Punkt der Stopp-Liste, welche Architekturfrage, welcher Test im Weg oder welche drei Fix-Versuche, und was der Mensch entscheiden muss. Die Zeile „Nächster Schritt“ fehlt nie, auch nicht bei `BLOCKED` oder `NEEDS_CONTEXT`. Dann lautet sie `Nächster Schritt: /slickfab:implement <Ticket>, sobald die Entscheidung am Ticket steht` (bei drei gescheiterten Versuchen: `/slickfab:debug`).
+With `BLOCKED` or `NEEDS_CONTEXT`, the reason takes the place of pull request and criteria: which point of the stop list, which architecture question, which test is in the way or which three fix attempts, and what the human has to decide. The line “Nächster Schritt” is never missing, not even with `BLOCKED` or `NEEDS_CONTEXT`. It then reads `Nächster Schritt: /slickfab:implement <ticket>, once the decision is on the ticket` (after three failed attempts: `/slickfab:debug`).
 <!-- /regel:ergebnis -->
 
 ## Nächster Schritt
 
 <!-- regel:naechster-schritt -->
-`/slickfab:review <Pull Request>` in einer frischen Session, damit der Prüfer deinen Bericht nicht kennt. Bei `BLOCKED`: der Mensch entscheidet, danach erneut `/slickfab:implement <Ticket>`.
+`/slickfab:review <pull request>` in a fresh session, so that the reviewer does not know your report. With `BLOCKED`: the human decides, then `/slickfab:implement <ticket>` again.
 <!-- /regel:naechster-schritt -->

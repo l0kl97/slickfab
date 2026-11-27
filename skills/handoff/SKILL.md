@@ -1,96 +1,96 @@
 ---
 name: handoff
-description: Verwenden, wenn die Arbeit an einem Ticket an eine frische Session übergeben werden soll, weil der Kontext voll wird oder die Session endet, oder wenn jemand „schreib eine Übergabe“ sagt.
-argument-hint: "<Ticket> [wofür die nächste Session da ist]"
+description: Use when the work on a ticket should be handed over to a fresh session because the context is filling up or the session is ending, or when someone says “write a handoff”.
+argument-hint: "<ticket> [what the next session is for]"
 ---
 
 <!-- regel:einleitung -->
-# handoff: Übergabe in 5 Punkten
+# handoff: a handoff in 5 points
 
-Ziel: Eine frische Session macht dort weiter, wo diese aufhört, ohne das Gespräch zu kennen. Die Übergabe steht als Kommentar am Ticket.
+Goal: A fresh session continues where this one stops, without knowing the conversation. The handoff is a comment on the ticket.
 
-Antworte in der Sprache des Menschen. Tracker-Regeln und Projektkonfiguration stehen unten im Abschnitt „Vertrag“.
+Answer in the user's language. Tracker rules and project configuration are below in the section “Vertrag”.
 <!-- /regel:einleitung -->
 
 ## Wann
 
 <!-- regel:wann -->
-- Wenn der Kontext voll wird (Warnung ab etwa zwei Dritteln) oder die Session endet, bevor das Ticket fertig ist.
-- Wenn ein anderer Agent oder Mensch das Ticket übernimmt.
+- When the context is filling up (warning from about two thirds) or the session ends before the ticket is done.
+- When another agent or human takes over the ticket.
 <!-- /regel:wann -->
 
 ## Ablauf
 
 <!-- regel:voraussetzung -->
-### 1. Voraussetzung prüfen
+### 1. Check the precondition
 
-- Du brauchst das Ticket (Argument oder das Ticket, an dem diese Session arbeitet).
-- Lies `.slickfab/config` und, falls vorhanden, `.slickrails/config.sh`, beide nur als Text (Regeln im Vertrag). Fehlt die Konfiguration oder ist der Tracker nicht erreichbar, schreibst du die Übergabe trotzdem, zeigst sie aber nur im Chat und sagst, warum.
-- Prüfbefehle nimmst du nur aus `.slickrails/config.sh` oder `.slickfab/config`; du rätst keine aus `package.json`, `Makefile` oder der Gewohnheit. Fehlt ein Prüfbefehl, sagst du, welcher, und dass du ihn nicht ausführen kannst.
+- You need the ticket (argument, or the ticket this session is working on).
+- Read `.slickfab/config` and, if present, `.slickrails/config.sh`, both only as text (rules in the contract). If the configuration is missing or the tracker is unreachable, you write the handoff anyway, but show it only in the chat and say why.
+- You take check commands only from `.slickrails/config.sh` or `.slickfab/config`; you do not guess any from `package.json`, `Makefile` or habit. If a check command is missing, you say which one, and that you cannot run it.
 <!-- /regel:voraussetzung -->
 
 <!-- regel:stand -->
-### 2. Stand erheben
+### 2. Gather the state
 
-Sammle, was die nächste Session braucht, aus Quellen, nicht aus dem Gedächtnis:
+Collect what the next session needs from sources, not from memory:
 
-- Ticket, Spec und ihre Kommentare (Rulings, frühere Übergaben),
-- `git status`, `git log` seit dem Hauptzweig, offene Pull Requests zum Branch,
-- die Prüfbefehle aus der Konfiguration. Prüfbefehle lässt du jetzt laufen und notierst Befehl und Ergebnis; ein Ergebnis von vor einer Stunde ist keins.
+- ticket, spec and their comments (rulings, earlier handoffs),
+- `git status`, `git log` since the main branch, open pull requests for the branch,
+- the check commands from the configuration. You run the check commands now and note command and result; a result from an hour ago is no result.
 
-Eine Freigabe nennst du nur, wenn sie dauerhaft dokumentiert ist: als Kommentar am Ticket, als Ruling, als Kommentar im Pull Request. Dazu gehört der Link. Was im Gespräch zugesagt wurde, aber nirgends dauerhaft steht, ist keine Freigabe; das schreibst du unter „Offene Freigaben“ als offen und fragst den Menschen, ob er sie am Ticket festhalten will. Du hältst sie nicht selbst als erteilt fest.
+You name an approval only if it is documented permanently: as a comment on the ticket, as a ruling, as a comment in the pull request. The link goes with it. What was promised in the conversation but is not recorded anywhere permanently is not an approval; you write it under “Open approvals” as open and ask the human whether they want to record it on the ticket. You do not record it as granted yourself.
 
-| Ausrede | Realität |
+| Excuse | Reality |
 |---|---|
-| „Der Mensch hat es vorhin im Chat erlaubt.“ | Die nächste Session sieht den Chat nicht. Steht es nicht am Ticket, ist es für sie offen. |
-| „Das war doch klar gemeint.“ | Eine abgeleitete Freigabe ist eine Entscheidung, die niemand getroffen hat. |
+| “The human allowed it earlier in the chat.” | The next session does not see the chat. If it is not on the ticket, it is open for that session. |
+| “It was clearly meant that way.” | A derived approval is a decision that nobody made. |
 <!-- /regel:stand -->
 
 <!-- regel:uebergabe -->
-### 3. Übergabe schreiben
+### 3. Write the handoff
 
-Verweise statt Kopien: Was schon in Ticket, Spec, Commit, Pull Request oder ADR steht, verlinkst du, statt es abzuschreiben. Geheimnisse (Schlüssel, Passwörter, persönliche Daten) ersetzt du durch `<REDACTED>`.
+References instead of copies: What is already in the ticket, spec, commit, pull request or ADR, you link instead of copying it. You replace secrets (keys, passwords, personal data) with `<REDACTED>`.
 
 ```markdown
-## Übergabe <Ticket-ID>, <Datum>
+## Handoff <ticket ID>, <date>
 
-**1. Scope und Entscheidungen**
-- Ziel dieses Tickets in einem Satz; was ausdrücklich nicht dazugehört
-- Entscheidungen seit Start: <Link zu Ruling/Kommentar>, je eine Zeile
+**1. Scope and decisions**
+- Goal of this ticket in one sentence; what explicitly does not belong to it
+- Decisions since the start: <link to ruling/comment>, one line each
 
-**2. Ticket-Stand**
-- [x] <Kriterium> (belegt durch <Test/Commit>)
-- [ ] <Kriterium>: <wie weit, was als Nächstes>
-- Läuft gerade: <Hypothese, Fix-Versuch n/3, Debug-Tag `[DEBUG-…]` noch im Code?>
+**2. Ticket state**
+- [x] <criterion> (proven by <test/commit>)
+- [ ] <criterion>: <how far, what comes next>
+- In progress: <hypothesis, fix attempt n/3, debug tag `[DEBUG-…]` still in the code?>
 
-**3. Dateien und Working-Tree**
-- Branch `<name>`, letzter Commit `<sha>`, Pull Request <Link oder „keiner“>
-- Nicht committet: <Dateien aus `git status`> oder „sauber“
+**3. Files and working tree**
+- Branch `<name>`, last commit `<sha>`, pull request <link or “none”>
+- Not committed: <files from `git status`> or “clean”
 
-**4. Prüfbefehle mit Ergebnis**
-- `<Befehl>` → <Ergebnis> (gelaufen <Uhrzeit>)
+**4. Check commands with result**
+- `<command>` → <result> (ran at <time>)
 
-**5. Offene Freigaben**
-- <was ein Mensch entscheiden oder freigeben muss, und wo es festgehalten werden soll> oder „keine“
-- Dokumentiert erteilt: <Link> oder „keine“
+**5. Open approvals**
+- <what a human has to decide or approve, and where it should be recorded> or “none”
+- Documented as granted: <link> or “none”
 
-**Für die nächste Session:** `/slickfab:<schritt> <Ticket>`; zuerst lesen: <Links>
+**For the next session:** `/slickfab:<step> <ticket>`; read first: <links>
 ```
 <!-- /regel:uebergabe -->
 
 <!-- regel:ablegen -->
-### 4. Am Ticket ablegen
+### 4. Post it on the ticket
 
-Leg die Übergabe als Kommentar am Ticket ab, mit der Marker-Zeile nach Tracker-Vertrag am Ende (meist `NEEDS_CONTEXT`, weil eine frische Session weitermachen muss; `BLOCKED`, wenn eine offene Freigabe die Arbeit anhält). Den Status des Tickets änderst du nicht. Ist der Tracker nicht erreichbar, zeigst du die Übergabe vollständig im Chat und sagst das; du legst keine Übergabe-Datei im Repo an.
+Post the handoff as a comment on the ticket, with the marker line according to the tracker contract at the end (usually `NEEDS_CONTEXT`, because a fresh session has to continue; `BLOCKED` if an open approval holds up the work). You do not change the ticket's status. If the tracker is unreachable, you show the handoff in full in the chat and say so; you create no handoff file in the repo.
 <!-- /regel:ablegen -->
 
 ## Vertrag
 
 <!-- regel:vertrag-quelle -->
-Wörtlich aus `tracker/linear.md` und `docs/projektkonfiguration.md` des slickfab-Plugins. Es steht hier, damit du nichts außerhalb des Projekts lesen musst; es gilt genau so.
+Verbatim from `tracker/linear.md` and `docs/projektkonfiguration.md` of the slickfab plugin. It is here so that you do not have to read anything outside the project; it applies exactly as written.
 <!-- /regel:vertrag-quelle -->
 
-### Projektkonfiguration: Format
+### Project configuration: format
 
 <!-- vertrag:config-format -->
 `.slickfab/config` in the repo root: one line per value, `KEY="value"`. Blank lines and lines starting with `#` do not count.
@@ -120,7 +120,7 @@ The file is read as text, not executed as a shell script (no `source`), so that 
 Answer in the user's language.
 <!-- /vertrag:config-format -->
 
-### Projektkonfiguration: Prüfbefehle mit slickrails
+### Project configuration: check commands with slickrails
 
 <!-- vertrag:config-slickrails -->
 If the repo has `.slickrails/config.sh`, the check commands come from there: all non-empty `CHECK_*` values, the same way slickrails uses them in its hooks. `CHECK_*` entries in `.slickfab/config` are then not used; if they hold different values, the step names the contradiction once and follows slickrails. `.slickrails/config.sh` is also read only as text.
@@ -128,7 +128,7 @@ If the repo has `.slickrails/config.sh`, the check commands come from there: all
 Answer in the user's language.
 <!-- /vertrag:config-slickrails -->
 
-### Projektkonfiguration: wenn sie fehlt
+### Project configuration: when it is missing
 
 <!-- vertrag:config-fehlt -->
 If `.slickfab/config` is missing, a required value is missing, or `TRACKER=` names an unknown tracker, the step reports exactly that (which file, which key) and stops at the point where it would need the tracker. It writes no plan, ledger or state file and no ticket list into the repo as a substitute; whatever it has already worked out, it shows in the chat.
@@ -138,7 +138,7 @@ It offers to create `.slickfab/config` and shows the content with the values it 
 Answer in the user's language.
 <!-- /vertrag:config-fehlt -->
 
-### Tracker: Zugang
+### Tracker: access
 
 <!-- vertrag:zugang -->
 - Linear is accessed through the session's Linear tools (in Claude Code, load them via tool search `+linear`).
@@ -148,7 +148,7 @@ Answer in the user's language.
 Answer in the user's language.
 <!-- /vertrag:zugang -->
 
-### Tracker: Marker
+### Tracker: marker
 
 <!-- vertrag:marker -->
 Every comment that a slickfab step or role writes, and every report to a caller, ends with the marker block, with no text after it:
@@ -188,18 +188,18 @@ Answer in the user's language.
 ## Ergebnis handoff
 
 **Ticket:** <ID>
-**Übergabe:** <Link zum Kommentar>
+**Handoff:** <link to the comment>
 
-Nächster Schritt: `/slickfab:implement <Ticket>` in einer frischen Session
+Nächster Schritt: `/slickfab:implement <ticket>` in a fresh session
 
 SLICKFAB-STATUS: <DONE|BLOCKED|NEEDS_CONTEXT>
 ```
 
-Die Zeile „Nächster Schritt“ fehlt nie, auch nicht bei `BLOCKED` oder `NEEDS_CONTEXT`.
+The line “Nächster Schritt” is never missing, not even with `BLOCKED` or `NEEDS_CONTEXT`.
 <!-- /regel:ergebnis -->
 
 ## Nächster Schritt
 
 <!-- regel:naechster-schritt -->
-In einer frischen Session `/slickfab:implement <Ticket>` (oder der Schritt, der unterbrochen wurde, etwa `/slickfab:debug`); er liest die Übergabe am Ticket zuerst.
+In a fresh session `/slickfab:implement <ticket>` (or the step that was interrupted, such as `/slickfab:debug`); it reads the handoff on the ticket first.
 <!-- /regel:naechster-schritt -->

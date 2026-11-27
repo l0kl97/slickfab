@@ -1,69 +1,69 @@
 ---
 name: retro
-description: Verwenden, wenn aus wiederkehrenden Fehlern der letzten Pull Requests, Reviews oder Sessions Regeln werden sollen, etwa nach einem Feature oder jedem zehnten Merge, oder wenn jemand „mach eine Retro“ sagt.
-argument-hint: "[Spec-Issue | PR-Bereich | Session]"
+description: Use when recurring mistakes from the last pull requests, reviews or sessions should become rules, for example after a feature or every tenth merge, or when someone says “do a retro”.
+argument-hint: "[spec issue | PR range | session]"
 ---
 
 <!-- regel:einleitung -->
-# retro: aus wiederkehrenden Fehlern Regeln machen
+# retro: turn recurring mistakes into rules
 
-Ziel: Ein Fehler, der zweimal passiert ist, soll kein drittes Mal durchrutschen. Du findest wiederkehrende Fehler und schlägst für jeden die billigste Bremse vor, die ihn künftig fängt.
+Goal: A mistake that has happened twice should not slip through a third time. You find recurring mistakes and propose for each the cheapest brake that catches it in future.
 
-Antworte in der Sprache des Menschen. Tracker-Regeln und Projektkonfiguration stehen unten im Abschnitt „Vertrag“.
+Answer in the user's language. Tracker rules and project configuration are below in the section “Vertrag”.
 <!-- /regel:einleitung -->
 
 ## Wann
 
 <!-- regel:wann -->
-- Nach `/slickfab:verify` für ein Feature, nach etwa jedem zehnten Merge oder wenn ein Fehler auffällt, der schon einmal da war.
-- Nicht, um einen einzelnen Bug zu beheben; dafür gibt es `/slickfab:debug`.
+- After `/slickfab:verify` for a feature, after roughly every tenth merge, or when a mistake shows up that has happened before.
+- Not to fix a single bug; for that there is `/slickfab:debug`.
 <!-- /regel:wann -->
 
 ## Ablauf
 
 <!-- regel:ablauf -->
-Du schlägst vor, du wendest nicht an. Du änderst keine Datei: keine Checks, keine Hooks, keine CI-Workflows, keine Linter-Konfiguration, keine Regeldateien (`.slickrails/rules.md`, `.slickrails/review-learnings.md`, `CLAUDE.md`, `AGENTS.md`, Coding-Standards), auch nicht „nur einen Eintrag“. Jede Bremse, die du vorschlägst, ändert, was künftig durchkommt; darüber entscheidet ein Mensch. Was er annimmt, wird wie jede andere Änderung als Ticket oder Pull Request gebaut und geprüft.
+You propose, you do not apply. You change no file: no checks, no hooks, no CI workflows, no linter configuration, no rule files (`.slickrails/rules.md`, `.slickrails/review-learnings.md`, `CLAUDE.md`, `AGENTS.md`, coding standards), not even “just one entry”. Every brake that you propose changes what gets through in future; a human decides on that. Whatever they accept is built and checked like any other change, as a ticket or pull request.
 
-### 1. Voraussetzung prüfen
+### 1. Check the precondition
 
-- Kläre den Zeitraum: Spec-Issue, Bereich von Pull Requests oder Session (Argument). Ohne Angabe: die letzten zehn gemergten Pull Requests des Repos.
-- Lies `.slickfab/config`. Den Tracker (Linear über die Linear-Werkzeuge der Session, per Werkzeugsuche `+linear`) liest retro nur, um Review-Kommentare und Labels zu finden; retro schreibt nichts in den Tracker. Ist der Tracker nicht erreichbar, ist das kein Abbruchgrund: Du arbeitest mit Git und Pull Requests weiter und nennst die Fehlermeldung und was dir dadurch fehlt.
-- Lies, was es an Bremsen schon gibt: `.slickrails/config.sh`, `.slickrails/rules.md`, `.slickrails/review-learnings.md`, Hooks, CI-Workflows, Linter-Konfiguration, `CLAUDE.md`/`AGENTS.md`.
+- Settle the time period: spec issue, range of pull requests or session (argument). If none is given: the repo's last ten merged pull requests.
+- Read `.slickfab/config`. retro reads the tracker (Linear through the session's Linear tools, via tool search `+linear`) only to find review comments and labels; retro writes nothing to the tracker. If the tracker is unreachable, that is no reason to abort: You keep working with Git and pull requests and name the error message and what you are missing because of it.
+- Read which brakes already exist: `.slickrails/config.sh`, `.slickrails/rules.md`, `.slickrails/review-learnings.md`, hooks, CI workflows, linter configuration, `CLAUDE.md`/`AGENTS.md`.
 
-### 2. Fehler sammeln
+### 2. Collect mistakes
 
-Quellen, schiefgelaufene zuerst:
+Sources, the ones that went wrong first:
 
-- Review-Kommentare mit Befunden `Critical` oder `Required` und Urteilen `REWORK` oder `REPLAN` (am PR und am Ticket),
-- Tickets mit `slickfab:rework`, `slickfab:needs-human` oder `slickfab:replan`, Fix-Tickets aus `/slickfab:verify`,
-- Bugfix-Commits und Reverts im Zeitraum, rote CI-Läufe,
-- Einträge, die Menschen nachträglich gemeldet haben.
+- review comments with findings `Critical` or `Required` and verdicts `REWORK` or `REPLAN` (on the PR and on the ticket),
+- tickets with `slickfab:rework`, `slickfab:needs-human` or `slickfab:replan`, fix tickets from `/slickfab:verify`,
+- bugfix commits and reverts in the time period, red CI runs,
+- entries that humans reported afterwards.
 
-Je Fehler eine Zeile: was passierte, wo (PR, Commit, `Datei:Zeile`), wer oder was hat ihn gefunden, wer hätte ihn früher finden sollen. Fasse gleiche Ursachen zusammen. Wiederkehrend ist ein Fehler ab dem zweiten Auftreten; einmalige Fehler nennst du nur, wenn sie schwer waren (Datenverlust, Sicherheitslücke, Produktion kaputt).
+One line per mistake: what happened, where (PR, commit, `file:line`), who or what found it, who should have found it earlier. Combine identical causes. A mistake is recurring from its second occurrence; one-off mistakes you name only if they were severe (data loss, security hole, production broken).
 
-### 3. Einordnen: Check oder Review-Lehre
+### 3. Classify: check or review lesson
 
-Für jeden wiederkehrenden Fehler genau eine Einordnung:
+For every recurring mistake exactly one classification:
 
-- **mechanisch:** ein festes Muster, das eine Maschine erkennen kann (verbotener Aufruf, Importform, Dateiort, fehlender Test zu einer Datei, neues `.skip`, abgesenkte Schwelle). Daraus wird ein Vorschlag für einen Check: eine Regel im Linter des Repos, ein Schritt in einem bestehenden Hook oder ein CI-Job, je nachdem, was im Repo am billigsten ist. Gibt es den Check schon, ist er aber nicht eingebunden oder still kaputt, ist genau das der Vorschlag. Gibt es im Repo gar keine automatische Prüfung (kein Hook, kein CI-Job mit Tests), ist das selbst ein Fund.
-- **Ermessen:** braucht Urteil (Konsistenz über Dateien, passende Abstraktion, ob ein Test das Richtige prüft). Daraus wird ein Vorschlag für einen Eintrag in `.slickrails/review-learnings.md` (eine datierte Zeile, kurz und konkret, so wie die Datei es vorgibt) oder, ohne slickrails, in die Review-Regeln des Repos.
+- **mechanical:** a fixed pattern that a machine can recognize (forbidden call, import form, file location, missing test for a file, new `.skip`, lowered threshold). This becomes a proposal for a check: a rule in the repo's linter, a step in an existing hook or a CI job, whichever is cheapest in the repo. If the check already exists but is not wired in or silently broken, exactly that is the proposal. If the repo has no automatic check at all (no hook, no CI job with tests), that is a finding in itself.
+- **judgement:** needs judgement (consistency across files, the right abstraction, whether a test checks the right thing). This becomes a proposal for an entry in `.slickrails/review-learnings.md` (one dated line, short and concrete, as the file prescribes) or, without slickrails, in the repo's review rules.
 
-Im Zweifel mechanisch: Ein Check, der immer läuft, schlägt eine Regel, an die sich jemand erinnern muss. `CLAUDE.md` und `AGENTS.md` bekommen höchstens einen Verweis, keine neuen Regeln; sie liegen jedem Agent im Kontext und werden mit jeder Zeile teurer.
+When in doubt, mechanical: A check that always runs beats a rule that someone has to remember. `CLAUDE.md` and `AGENTS.md` get at most a reference, no new rules; they sit in every agent's context and get more expensive with every line.
 
-Betrifft ein Vorschlag slickrails selbst (einen Check, den jedes Repo bräuchte), schreib ihn als Text für ein Issue oder einen Pull Request an slickrails; du änderst slickrails nicht.
+If a proposal concerns slickrails itself (a check that every repo would need), write it as text for an issue or a pull request to slickrails; you do not change slickrails.
 
-### 4. Vorlegen
+### 4. Present
 
-Zeig die Vorschläge, der schwerste Fehler zuerst. Je Vorschlag: der Fehler mit Belegen (mindestens zwei Stellen bei wiederkehrenden), die Einordnung, die genaue Änderung als Text (der Check als Code-Vorschlag, der Eintrag als fertige Zeile) und wo sie hingehört. Frag, welche der Mensch annimmt. Nimmt er welche an, bietest du an, dafür Tickets mit `/slickfab:tickets` anzulegen oder einen Pull Request mit `/slickfab:implement` zu bauen; selbst schreibst du sie nicht in die Dateien.
+Show the proposals, the most severe mistake first. Per proposal: the mistake with evidence (at least two places for recurring ones), the classification, the exact change as text (the check as a code proposal, the entry as a finished line) and where it belongs. Ask which ones the human accepts. If they accept some, you offer to create tickets for them with `/slickfab:tickets` or to build a pull request with `/slickfab:implement`; you do not write them into the files yourself.
 <!-- /regel:ablauf -->
 
 ## Vertrag
 
 <!-- regel:vertrag-quelle -->
-Wörtlich aus `tracker/linear.md` und `docs/projektkonfiguration.md` des slickfab-Plugins. Es steht hier, damit du nichts außerhalb des Projekts lesen musst; es gilt genau so.
+Verbatim from `tracker/linear.md` and `docs/projektkonfiguration.md` of the slickfab plugin. It is here so that you do not have to read anything outside the project; it applies exactly as written.
 <!-- /regel:vertrag-quelle -->
 
-### Projektkonfiguration: Format
+### Project configuration: format
 
 <!-- vertrag:config-format -->
 `.slickfab/config` in the repo root: one line per value, `KEY="value"`. Blank lines and lines starting with `#` do not count.
@@ -93,7 +93,7 @@ The file is read as text, not executed as a shell script (no `source`), so that 
 Answer in the user's language.
 <!-- /vertrag:config-format -->
 
-### Projektkonfiguration: Prüfbefehle mit slickrails
+### Project configuration: check commands with slickrails
 
 <!-- vertrag:config-slickrails -->
 If the repo has `.slickrails/config.sh`, the check commands come from there: all non-empty `CHECK_*` values, the same way slickrails uses them in its hooks. `CHECK_*` entries in `.slickfab/config` are then not used; if they hold different values, the step names the contradiction once and follows slickrails. `.slickrails/config.sh` is also read only as text.
@@ -101,7 +101,7 @@ If the repo has `.slickrails/config.sh`, the check commands come from there: all
 Answer in the user's language.
 <!-- /vertrag:config-slickrails -->
 
-### Tracker: Marker
+### Tracker: marker
 
 <!-- vertrag:marker -->
 Every comment that a slickfab step or role writes, and every report to a caller, ends with the marker block, with no text after it:
@@ -140,16 +140,16 @@ Answer in the user's language.
 ```
 ## Ergebnis retro
 
-**Zeitraum:** <Spec, PR-Bereich oder Session> · **Fehler gesichtet:** <n>, davon wiederkehrend: <n>
+**Time period:** <spec, PR range or session> · **Mistakes reviewed:** <n>, of which recurring: <n>
 
-1. <Fehler> — <n>× (<Belege: PR, Commit, Datei:Zeile>)
-   Einordnung: mechanisch → Vorschlag für einen Check in <Hook, Linter, CI-Job> | Ermessen → Vorschlag für einen Eintrag in `.slickrails/review-learnings.md`
-   Vorschlag: <Code oder fertige Zeile>
+1. <mistake> — <n>× (<evidence: PR, commit, file:line>)
+   Classification: mechanical → proposal for a check in <hook, linter, CI job> | judgement → proposal for an entry in `.slickrails/review-learnings.md`
+   Proposal: <code or finished line>
 
-**Für slickrails:** <Text für ein Issue> (oder „keiner“)
-**Geänderte Dateien:** keine
+**For slickrails:** <text for an issue> (or “none”)
+**Changed files:** none
 
-Nächster Schritt: `/slickfab:grill` (neues Feature) | `/slickfab:tickets <Spec>`
+Nächster Schritt: `/slickfab:grill` (new feature) | `/slickfab:tickets <spec>`
 
 SLICKFAB-STATUS: DONE
 ```
@@ -158,5 +158,5 @@ SLICKFAB-STATUS: DONE
 ## Nächster Schritt
 
 <!-- regel:naechster-schritt -->
-Der Mensch entscheidet über jeden Vorschlag. Was er annimmt, wird wie jede Änderung gebaut: als Ticket über `/slickfab:tickets` oder direkt mit `/slickfab:implement`. Danach geht es mit dem nächsten Feature weiter, beginnend mit `/slickfab:grill`.
+The human decides on every proposal. Whatever they accept is built like any change: as a ticket via `/slickfab:tickets` or directly with `/slickfab:implement`. After that, work continues with the next feature, starting with `/slickfab:grill`.
 <!-- /regel:naechster-schritt -->

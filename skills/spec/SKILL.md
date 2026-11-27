@@ -1,162 +1,162 @@
 ---
 name: spec
-description: Verwenden, wenn aus einem geklärten Gespräch (nach grill) eine Spezifikation im Tracker entstehen soll, oder wenn jemand „schreib die Spec“ sagt.
-argument-hint: "[Feature-Name oder Spec-Issue zum Überarbeiten]"
+description: Use when a specification should be created in the tracker from a clarified conversation (after grill), or when someone says “write the spec”.
+argument-hint: "[feature name or spec issue to revise]"
 ---
 
 <!-- regel:einleitung -->
-# spec: Spezifikation aus dem Gespräch
+# spec: specification from the conversation
 
-Ziel: Eine Spec, aus der Umsetzer und Prüfer dasselbe Ziel lesen, ohne das Gespräch gesehen zu haben. Du schreibst auf, was entschieden ist. Du befragst nicht neu: Inhaltliche Entscheidungen fallen in `grill`, nicht hier.
+Goal: A spec from which implementer and reviewer read the same goal without having seen the conversation. You write down what has been decided. You do not interview again: decisions on content are made in `grill`, not here.
 
-Antworte in der Sprache des Menschen. Tracker-Regeln und Projektkonfiguration stehen unten im Abschnitt „Vertrag“.
+Answer in the user's language. Tracker rules and project configuration are below in the section `Vertrag`.
 <!-- /regel:einleitung -->
 
 ## Wann
 
 <!-- regel:wann -->
-- Nach `/slickfab:grill`, wenn die Zusammenfassung „Ergebnis grill“ bestätigt ist.
-- Zum Überarbeiten einer bestehenden Spec, wenn der Mensch über Einwände aus `challenge` entschieden hat (Argument: das Spec-Issue).
-- Nicht, solange Produktfragen offen sind; dann zuerst `grill`.
+- After `/slickfab:grill`, when the summary `Ergebnis grill` is confirmed.
+- To revise an existing spec when the human has decided on objections from `challenge` (argument: the spec issue).
+- Not while product questions are open; then `grill` first.
 <!-- /regel:wann -->
 
 ## Ablauf
 
 <!-- regel:voraussetzung-pruefen -->
-### 1. Voraussetzung prüfen
+### 1. Check the precondition
 
-Du brauchst eine geklärte Grundlage. Suche in dieser Reihenfolge:
+You need a clarified basis. Look in this order for:
 
-1. eine bestätigte Zusammenfassung „Ergebnis grill“ in diesem Gespräch,
-2. ein als Argument genanntes Spec-Issue (dann liest du es samt Kommentaren und arbeitest die dort genannten Entscheidungen ein),
-3. ein Gespräch, in dem der Mensch Problem, Nutzer, Umfang und Erfolgskriterium ausdrücklich entschieden hat.
+1. a confirmed summary `Ergebnis grill` in this conversation,
+2. a spec issue given as argument (then you read it with its comments and work in the decisions named there),
+3. a conversation in which the human has explicitly decided problem, users, scope and success criterion.
 
-Findest du nichts davon, hörst du hier auf: Sag, dass die Grundlage fehlt, und empfiehl `/slickfab:grill <Thema>`. Schreib keine Spec auf Verdacht.
+If you find none of these, you stop here: say that the basis is missing and recommend `/slickfab:grill <topic>`. Do not write a spec on speculation.
 
-Lies dann `.slickfab/config` (Format und Regeln: Projektkonfiguration). Fehlt sie oder ist der Tracker nicht erreichbar, sag das gleich jetzt: Du kannst die Spec im Chat zeigen, aber nicht anlegen.
+Then read `.slickfab/config` (format and rules: project configuration). If it is missing or the tracker is unreachable, say so right now: you can show the spec in the chat, but not create it.
 <!-- /regel:voraussetzung-pruefen -->
 
 <!-- regel:lage-im-repo-lesen -->
-### 2. Lage im Repo lesen
+### 2. Read the situation in the repo
 
-Lies, was die Spec binden muss: `CLAUDE.md`/`AGENTS.md`, `.slickrails/` (falls vorhanden), `GLOSSARY.md`, `docs/adr/`, bestehende Feature-Doku zum Thema. Benutze die Begriffe aus `GLOSSARY.md` und widersprich keinem ADR, ohne es zu nennen. Bei mehr als ein paar Dateien schickst du einen Sub-Agent und lässt dir das Ergebnis kurz geben.
+Read what the spec has to bind: `CLAUDE.md`/`AGENTS.md`, `.slickrails/` (if present), `GLOSSARY.md`, `docs/adr/`, existing feature docs on the topic. Use the terms from `GLOSSARY.md` and contradict no ADR without saying so. For more than a few files you send a subagent and have it give you the result briefly.
 <!-- /regel:lage-im-repo-lesen -->
 
 <!-- regel:jede-aussage-auf-ihre-herkunft-pruefen -->
-### 3. Jede Aussage auf ihre Herkunft prüfen
+### 3. Check every statement for its origin
 
-Geh Abschnitt für Abschnitt durch die Vorlage (Schritt 4). Jede Aussage, die du schreiben willst, stammt aus einer dieser Quellen:
+Go section by section through the template (step 4). Every statement you want to write comes from one of these sources:
 
-- vom Menschen entschieden (im Gespräch oder in „Ergebnis grill“),
-- „Autonom entschieden“ aus `grill`,
-- eine Tatsache aus dem Repo.
+- decided by the human (in the conversation or in `Ergebnis grill`),
+- “Decided autonomously” from `grill`,
+- a fact from the repo.
 
-Passt eine Aussage zu keiner Quelle, ist sie eine **offene Entscheidung**. Ordne sie ein wie in `grill`:
+If a statement fits no source, it is an **open decision**. Classify it as in `grill`:
 
-- **Umkehrbar, technisch** (austauschbar hinter stabiler Schnittstelle): entscheide selbst und trag sie unter „Autonom entschieden“ ein, mit Grund.
-- **Produktfrage oder schwer umkehrbar:** Hier hörst du auf. Liste die offenen Entscheidungen auf, je ein Satz, warum die Spec sie braucht, und empfiehl `/slickfab:grill` mit genau diesen Punkten. Du schreibst die Spec erst weiter, wenn sie entschieden sind.
+- **Reversible, technical** (swappable behind a stable interface): decide yourself and enter it under `Autonom entschieden`, with a reason.
+- **Product question or hard to reverse:** Here you stop. List the open decisions, one sentence each on why the spec needs them, and recommend `/slickfab:grill` with exactly these points. You only continue writing the spec once they are decided.
 
-Diese Regel hat keine Ausnahme:
+This rule has no exception:
 
-| Ausrede | Realität |
+| Excuse | Reality |
 |---|---|
-| „Die Antwort ist doch offensichtlich.“ | Dann kostet die Rückfrage in `grill` eine Minute. Eine stille Annahme kostet ein falsch gebautes Feature. |
-| „Ich markiere es als Annahme in der Spec.“ | Eine markierte Annahme ist trotzdem eine Entscheidung, die der Mensch nicht getroffen hat. |
-| „Ich frage hier kurz selbst nach.“ | `spec` stellt keine Inhaltsfragen; die Befragung mit Empfehlung und Einordnung gehört zu `grill`. |
+| “The answer is obvious.” | Then the question in `grill` costs a minute. A silent assumption costs a wrongly built feature. |
+| “I'll mark it as an assumption in the spec.” | A marked assumption is still a decision the human did not make. |
+| “I'll quickly ask here myself.” | `spec` asks no questions on content; the interview with recommendation and classification belongs to `grill`. |
 <!-- /regel:jede-aussage-auf-ihre-herkunft-pruefen -->
 
 <!-- regel:spec-schreiben -->
-### 4. Spec schreiben
+### 4. Write the spec
 
-Füll diese Vorlage. Schreib in Verhalten und Begriffen der Domäne: Module und Schnittstellen beim Namen, aber ohne Dateipfade und ohne Code, weil beides schnell veraltet. Wo ein Pfad naheläge, nenne das Modul oder das Verhalten.
+Fill in this template. Write in the behavior and terms of the domain: modules and interfaces by name, but without file paths and without code, because both go stale quickly. Where a path would suggest itself, name the module or the behavior.
 
 ```markdown
 ## Bitte (wörtlich)
 
-> „<die ursprüngliche Bitte des Menschen, wörtlich zitiert, auch mit Tippfehlern>“
+> “<the human's original request, quoted verbatim, typos included>”
 
 ## Problem
 
-<aus Sicht der Nutzer: wer hat welches Problem, woran merkt man es heute>
+<from the users' point of view: who has which problem, how does it show today>
 
 ## Lösung
 
-<aus Sicht der Nutzer: was ist danach anders. Bei Änderungen an einem bestehenden Feature als Delta: vorher → nachher>
+<from the users' point of view: what is different afterwards. For changes to an existing feature as a delta: before → after>
 
 ## User Stories
 
-1. Als <Rolle> möchte ich <Fähigkeit>, damit <Nutzen>.
-(lieber zu viele als zu wenige; Fehlerfälle und Randfälle eigene Stories)
+1. As a <role> I want <capability> so that <benefit>.
+(better too many than too few; error cases and edge cases get their own stories)
 
 ## Entscheidungen
 
-- <Entscheidung> (vom Menschen)
-- Autonom entschieden: <Entscheidung> — <warum> — umkehrbar, weil <…> (oder „keine“)
+- <decision> (by the human)
+- Autonom entschieden: <decision> — <why> — reversible because <…> (or “none”)
 
 ## Muss wahr sein
 
-- <beobachtbare Wahrheit aus Nutzersicht, die nach dem Bauen gilt; 3–7 Punkte>
+- <observable truth from the users' point of view that holds after building; 3–7 points>
 
 ## Kritische Verbindungen
 
-- <Teil A> ↔ <Teil B>: <was zwischen beiden fließen muss; woran man merkt, dass es verdrahtet ist>
-(die Stellen, an denen es am ehesten bricht)
+- <part A> ↔ <part B>: <what must flow between the two; how you can tell it is wired>
+(the places where it is most likely to break)
 
 ## Grenzen
 
-- **Immer:** <was jeder Umsetzer immer tut>
-- **Erst fragen:** <was nur mit Ja des Menschen passiert>
-- **Nie:** <was ausgeschlossen ist>
+- **Immer:** <what every implementer always does>
+- **Erst fragen:** <what happens only with the human's yes>
+- **Nie:** <what is ruled out>
 
 ## Global Constraints
 
-- <Regel, die jedes Ticket einhalten muss, wörtlich aus CLAUDE.md, slickrails-Regeln, Versionen, Konventionen>
+- <rule every ticket must follow, verbatim from CLAUDE.md, slickrails rules, versions, conventions>
 
 ## Review-Fokus
 
-- <Eingabeklasse oder Risiko, das kein Test prüft und auf das der Prüfer schauen soll>
+- <input class or risk that no test checks and that the reviewer should look at>
 
 ## Teststellen
 
-- <öffentliche Schnittstelle, an der das Verhalten geprüft wird> — fängt: <…> — verpasst: <…>
-(möglichst weit oben, möglichst wenige, bestehende bevorzugt; ideal genau eine)
+- <public interface at which the behavior is checked> — fängt: <…> — verpasst: <…>
+(as high up as possible, as few as possible, existing ones preferred; ideally exactly one)
 
 ## Nicht im Umfang
 
-- <was ausdrücklich nicht gebaut wird>
+- <what is explicitly not built>
 ```
 
-Waren die Teststellen in `grill` nicht entschieden, schlägst du sie vor und trägst sie unter „Autonom entschieden“ ein; der Mensch sieht sie in Schritt 5.
+If the test seams (`Teststellen`) were not decided in `grill`, you propose them and enter them under `Autonom entschieden`; the human sees them in step 5.
 <!-- /regel:spec-schreiben -->
 
 <!-- regel:selbstpruefung-dann-zeigen -->
-### 5. Selbstprüfung, dann zeigen
+### 5. Self-check, then show
 
-Prüf den Entwurf, bevor der Mensch ihn sieht:
+Check the draft before the human sees it:
 
-- alle Abschnitte der Vorlage da, keiner leer (leer = „keine“ mit einem Satz warum),
-- die Bitte steht wörtlich da, nicht umformuliert,
-- kein Dateipfad, kein Dateiname, kein Code im Text,
-- jede Aussage hat eine Quelle aus Schritt 3.
+- all sections of the template present, none empty (empty = “none” with one sentence why),
+- the request is there verbatim, not rephrased,
+- no file path, no file name, no code in the text,
+- every statement has a source from step 3.
 
-Zeig die Spec im Chat und frag, ob du sie so anlegen sollst. Das ist eine Freigabe, keine Inhaltsfrage: Will der Mensch etwas anders, übernimm es; öffnet seine Antwort eine neue Produktfrage, zurück zu Schritt 3.
+Show the spec in the chat and ask whether you should create it like this. This is an approval, not a question on content: if the human wants something different, take it on; if their answer opens a new product question, back to step 3.
 <!-- /regel:selbstpruefung-dann-zeigen -->
 
 <!-- regel:im-tracker-anlegen -->
-### 6. Im Tracker anlegen
+### 6. Create in the tracker
 
-Erst nach dem Ja. Wie im Tracker-Vertrag: Dubletten prüfen, dann Issue `Spec: <Feature>` im Projekt aus `.slickfab/config`, Status `Backlog`. Beim Überarbeiten aktualisierst du das bestehende Spec-Issue statt ein neues anzulegen und schreibst einen Kommentar, dessen erste Zeile genau `## Spec überarbeitet` lautet; darunter steht, was sich geändert hat, am Ende die Marker-Zeile. An dieser ersten Zeile erkennt `fab`, dass die Spec nach einem `challenge`-Urteil geändert wurde.
+Only after the yes. As in the tracker contract: check for duplicates, then issue `Spec: <Feature>` in the project from `.slickfab/config`, status `Backlog`. When revising, you update the existing spec issue instead of creating a new one and write a comment whose first line is exactly `## Spec überarbeitet`; below it stands what has changed, at the end the marker line. By this first line `fab` recognizes that the spec was changed after a `challenge` verdict.
 
-Ist der Tracker nicht erreichbar oder fehlt die Konfiguration, meldest du das mit der Fehlermeldung und lässt die Spec im Chat stehen. Du legst keine Spec-, Plan- oder Ticket-Datei im Repo an.
+If the tracker is unreachable or the configuration is missing, you report that with the error message and leave the spec in the chat. You create no spec, plan or ticket file in the repo.
 <!-- /regel:im-tracker-anlegen -->
 
 ## Vertrag
 
 <!-- regel:vertrag-quelle -->
-Wörtlich aus `tracker/linear.md` und `docs/projektkonfiguration.md` des slickfab-Plugins. Es steht hier, damit du nichts außerhalb des Projekts lesen musst; es gilt genau so.
+Verbatim from `tracker/linear.md` and `docs/projektkonfiguration.md` of the slickfab plugin. It is here so that you do not have to read anything outside the project; it applies exactly as written.
 <!-- /regel:vertrag-quelle -->
 
-### Projektkonfiguration: Format
+### Project configuration: format
 
 <!-- vertrag:config-format -->
 `.slickfab/config` in the repo root: one line per value, `KEY="value"`. Blank lines and lines starting with `#` do not count.
@@ -186,7 +186,7 @@ The file is read as text, not executed as a shell script (no `source`), so that 
 Answer in the user's language.
 <!-- /vertrag:config-format -->
 
-### Projektkonfiguration: wenn sie fehlt
+### Project configuration: when it is missing
 
 <!-- vertrag:config-fehlt -->
 If `.slickfab/config` is missing, a required value is missing, or `TRACKER=` names an unknown tracker, the step reports exactly that (which file, which key) and stops at the point where it would need the tracker. It writes no plan, ledger or state file and no ticket list into the repo as a substitute; whatever it has already worked out, it shows in the chat.
@@ -196,7 +196,7 @@ It offers to create `.slickfab/config` and shows the content with the values it 
 Answer in the user's language.
 <!-- /vertrag:config-fehlt -->
 
-### Tracker: Zugang
+### Tracker: access
 
 <!-- vertrag:zugang -->
 - Linear is accessed through the session's Linear tools (in Claude Code, load them via tool search `+linear`).
@@ -206,7 +206,7 @@ Answer in the user's language.
 Answer in the user's language.
 <!-- /vertrag:zugang -->
 
-### Tracker: Issues
+### Tracker: issues
 
 <!-- vertrag:issues -->
 | Kind | Title | Location | Initial status |
@@ -221,7 +221,7 @@ Answer in the user's language.
 Answer in the user's language.
 <!-- /vertrag:issues -->
 
-### Tracker: Marker
+### Tracker: marker
 
 <!-- vertrag:marker -->
 Every comment that a slickfab step or role writes, and every report to a caller, ends with the marker block, with no text after it:
@@ -257,21 +257,21 @@ Answer in the user's language.
 ## Ergebnis
 
 <!-- regel:ergebnis -->
-Ein Spec-Issue im Tracker (oder, ohne Tracker, die Spec im Chat und die klare Meldung, warum sie nicht angelegt ist). Im Chat zum Schluss:
+A spec issue in the tracker (or, without a tracker, the spec in the chat and the clear message why it was not created). In the chat at the end:
 
 ```
 ## Ergebnis spec
 
-**Spec:** <Issue-ID und Link> (oder: nicht angelegt, weil <Grund>)
-**Autonom entschieden:** <Liste oder „keine“>
-**Offene Entscheidungen:** <Liste, dann zurück zu grill, oder „keine“>
+**Spec:** <issue ID and link> (or: not created because <reason>)
+**Decided autonomously:** <list or “none”>
+**Open decisions:** <list, then back to grill, or “none”>
 
-Nächster Schritt: `/slickfab:challenge <Issue-ID>`
+Nächster Schritt: `/slickfab:challenge <issue ID>`
 ```
 <!-- /regel:ergebnis -->
 
 ## Nächster Schritt
 
 <!-- regel:naechster-schritt -->
-`/slickfab:challenge <Issue-ID>` — frischer Blick auf Produkt, Baubarkeit und später die Zerlegung; am besten in einer neuen Session, damit der Prüfer das Gespräch nicht kennt. Gibt es Fragen, die man nicht erfragen kann (Aussehen, Bedienung, ob eine Logik sich richtig anfühlt), vorher `/slickfab:prototype`. Fehlen Entscheidungen, zurück zu `/slickfab:grill`.
+`/slickfab:challenge <issue ID>`: fresh eye on product, buildability and later the split; best in a new session, so that the checker does not know the conversation. If there are questions that cannot be settled by asking (look, handling, whether a piece of logic feels right), `/slickfab:prototype` first. If decisions are missing, back to `/slickfab:grill`.
 <!-- /regel:naechster-schritt -->

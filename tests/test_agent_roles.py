@@ -246,7 +246,7 @@ class BrokenRolesTest(unittest.TestCase):
     def test_copied_line_from_second_step(self):
         # Der Planer hat zwei Schritte; auch der zweite (tickets) wird geprüft.
         path = os.path.join(self.tmp, "agents", "planner.md")
-        line = "- Ein „und“ im Titel heißt meist zwei Tickets; mehr als etwa 5 Kriterien heißt meist zu groß."
+        line = "- An “and” in the title usually means two tickets; more than about 5 criteria usually means too big."
         self.assertIn(line, read(os.path.join(ROOT, "skills", "tickets", "SKILL.md")))
         text = read(path).replace("<!-- /regel:einleitung -->", line + "\n<!-- /regel:einleitung -->")
         write(path, text)

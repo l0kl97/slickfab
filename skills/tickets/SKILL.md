@@ -1,142 +1,142 @@
 ---
 name: tickets
-description: Verwenden, wenn eine geprüfte Spec in Tickets für den Tracker zerlegt werden soll, oder wenn jemand „schneid das in Tickets“ oder „leg die Tickets an“ sagt.
-argument-hint: "<Spec-Issue>"
+description: Use when a reviewed spec should be split into tickets for the tracker, or when someone says “cut this into tickets” or “create the tickets”.
+argument-hint: "<spec issue>"
 ---
 
 <!-- regel:einleitung -->
-# tickets: Spec in dünne, durchgehende Tickets schneiden
+# tickets: cut the spec into thin, continuous tickets
 
-Ziel: Tickets, die ein Agent ohne Rückfrage bauen kann, möglichst parallel, und die zusammen genau die Spec liefern, nicht weniger. Angelegt wird erst, wenn der Mensch die Liste bestätigt hat.
+Goal: Tickets that an agent can build without asking back, as parallel as possible, and that together deliver exactly the spec, not less. Nothing is created until the human has confirmed the list.
 
-Antworte in der Sprache des Menschen. Tracker-Regeln und Projektkonfiguration stehen unten im Abschnitt „Vertrag“.
+Answer in the user's language. Tracker rules and project configuration are below in the section `Vertrag`.
 <!-- /regel:einleitung -->
 
 ## Wann
 
 <!-- regel:wann -->
-- Nach `/slickfab:challenge`, wenn der Mensch über Einwände entschieden hat und die Spec stimmt.
-- Nicht ohne Spec im Tracker; nicht, wenn das Urteil `nicht bauen` lautet und der Mensch zugestimmt hat.
+- After `/slickfab:challenge`, when the human has decided on objections and the spec is right.
+- Not without a spec in the tracker; not if the verdict is `nicht bauen` and the human has agreed.
 <!-- /regel:wann -->
 
 ## Ablauf
 
 <!-- regel:voraussetzung-pruefen -->
-### 1. Voraussetzung prüfen
+### 1. Check the precondition
 
-- Lies `.slickfab/config`. Fehlt sie oder ist der Tracker nicht erreichbar, hör hier auf und melde genau das. Tickets gibt es nur im Tracker; du schreibst keine Ticket-, Plan- oder State-Datei ins Repo als Ersatz.
-- Du brauchst das Spec-Issue (Argument oder „Ergebnis spec“ in diesem Gespräch). Fehlt es, empfiehl `/slickfab:spec`.
-- Lies das Spec-Issue mit allen Kommentaren. Suche den Kommentar aus `challenge` (Urteil, Einwände). Fehlt er, sag das und empfiehl zuerst `/slickfab:challenge <Spec-Issue>`; weiter nur, wenn der Mensch ausdrücklich ohne Prüfung zerlegen will. Hat der Mensch über Einwände entschieden, die noch nicht in der Spec stehen, zuerst `/slickfab:spec <Spec-Issue>`. Lautet das letzte Urteil `nicht bauen`, hör hier auf und leg die Frage dem Menschen vor (Vorlage „Rückfrage“ unten), außer er hat ausdrücklich gesagt, dass trotzdem zerlegt wird.
+- Read `.slickfab/config`. If it is missing or the tracker is unreachable, stop here and report exactly that. Tickets exist only in the tracker; you write no ticket, plan or state file into the repo as a substitute.
+- You need the spec issue (argument or `Ergebnis spec` in this conversation). If it is missing, recommend `/slickfab:spec`.
+- Read the spec issue with all its comments. Look for the comment from `challenge` (verdict, objections). If it is missing, say so and recommend `/slickfab:challenge <spec issue>` first; continue only if the human explicitly wants to split without a check. If the human has decided on objections that are not yet in the spec, `/slickfab:spec <spec issue>` first. If the last verdict is `nicht bauen`, stop here and put the question to the human (template “question” below), unless they have explicitly said that the spec is to be split anyway.
 <!-- /regel:voraussetzung-pruefen -->
 
 <!-- regel:repo-lesen -->
-### 2. Repo lesen
+### 2. Read the repo
 
-Finde, wo die Spec das Repo berührt: Module, Schnittstellen, Tests, `GLOSSARY.md`, `docs/adr/`, `CLAUDE.md`. Für mehr als ein paar Dateien einen Sub-Agent. Achte auf vorbereitende Umbauten, die die eigentliche Änderung leicht machen.
+Find where the spec touches the repo: modules, interfaces, tests, `GLOSSARY.md`, `docs/adr/`, `CLAUDE.md`. For more than a few files, a subagent. Watch for preparatory refactorings that make the actual change easy.
 <!-- /regel:repo-lesen -->
 
 <!-- regel:schneiden -->
-### 3. Schneiden
+### 3. Cut
 
-- **Tracer zuerst:** Das erste Ticket ist der dünnste Pfad durch alle Schichten, der die kritischen Verbindungen der Spec einmal echt verdrahtet und von außen prüfbar macht. Es blockiert alle übrigen Tickets.
-- **Durchgehende Scheiben:** Jedes weitere Ticket liefert ein von außen prüfbares Verhalten quer durch die Schichten, ist für sich vorführbar und passt in eine frische Session. Frontend und Backend trennst du nur, wenn das Ticket die Schnittstelle zwischen beiden wörtlich festlegt.
-- **Vorbereitender Umbau**, den mehrere Tickets brauchen, ist ein eigenes Ticket direkt nach dem Tracer.
-- **Breite mechanische Umbauten** (Spalte umbenennen, geteilten Typ ändern) schneidest du als Expand–Migrate–Contract: erst das Neue neben das Alte (Expand), dann die Aufrufer paketweise umziehen, je Paket ein Ticket, blockiert vom Expand, die Prüfungen bleiben dazwischen grün (Migrate), zuletzt das Alte entfernen, blockiert von allen Paketen (Contract).
-- Ein „und“ im Titel heißt meist zwei Tickets; mehr als etwa 5 Kriterien heißt meist zu groß.
+- **Tracer first:** The first ticket is the thinnest path through all layers that wires the spec's critical connections for real once and makes them checkable from outside. It blocks all other tickets.
+- **Continuous slices:** Every further ticket delivers a behavior that is checkable from outside, across the layers, is demonstrable on its own and fits into a fresh session. You separate frontend and backend only if the ticket fixes the interface between the two verbatim.
+- A **preparatory refactoring** that several tickets need is a ticket of its own, directly after the tracer.
+- **Broad mechanical refactorings** (renaming a column, changing a shared type) you cut as Expand–Migrate–Contract: first the new next to the old (expand), then move the callers over in batches, one ticket per batch, blocked by the expand, with the checks staying green in between (migrate), finally remove the old, blocked by all batches (contract).
+- An “and” in the title usually means two tickets; more than about 5 criteria usually means too big.
 
-Jedes Ticket in dieser Form:
+Every ticket in this form:
 
 ```markdown
 ## Was gebaut wird
 
-<Verhalten aus Nutzersicht, nicht Schichten>
+<behavior from the users' point of view, not layers>
 
 ## Akzeptanzkriterien
 
-- [ ] <beobachtbares Verhalten, auch Fehlerfälle>. **Widerlegt, wenn** <die Beobachtung, die es widerlegt>.
+- [ ] <observable behavior, including error cases>. **Widerlegt, wenn** <the observation that refutes it>.
 
 ## Schnittstellen
 
-- Verbraucht: <Namen, Datenformen, Routen, die dieses Ticket von anderen nutzt, mit Ticket-Nr.>
-- Liefert: <Namen, Datenformen, Routen, die andere Tickets von diesem nutzen>
+- Verbraucht: <names, data shapes, routes that this ticket uses from others, with ticket no.>
+- Liefert: <names, data shapes, routes that other tickets use from this one>
 
 ## Nicht im Umfang
 
-- <was ausdrücklich ein anderes Ticket macht>
+- <what another ticket explicitly does>
 
 +++ Agent notes
 
 **Betroffene Dateien (voraussichtlich)**
-- <Pfad>
+- <path>
 
-**Fundstellen** <wo im Repo Vorbilder liegen>
+**Fundstellen** <where in the repo examples are>
 
 +++
 ```
 
-Zum Text: Was gebaut wird und Kriterien in der Sprache der Spec, ohne Pfade; Pfade stehen nur in den Agent notes. Jedes Kriterium wäre am heutigen Stand falsch; ist es schon wahr, ist es kein Kriterium. Die Global Constraints der Spec gelten für jedes Ticket, weil es ein Sub-Issue der Spec ist.
+On the text: `Was gebaut wird` and the criteria in the language of the spec, without paths; paths go only in the Agent notes. Every criterion would be false in the current state; if it is already true, it is not a criterion. The spec's Global Constraints apply to every ticket, because it is a sub-issue of the spec.
 
-Labels je Ticket: genau eine Größe `S`, `M` oder `L`, und `door:one-way`, wenn das Ticket schwer umkehrbar ist (Migration, Auth, Zahlung, Löschen von Daten, Deploy, öffentliche Schnittstelle).
+Labels per ticket: exactly one size `S`, `M` or `L`, and `door:one-way` if the ticket is hard to reverse (migration, auth, payment, deletion of data, deploy, public interface).
 <!-- /regel:schneiden -->
 
 <!-- regel:abhaengigkeiten-setzen -->
-### 4. Abhängigkeiten setzen
+### 4. Set dependencies
 
-- Der Tracer blockiert alle übrigen Tickets.
-- Echte Abhängigkeiten (ein Ticket verbraucht, was ein anderes liefert) werden Blockiert-Relationen.
-- **Dateiüberschnitt:** Mach eine Tabelle Datei → Tickets aus den Agent notes. Nennen zwei Tickets dieselbe Datei, bekommt das spätere eine Blockiert-Relation auf das frühere, auch wenn sie inhaltlich nichts voneinander brauchen; parallel gebaut würden sie sich gegenseitig überschreiben.
-- Keine Zyklen. Was danach keine Blocker außer dem Tracer hat, kann parallel laufen.
+- The tracer blocks all other tickets.
+- Real dependencies (one ticket consumes what another delivers) become blocked-by relations.
+- **File overlap:** Make a table file → tickets from the Agent notes. If two tickets name the same file, the later one gets a blocked-by relation on the earlier one, even if they need nothing from each other in content; built in parallel, they would overwrite each other.
+- No cycles. Whatever then has no blockers other than the tracer can run in parallel.
 <!-- /regel:abhaengigkeiten-setzen -->
 
 <!-- regel:auf-stille-kuerzung-pruefen -->
-### 5. Auf stille Kürzung prüfen
+### 5. Check for silent shortening
 
-Lies jeden Titel, jede Beschreibung und jedes Kriterium auf Formulierungen, die Arbeit vertagen: „v1“, „vereinfacht“, „Platzhalter“, „wird später verdrahtet“, und alles Gleichbedeutende (Stub, erstmal hart kodiert, TODO, folgt später, placeholder, simplified). Ein Ticket mit so einer Formulierung legst du nicht an. Statt das Wort zu ersetzen, korrigierst du den Schnitt: Entweder das Ticket liefert es ganz, oder der vertagte Teil wird ein eigenes Ticket mit eigenen Kriterien und Blockiert-Relation und steht im ersten unter „Nicht im Umfang“.
+Read every title, every description and every criterion for phrases that defer work: “v1”, “simplified”, “placeholder”, “will be wired later”, and everything equivalent (stub, hard-coded for now, TODO, follows later; in German, for example, `vereinfacht`, `Platzhalter`, `wird später verdrahtet`). A ticket with such a phrase you do not create. Instead of replacing the word, you correct the cut: either the ticket delivers it completely, or the deferred part becomes a ticket of its own with its own criteria and a blocked-by relation and is listed in the first one under `Nicht im Umfang`.
 
-| Ausrede | Realität |
+| Excuse | Reality |
 |---|---|
-| „Für den Anfang reicht eine vereinfachte Version.“ | Dann ist die kleinere Version die Spec, und das entscheidet der Mensch in `grill` oder `challenge`, nicht der Ticket-Text. |
-| „Die Verdrahtung macht das nächste Ticket.“ | Dann ist sie ein eigenes Ticket mit Kriterien. Sonst baut niemand sie. |
+| “A simplified version is enough to start with.” | Then the smaller version is the spec, and the human decides that in `grill` or `challenge`, not the ticket text. |
+| “The next ticket does the wiring.” | Then it is a ticket of its own with criteria. Otherwise nobody builds it. |
 <!-- /regel:auf-stille-kuerzung-pruefen -->
 
 <!-- regel:zerlegung-pruefen-und-bestaetigen-lassen -->
-### 6. Zerlegung prüfen und bestätigen lassen
+### 6. Check the split and get it confirmed
 
-1. Ruf die Zerlegungsprüfung von `/slickfab:challenge` mit Spec und Liste auf (frischer Sub-Agent, Runde 1). Bei Befunden: Liste überarbeiten, Runde 2 mit der Befundzahl aus Runde 1. Es gibt höchstens diese 2 Runden; was danach offen ist, legst du dem Menschen vor.
-2. Prüf auf Dubletten: Suche im Projekt aus `.slickfab/config` nach offenen und erledigten Issues mit ähnlichem Titel, auch unter den Sub-Issues der Spec. Treffer zeigst du in der Liste an. Antwortet der Tracker bei der Suche mit einem Fehler, hör auf (Vorlage „Abbruch“ unten, `BLOCKED`).
-3. Zeig die nummerierte Liste:
+1. Call the split check of `/slickfab:challenge` with spec and list (fresh subagent, round 1). With findings: revise the list, round 2 with the number of findings from round 1. There are at most these 2 rounds; whatever is open after that, you put to the human.
+2. Check for duplicates: search the project from `.slickfab/config` for open and completed issues with a similar title, also among the sub-issues of the spec. You show matches in the list. If the tracker answers the search with an error, stop (template “abort” below, `BLOCKED`).
+3. Show the numbered list:
 
 ```
-1. <Titel> — <Größe>, <door:one-way falls zutreffend> — blockiert von: — (Tracer)
-   liefert: <ein Satz> · Dateien: <kurz>
-2. <Titel> — <Größe> — blockiert von: 1
-   liefert: … · Dateien: …
+1. <title> — <size>, <door:one-way if applicable> — blocked by: — (tracer)
+   delivers: <one sentence> · files: <short>
+2. <title> — <size> — blocked by: 1
+   delivers: … · files: …
 …
-Zerlegungsprüfung: bestanden in Runde <n> | offen: <Befunde>
-Dubletten: keine | <Treffer>
+Split check: passed in round <n> | open: <findings>
+Duplicates: none | <matches>
 ```
 
-Frag: Stimmt die Größe der Scheiben? Stimmen die Abhängigkeiten? Etwas zusammenlegen oder teilen? Dann wartest du. Änderungswünsche arbeitest du ein und zeigst die Liste erneut. Angelegt wird erst nach einem ausdrücklichen Ja zur Liste; „passt schon“ zu einer einzelnen Zeile ist kein Ja zur ganzen Liste.
+Ask: Is the size of the slices right? Are the dependencies right? Merge or split anything? Then you wait. Change requests you work in and show the list again. Nothing is created until there is an explicit yes to the list; “fine” to a single row is not a yes to the whole list.
 <!-- /regel:zerlegung-pruefen-und-bestaetigen-lassen -->
 
 <!-- regel:anlegen -->
-### 7. Anlegen
+### 7. Create
 
-Erst nach dem Ja, und in Abhängigkeitsreihenfolge (Tracer zuerst), damit jede Relation auf eine echte Issue-ID zeigt:
+Only after the yes, and in dependency order (tracer first), so that every relation points to a real issue ID:
 
-- je Ticket ein Sub-Issue der Spec, Status `Backlog`, Labels wie in Schritt 3, Relationen wie in Schritt 4,
-- danach ein Kommentar am Spec-Issue mit der Liste der Tickets und der Marker-Zeile nach Tracker-Vertrag.
+- one sub-issue of the spec per ticket, status `Backlog`, labels as in step 3, relations as in step 4,
+- after that a comment on the spec issue with the list of tickets and the marker line according to the tracker contract.
 
-Kein Ticket setzt du auf `Todo`; das ist die Freigabe des Menschen. Die Spec selbst änderst du nicht. Bricht der Tracker mitten im Anlegen ab, hör auf und melde, welche Tickets angelegt sind und welche nicht, mit der Fehlermeldung (Vorlage „Abbruch“ unten, `BLOCKED`). Du legst keine Datei als Ersatz an.
+You set no ticket to `Todo`; that is the human's approval. You do not change the spec itself. If the tracker breaks off in the middle of creating, stop and report which tickets are created and which are not, with the error message (template “abort” below, `BLOCKED`). You create no file as a substitute.
 <!-- /regel:anlegen -->
 
 ## Vertrag
 
 <!-- regel:vertrag-quelle -->
-Wörtlich aus `tracker/linear.md` und `docs/projektkonfiguration.md` des slickfab-Plugins. Es steht hier, damit du nichts außerhalb des Projekts lesen musst; es gilt genau so.
+Verbatim from `tracker/linear.md` and `docs/projektkonfiguration.md` of the slickfab plugin. It is here so that you do not have to read anything outside the project; it applies exactly as written.
 <!-- /regel:vertrag-quelle -->
 
-### Projektkonfiguration: Format
+### Project configuration: format
 
 <!-- vertrag:config-format -->
 `.slickfab/config` in the repo root: one line per value, `KEY="value"`. Blank lines and lines starting with `#` do not count.
@@ -166,7 +166,7 @@ The file is read as text, not executed as a shell script (no `source`), so that 
 Answer in the user's language.
 <!-- /vertrag:config-format -->
 
-### Projektkonfiguration: wenn sie fehlt
+### Project configuration: when it is missing
 
 <!-- vertrag:config-fehlt -->
 If `.slickfab/config` is missing, a required value is missing, or `TRACKER=` names an unknown tracker, the step reports exactly that (which file, which key) and stops at the point where it would need the tracker. It writes no plan, ledger or state file and no ticket list into the repo as a substitute; whatever it has already worked out, it shows in the chat.
@@ -176,7 +176,7 @@ It offers to create `.slickfab/config` and shows the content with the values it 
 Answer in the user's language.
 <!-- /vertrag:config-fehlt -->
 
-### Tracker: Zugang
+### Tracker: access
 
 <!-- vertrag:zugang -->
 - Linear is accessed through the session's Linear tools (in Claude Code, load them via tool search `+linear`).
@@ -186,7 +186,7 @@ Answer in the user's language.
 Answer in the user's language.
 <!-- /vertrag:zugang -->
 
-### Tracker: Issues
+### Tracker: issues
 
 <!-- vertrag:issues -->
 | Kind | Title | Location | Initial status |
@@ -201,7 +201,7 @@ Answer in the user's language.
 Answer in the user's language.
 <!-- /vertrag:issues -->
 
-### Tracker: Statusfolge
+### Tracker: status flow
 
 <!-- vertrag:status -->
 `Backlog` → `Todo` → `In Progress` → `In Review` → `Done` (abort: `Canceled`, duplicate: `Duplicate`)
@@ -219,7 +219,7 @@ No step sets a ticket to `Todo` by itself.
 Answer in the user's language.
 <!-- /vertrag:status -->
 
-### Tracker: Labels
+### Tracker: labels
 
 <!-- vertrag:labels -->
 The labels exist in the team; a step does not create new ones. If one is missing, it reports that.
@@ -238,7 +238,7 @@ In Linear, `rework`, `ready`, `needs-human` and `replan` are children of the lab
 Answer in the user's language.
 <!-- /vertrag:labels -->
 
-### Tracker: Marker
+### Tracker: marker
 
 <!-- vertrag:marker -->
 Every comment that a slickfab step or role writes, and every report to a caller, ends with the marker block, with no text after it:
@@ -274,69 +274,69 @@ Answer in the user's language.
 ## Ergebnis
 
 <!-- regel:ergebnis -->
-Wo tickets endet, und mit welcher Vorlage. Jede Stelle im Ablauf, an der du aufhörst, empfiehlst, wartest oder dem Menschen etwas vorlegst, steht hier:
+Where tickets ends, and with which template. Every place in the flow where you stop, recommend, wait or put something to the human is listed here:
 
-| Stelle | Fall | Vorlage | STATUS |
+| Place | Case | Template | STATUS |
 |---|---|---|---|
-| Schritt 1 | `.slickfab/config` fehlt oder Tracker nicht erreichbar | Ergebnis tickets (Abbruch) | `BLOCKED` |
-| Schritt 1 | Spec-Issue fehlt | Ergebnis tickets (Rückfrage) | `NEEDS_CONTEXT` |
-| Schritt 1 | `challenge`-Kommentar fehlt | Ergebnis tickets (Rückfrage) | `NEEDS_CONTEXT` |
-| Schritt 1 | Entscheidung steht noch nicht in der Spec | Ergebnis tickets (Rückfrage) | `NEEDS_CONTEXT` |
-| Schritt 1 | letztes `challenge`-Urteil `nicht bauen` | Ergebnis tickets (Rückfrage) | `NEEDS_CONTEXT` |
-| Schritt 6 | Tracker antwortet bei der Dublettensuche mit einem Fehler | Ergebnis tickets (Abbruch) | `BLOCKED` |
-| Schritt 6 | Dublette, Liste wartet auf das Ja oder Befunde offen nach Runde 2 | Ergebnis tickets (Rückfrage) | `NEEDS_CONTEXT` |
-| Schritt 7 | Tracker bricht beim Anlegen ab | Ergebnis tickets (Abbruch) | `BLOCKED` |
-| Schritt 7 | alle Tickets angelegt | Ergebnis tickets | `DONE` oder `DONE_WITH_CONCERNS` |
+| Step 1 | `.slickfab/config` missing or tracker unreachable | Ergebnis tickets (abort) | `BLOCKED` |
+| Step 1 | spec issue missing | Ergebnis tickets (question) | `NEEDS_CONTEXT` |
+| Step 1 | `challenge` comment missing | Ergebnis tickets (question) | `NEEDS_CONTEXT` |
+| Step 1 | decision not yet in the spec | Ergebnis tickets (question) | `NEEDS_CONTEXT` |
+| Step 1 | last `challenge` verdict `nicht bauen` | Ergebnis tickets (question) | `NEEDS_CONTEXT` |
+| Step 6 | tracker answers the duplicate search with an error | Ergebnis tickets (abort) | `BLOCKED` |
+| Step 6 | duplicate, list waiting for the yes, or findings open after round 2 | Ergebnis tickets (question) | `NEEDS_CONTEXT` |
+| Step 7 | tracker breaks off while creating | Ergebnis tickets (abort) | `BLOCKED` |
+| Step 7 | all tickets created | Ergebnis tickets | `DONE` or `DONE_WITH_CONCERNS` |
 
 ```
 ## Ergebnis tickets
 
-**Spec:** <Issue-ID>
-**Tickets:** <ID> Tracer, <ID>, … (alle in Backlog)
-**Parallel möglich nach dem Tracer:** <IDs>
-**door:one-way:** <IDs oder „keine“>
-**Offen aus der Zerlegungsprüfung:** <Befunde oder „keine“>
+**Spec:** <issue ID>
+**Tickets:** <ID> tracer, <ID>, … (all in Backlog)
+**Parallel after the tracer:** <IDs>
+**door:one-way:** <IDs or “none”>
+**Open from the split check:** <findings or “none”>
 
-Nächster Schritt: `/slickfab:implement <Tracer-ID>`, sobald du die Tickets auf Todo gesetzt hast
+Nächster Schritt: `/slickfab:implement <tracer ID>`, once you have set the tickets to Todo
 
 SLICKFAB-STATUS: <DONE|DONE_WITH_CONCERNS>
 ```
 
-Endet der Schritt, ohne Tickets anzulegen, weil du den Menschen etwas fragst (Dublette, fehlender `challenge`-Kommentar, Urteil `nicht bauen`, Liste wartet auf das Ja) oder weil etwas fehlt (Spec, Entscheidung in der Spec), gilt diese Vorlage. Den nächsten Schritt wählst du nach dem Grund, wie in Schritt 1:
+If the step ends without creating tickets because you are asking the human something (duplicate, missing `challenge` comment, verdict `nicht bauen`, list waiting for the yes) or because something is missing (spec, decision in the spec), this template applies. You choose the next step by the reason, as in step 1:
 
 ```
-## Ergebnis tickets (Rückfrage)
+## Ergebnis tickets (question)
 
-**Spec:** <Issue-ID>
-**Frage:** <was der Mensch entscheiden oder liefern muss, mit Links zu Treffern>
-**Bisher erarbeitet:** <Liste oder Stand, damit nichts verloren geht>
+**Spec:** <issue ID>
+**Question:** <what the human has to decide or provide, with links to matches>
+**Worked out so far:** <list or state, so that nothing is lost>
 
-Nächster Schritt: `/slickfab:<Schritt>` nach dem Grund: fehlt die Spec oder steht eine Entscheidung noch nicht darin: `/slickfab:spec [Spec-Issue]`; fehlt die Prüfung: `/slickfab:challenge <Spec-Issue>`; lautet das Urteil `nicht bauen`: `/slickfab:spec <Spec-Issue>`, wenn du die Spec änderst (danach `/slickfab:challenge <Spec-Issue>`); stimmst du dem Urteil zu, endet das Vorhaben und du setzt die Spec auf `Canceled`; Frage zum Schnitt (Dublette, Liste wartet auf das Ja, Befunde offen nach Runde 2): `/slickfab:tickets <Spec-Issue>` erneut, sobald die Antwort da ist
+Nächster Schritt: `/slickfab:<step>` by reason: if the spec is missing or a decision is not yet in it: `/slickfab:spec [spec issue]`; if the check is missing: `/slickfab:challenge <spec issue>`; if the verdict is `nicht bauen`: `/slickfab:spec <spec issue>` if you change the spec (after that `/slickfab:challenge <spec issue>`); if you agree with the verdict, the work ends and you set the spec to `Canceled`; question about the cut (duplicate, list waiting for the yes, findings open after round 2): `/slickfab:tickets <spec issue>` again, once the answer is there
 
 SLICKFAB-STATUS: NEEDS_CONTEXT
 ```
 
-Fehlt in Schritt 1 die Konfiguration oder ist der Tracker nicht erreichbar, antwortet er bei der Dublettensuche mit einem Fehler (Schritt 6) oder bricht er mitten im Anlegen ab (Schritt 7), gilt diese Vorlage:
+If in step 1 the configuration is missing or the tracker is unreachable, if it answers the duplicate search with an error (step 6), or if it breaks off in the middle of creating (step 7), this template applies:
 
 ```
-## Ergebnis tickets (Abbruch)
+## Ergebnis tickets (abort)
 
-**Spec:** <Issue-ID>
-**Wo:** Schritt 1 (Konfiguration oder Tracker) | Schritt 6 (Dublettensuche) | Schritt 7 (beim Anlegen)
-**Schon angelegt:** <IDs mit Titel und gesetzten Relationen> (in Schritt 1 und 6: keine)
-**Nicht angelegt:** <Titel aus der bestätigten Liste> (in Schritt 1: alle, Liste gibt es noch nicht; in Schritt 6: alle Titel der noch nicht bestätigten Liste)
-**Fehlermeldung:** <wörtlich: fehlende Datei oder fehlender Schlüssel, oder die Fehlerantwort des Trackers>
+**Spec:** <issue ID>
+**Where:** step 1 (configuration or tracker) | step 6 (duplicate search) | step 7 (while creating)
+**Already created:** <IDs with title and relations set> (in steps 1 and 6: none)
+**Not created:** <titles from the confirmed list> (in step 1: all, there is no list yet; in step 6: all titles of the not yet confirmed list)
+**Error message:** <verbatim: missing file or missing key, or the tracker's error response>
 
-Nächster Schritt: `/slickfab:tickets <Spec-Issue>` erneut, nachdem du <`.slickfab/config` angelegt | den Tracker geprüft (Werkzeuge geladen, angemeldet, Team und Projekt vorhanden)> hast; nach einem Abbruch in Schritt 7 findet die Dublettenprüfung die schon angelegten Tickets, angelegt wird nur der Rest
+Nächster Schritt: `/slickfab:tickets <spec issue>` again, after you have <created `.slickfab/config` | checked the tracker (tools loaded, logged in, team and project exist)>; after an abort in step 7 the duplicate check finds the tickets already created, and only the rest is created
 
 SLICKFAB-STATUS: BLOCKED
 ```
 
-Die Zeile „Nächster Schritt“ fehlt nie, auch nicht bei einer Rückfrage (`NEEDS_CONTEXT`). Die Marker-Zeile ist die letzte Zeile deiner Antwort und steht außerhalb jedes Codeblocks. Die Vorlagen stehen hier nur zur Darstellung in Codeblöcken; deine Antwort schreibst du als normalen Text, ohne Codeblock um Ergebnis oder Marker.
+The line `Nächster Schritt` is never missing, not even for a question (`NEEDS_CONTEXT`). The marker line is the last line of your answer and stands outside any code block. The templates are shown in code blocks here only for display; you write your answer as normal text, without a code block around result or marker.
 <!-- /regel:ergebnis -->
 
 ## Nächster Schritt
 
 <!-- regel:naechster-schritt -->
-Der Mensch prüft die Tickets und setzt sie auf `Todo`. Dann `/slickfab:implement <Tracer-ID>` für das erste Ticket; die übrigen werden frei, sobald der Tracer gemergt ist.
+The human checks the tickets and sets them to `Todo`. Then `/slickfab:implement <tracer ID>` for the first ticket; the others become free as soon as the tracer is merged.
 <!-- /regel:naechster-schritt -->

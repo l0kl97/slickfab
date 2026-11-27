@@ -117,12 +117,15 @@ class ProjectConfigTest(unittest.TestCase):
 class StandaloneStepMixin:
     """AC: läuft allein per Slash-Befehl, prüft seine Voraussetzung, nennt den nächsten Schritt."""
     step = None
+    # Überschrift von Schritt 1 in der Sprache des Schritts. test_build_steps und test_check_steps
+    # nutzen diesen Mixin für Schritte, die noch deutsch sind; die englischen setzen ihn selbst.
+    precondition = "### 1. Voraussetzung prüfen"
 
     def setUp(self):
         self.text = read("skills/%s/SKILL.md" % self.step)
 
     def test_checks_its_precondition(self):
-        self.assertIn("### 1. Voraussetzung prüfen", section(self.text, "Ablauf"))
+        self.assertIn(self.precondition, section(self.text, "Ablauf"))
 
     def test_names_next_step(self):
         self.assertRegex(section(self.text, "Nächster Schritt"), r"`/slickfab:[a-z-]+")
@@ -140,7 +143,10 @@ class StandaloneStepMixin:
 
 class SpecStepTest(StandaloneStepMixin, unittest.TestCase):
     step = "spec"
+    precondition = "### 1. Check the precondition"
 
+    # Überschriften des Spec-Issues bleiben wörtlich: verify, implement und der Dispatcher
+    # lesen sie unter diesen Namen, auch in schon angelegten Issues.
     SECTIONS = ("Bitte (wörtlich)", "Problem", "Lösung", "User Stories", "Entscheidungen",
                 "Muss wahr sein", "Kritische Verbindungen", "Grenzen", "Global Constraints",
                 "Review-Fokus", "Teststellen", "Nicht im Umfang")
@@ -162,16 +168,17 @@ class SpecStepTest(StandaloneStepMixin, unittest.TestCase):
 
 class PrototypeStepTest(StandaloneStepMixin, unittest.TestCase):
     step = "prototype"
+    precondition = "### 1. Check the precondition"
 
     def test_two_shapes_ui_variants_and_logic_script(self):
         flow = section(self.text, "Ablauf")
         self.assertIn("?variant=", flow)
-        self.assertIn("Wegwerfskript", flow)
+        self.assertIn("throwaway script", flow)
 
     def test_always_on_throwaway_branch(self):
         flow = section(self.text, "Ablauf")
         self.assertIn("prototype/", flow)
-        self.assertIn("Wegwerf-Branch", flow)
+        self.assertIn("throwaway branch", flow)
 
 
 class PrototypeEndingsTest(unittest.TestCase):
@@ -189,14 +196,14 @@ class PrototypeEndingsTest(unittest.TestCase):
 
     def test_templates_for_waiting_and_after_verdict(self):
         self.assertEqual(set(self.templates),
-                         {"Ergebnis prototype", "Ergebnis prototype (wartet auf Urteil)",
-                          "Ergebnis prototype (Rückfrage Branch)", "Ergebnis prototype (Halt)"})
+                         {"Ergebnis prototype", "Ergebnis prototype (awaiting verdict)",
+                          "Ergebnis prototype (branch question)", "Ergebnis prototype (halt)"})
 
     def test_every_template_ends_with_next_step_and_status(self):
         expected = {"Ergebnis prototype": ("DONE",),
-                    "Ergebnis prototype (wartet auf Urteil)": ("NEEDS_CONTEXT",),
-                    "Ergebnis prototype (Rückfrage Branch)": ("NEEDS_CONTEXT",),
-                    "Ergebnis prototype (Halt)": ("NEEDS_CONTEXT", "BLOCKED")}
+                    "Ergebnis prototype (awaiting verdict)": ("NEEDS_CONTEXT",),
+                    "Ergebnis prototype (branch question)": ("NEEDS_CONTEXT",),
+                    "Ergebnis prototype (halt)": ("NEEDS_CONTEXT", "BLOCKED")}
         for name, block in self.templates.items():
             with self.subTest(template=name):
                 lines = block.strip().splitlines()
@@ -206,41 +213,41 @@ class PrototypeEndingsTest(unittest.TestCase):
                 self.assertTrue(any(l.startswith("Nächster Schritt: ") for l in lines[:-1]))
 
     def test_waiting_template_says_how_to_continue_and_where_the_repo_stands(self):
-        waiting = self.templates["Ergebnis prototype (wartet auf Urteil)"]
+        waiting = self.templates["Ergebnis prototype (awaiting verdict)"]
         self.assertIn("**Start:**", waiting)
-        self.assertIn("**Vergleichen:**", waiting)
-        self.assertIn("**Repo steht auf:** prototype/<slug> (Prototyp committet, angelegt von <Branch>) "
-                      "— zurück mit `git switch <Branch>`", waiting)
+        self.assertIn("**Compare:**", waiting)
+        self.assertIn("**Repo is on:** prototype/<slug> (prototype committed, created from <branch>) "
+                      "— back with `git switch <branch>`", waiting)
         # Pre-Push-Review: Die neue Session braucht Wegwerf- und Ausgangs-Branch im Argument.
-        self.assertIn("Nächster Schritt: Urteil hier geben, dann hält prototype es fest; in einer "
-                      "neuen Session `/slickfab:prototype Frage: <…> Urteil: <…> "
-                      "Branch: prototype/<slug> von <Branch>`", waiting)
+        self.assertIn("Nächster Schritt: give the verdict here, then prototype records it; in a "
+                      "new session `/slickfab:prototype Question: <…> Verdict: <…> "
+                      "Branch: prototype/<slug> from <branch>`", waiting)
 
     def test_step_five_commits_before_waiting_and_uses_the_template(self):
         five = subsection(section(self.text, "Ablauf"), "5.")
-        self.assertIn("Bevor du vorführst, committe den Prototyp auf dem Wegwerf-Branch; der "
-                      "Commit-Text nennt die Frage und den Ausgangs-Branch", five)
-        self.assertIn("Vorlage „wartet auf Urteil“", five)
-        self.assertIn("Endet die Sitzung vor dem Urteil", five)
+        self.assertIn("Before you demonstrate, commit the prototype on the throwaway branch; the "
+                      "commit message names the question and the starting branch", five)
+        self.assertIn("template “awaiting verdict”", five)
+        self.assertIn("If the session ends before the verdict", five)
 
     def test_step_six_continues_with_verdict_from_argument(self):
         six = subsection(section(self.text, "Ablauf"), "6.")
-        self.assertIn("Kommt das Urteil in einer neuen Session", six)
+        self.assertIn("If the verdict comes in a new session", six)
         # Pre-Push-Review: sonst Commit auf main und Rückkehr auf einen geratenen Branch.
-        self.assertIn("wechsle auf den Wegwerf-Branch aus dem Argument", six)
-        self.assertIn("den Ausgangs-Branch nimmst du aus dem Argument oder dem Commit-Text des "
-                      "Prototyps", six)
-        self.assertIn("Fehlt einer der beiden oder gibt es den Wegwerf-Branch nicht, hör auf", six)
+        self.assertIn("switch to the throwaway branch from the argument", six)
+        self.assertIn("you take the starting branch from the argument or from the prototype's "
+                      "commit message", six)
+        self.assertIn("If one of the two is missing or the throwaway branch does not exist, stop", six)
         # Pre-Push-Review 2: auch dieses Warten braucht eine Vorlage mit nächstem Schritt.
-        self.assertIn("Vorlage „Rückfrage Branch“", six)
-        self.assertIn("Du committest nie auf einem Branch, der nicht mit `prototype/` beginnt.", six)
+        self.assertIn("template “branch question”", six)
+        self.assertIn("You never commit on a branch that does not start with `prototype/`.", six)
 
     def test_branch_question_template_names_what_is_missing_and_the_command(self):
-        ask = self.templates["Ergebnis prototype (Rückfrage Branch)"]
-        self.assertIn("**Fehlt:** <Wegwerf-Branch | Ausgangs-Branch | `prototype/<slug>` gibt es nicht>", ask)
-        self.assertIn("**Nichts geändert:** kein Commit, kein Branchwechsel", ask)
-        self.assertIn("Nächster Schritt: `/slickfab:prototype Frage: <…> Urteil: <…> "
-                      "Branch: prototype/<slug> von <Branch>`", ask)
+        ask = self.templates["Ergebnis prototype (branch question)"]
+        self.assertIn("**Missing:** <throwaway branch | starting branch | `prototype/<slug>` does not exist>", ask)
+        self.assertIn("**Nothing changed:** no commit, no branch switch", ask)
+        self.assertIn("Nächster Schritt: `/slickfab:prototype Question: <…> Verdict: <…> "
+                      "Branch: prototype/<slug> from <branch>`", ask)
 
 
 class PrototypeHaltTest(unittest.TestCase):
@@ -253,86 +260,100 @@ class PrototypeHaltTest(unittest.TestCase):
         self.rows = set()
         for line in self.result.splitlines():
             cells = tuple(c.strip() for c in line.strip().strip("|").split("|"))
-            if len(cells) == 4 and cells[0].startswith("Schritt "):
+            if len(cells) == 4 and cells[0].startswith("Step "):
                 self.rows.add(cells)
 
     def test_every_halt_has_a_row_with_next_step_and_status(self):
         self.assertEqual(self.rows, {
-            ("Schritt 1", "keine Frage", "`/slickfab:prototype <Frage>`", "`NEEDS_CONTEXT`"),
-            ("Schritt 1", "Frage mit einem Satz zu klären", "`/slickfab:grill <Frage>`", "`NEEDS_CONTEXT`"),
-            ("Schritt 1", "offene Änderungen im Repo",
-             "Mensch committet oder legt sie selbst beiseite, dann `/slickfab:prototype <Frage>` erneut",
+            ("Step 1", "no question", "`/slickfab:prototype <question>`", "`NEEDS_CONTEXT`"),
+            ("Step 1", "question can be settled with one sentence", "`/slickfab:grill <question>`", "`NEEDS_CONTEXT`"),
+            ("Step 1", "open changes in the repo",
+             "the human commits or sets them aside themselves, then `/slickfab:prototype <question>` again",
              "`BLOCKED`"),
             # Review PR #21, A1: Commit in Schritt 5 nur auf prototype/.
-            ("Schritt 5", "nicht auf `prototype/<slug>`",
-             "Mensch prüft den Branch, dann `/slickfab:prototype <Frage>` erneut", "`BLOCKED`"),
+            ("Step 5", "not on `prototype/<slug>`",
+             "the human checks the branch, then `/slickfab:prototype <question>` again", "`BLOCKED`"),
         })
 
     def test_step_five_checks_the_branch_before_committing(self):
         five = subsection(section(self.text, "Ablauf"), "5.")
-        self.assertIn("Prüf vor diesem Commit mit `git branch --show-current`, dass du auf "
-                      "`prototype/<slug>` stehst. Sonst committest du nichts und endest mit der "
-                      "Vorlage „Halt“.", five)
+        self.assertIn("Before this commit, check with `git branch --show-current` that you are on "
+                      "`prototype/<slug>`. Otherwise you commit nothing and end with the "
+                      "template “halt”.", five)
 
     def test_step_one_points_to_the_template(self):
         one = subsection(section(self.text, "Ablauf"), "1.")
-        self.assertIn("Hörst du hier auf, endest du mit der Vorlage „Halt“ (unten).", one)
+        self.assertIn("If you stop here, you end with the template “halt” (below).", one)
 
     def test_template_says_nothing_changed(self):
-        self.assertIn("**Stand:** Repo auf <Branch>, kein Commit; <kein Branch angelegt | "
-                      "uncommittete Prototyp-Dateien: …>", self.result)
+        self.assertIn("**State:** repo on <branch>, no commit; <no branch created | "
+                      "uncommitted prototype files: …>", self.result)
 
 
 class ChallengeStepTest(StandaloneStepMixin, unittest.TestCase):
     step = "challenge"
+    precondition = "### 1. Check the precondition"
 
     def test_fresh_view_gets_only_the_spec(self):
         flow = section(self.text, "Ablauf")
-        self.assertIn("frischen Sub-Agent", flow)
-        self.assertIn("nur die Spec", flow)
+        self.assertIn("start a fresh subagent", flow)
+        self.assertIn("only the spec", flow)
 
     def test_at_most_seven_objections_and_a_verdict(self):
-        self.assertIn("höchstens 7 Einwände", self.text)
+        self.assertIn("at most 7 objections", self.text)
+        # Die Urteilswerte bleiben wörtlich: fab und tickets lesen sie aus Kommentaren am Spec-Issue.
         for verdict in ("`bauen`", "`kleiner bauen`", "`nicht bauen`"):
             self.assertIn(verdict, self.text)
 
     def test_buildability_sorts_into_three_piles(self):
-        for pile in ("schon beantwortet", "Kleinkram", "nur der Mensch"):
+        for pile in ("already answered", "small stuff", "only the human"):
             self.assertIn(pile, self.text)
 
     def test_decomposition_check_stops_after_round_two(self):
         flow = section(self.text, "Ablauf")
-        self.assertIn("höchstens 2 Runden", flow)
-        self.assertIn("nicht sinkt", flow)
-        self.assertIn("keine dritte Runde", flow)
+        self.assertIn("at most 2 rounds", flow)
+        self.assertIn("does not go down", flow)
+        self.assertIn("There is no third round", flow)
 
 
 class TicketsStepTest(StandaloneStepMixin, unittest.TestCase):
     step = "tickets"
+    precondition = "### 1. Check the precondition"
 
     def test_tracer_first_blocks_all_others(self):
         flow = section(self.text, "Ablauf")
         self.assertIn("Tracer", flow)
-        self.assertIn("blockiert alle übrigen", flow)
+        self.assertIn("blocks all other tickets", flow)
+        # Beide Stellen tragen die Regel: das Schneiden und das Setzen der Relationen
+        # (Mutationsprobe: der Satz in Schritt 3 allein gestrichen blieb grün).
+        self.assertIn("It blocks all other tickets.", subsection(flow, "3. Cut"))
+        self.assertIn("- The tracer blocks all other tickets.", subsection(flow, "4. Set dependencies"))
 
     def test_file_overlap_gets_blocked_by_relation(self):
-        self.assertIn("dieselbe Datei", section(self.text, "Ablauf"))
-        self.assertIn("Blockiert-Relation", section(self.text, "Ablauf"))
+        self.assertIn("the same file", section(self.text, "Ablauf"))
+        self.assertIn("blocked-by relation", section(self.text, "Ablauf"))
+        # Mutationsprobe: die Regel selbst gestrichen blieb grün, die Wörter standen auch anderswo.
+        self.assertIn("If two tickets name the same file, the later one gets a blocked-by relation on "
+                      "the earlier one, even if they need nothing from each other in content",
+                      subsection(section(self.text, "Ablauf"), "4. Set dependencies"))
 
     def test_rejects_deferral_phrases(self):
         flow = section(self.text, "Ablauf")
-        for phrase in ("„v1“", "„vereinfacht“", "„Platzhalter“", "„wird später verdrahtet“"):
+        for phrase in ("“v1”", "“simplified”", "“placeholder”", "“will be wired later”",
+                       "`vereinfacht`", "`Platzhalter`", "`wird später verdrahtet`"):
             self.assertIn(phrase, flow)
 
     def test_confirmation_and_duplicate_check_before_creating(self):
         flow = section(self.text, "Ablauf")
-        confirm = flow.index("nummerierte Liste")
-        dupes = flow.index("Dubletten")
-        create = flow.index("### 7. Anlegen")
+        confirm = flow.index("numbered list")
+        dupes = flow.index("Check for duplicates")
+        create = flow.index("### 7. Create")
         self.assertLess(confirm, create)
         self.assertLess(dupes, create)
 
     def test_ticket_template_fields(self):
+        # Felder des Tickets bleiben wörtlich: der Dispatcher liest „Betroffene Dateien“,
+        # implement, review und verify lesen „Widerlegt, wenn“.
         for field in ("Widerlegt, wenn", "Verbraucht:", "Liefert:", "Betroffene Dateien",
                       "`door:one-way`", "Expand–Migrate–Contract"):
             self.assertIn(field, self.text)
@@ -344,10 +365,10 @@ class TicketsStepTest(StandaloneStepMixin, unittest.TestCase):
         # Hand-Durchlauf, Befund 1: Bei einer Rückfrage (Dublette,
         # NEEDS_CONTEXT) fehlte „Nächster Schritt“, und der Marker stand in einem Codeblock.
         result = section(self.text, "Ergebnis")
-        self.assertIn("Die Zeile „Nächster Schritt“ fehlt nie, auch nicht bei einer Rückfrage "
+        self.assertIn("The line `Nächster Schritt` is never missing, not even for a question "
                       "(`NEEDS_CONTEXT`).", result)
-        self.assertIn("Die Marker-Zeile ist die letzte Zeile deiner Antwort und steht außerhalb "
-                      "jedes Codeblocks.", result)
+        self.assertIn("The marker line is the last line of your answer and stands outside "
+                      "any code block.", result)
         templates = re.findall(r"^```\n(.*?)^```", result, re.S | re.M)
         self.assertEqual(len(templates), 3, "Vorlagen: angelegt, Rückfrage, Abbruch")
         for block in templates:
@@ -364,32 +385,32 @@ class TicketsStepTest(StandaloneStepMixin, unittest.TestCase):
     def test_question_next_step_matches_the_reason(self):
         # Review PR #17, A1: Die Rückfrage-Vorlage empfahl fest `tickets` erneut, Schritt 1
         # verlangt bei fehlender Spec oder einer Entscheidung, die nicht in der Spec steht, `spec`.
-        question = [t for t in self.result_templates() if "(Rückfrage)" in t][0]
-        self.assertIn("fehlt die Spec oder steht eine Entscheidung noch nicht darin: "
-                      "`/slickfab:spec [Spec-Issue]`", question)
-        self.assertIn("fehlt die Prüfung: `/slickfab:challenge <Spec-Issue>`", question)
-        self.assertIn("Frage zum Schnitt (Dublette, Liste wartet auf das Ja, Befunde offen nach Runde 2): "
-                      "`/slickfab:tickets <Spec-Issue>` erneut", question)
+        question = [t for t in self.result_templates() if "(question)" in t][0]
+        self.assertIn("if the spec is missing or a decision is not yet in it: "
+                      "`/slickfab:spec [spec issue]`", question)
+        self.assertIn("if the check is missing: `/slickfab:challenge <spec issue>`", question)
+        self.assertIn("question about the cut (duplicate, list waiting for the yes, findings open after round 2): "
+                      "`/slickfab:tickets <spec issue>` again", question)
         # Schritt 1 nennt dieselben Wege.
-        pre = subsection(self.text, "1. Voraussetzung")
-        self.assertIn("Fehlt es, empfiehl `/slickfab:spec`.", pre)
-        self.assertIn("zuerst `/slickfab:spec <Spec-Issue>`", pre)
+        pre = subsection(self.text, "1. Check the precondition")
+        self.assertIn("If it is missing, recommend `/slickfab:spec`.", pre)
+        self.assertIn("`/slickfab:spec <spec issue>` first", pre)
 
     def test_tracker_abort_while_creating_has_blocked_template(self):
         # Review PR #17, A1: Bricht der Tracker beim Anlegen ab, gab es keine Vorlage mit BLOCKED.
-        aborted = [t for t in self.result_templates() if "(Abbruch)" in t]
+        aborted = [t for t in self.result_templates() if "(abort)" in t]
         self.assertEqual(len(aborted), 1)
         lines = aborted[0].strip().splitlines()
         self.assertEqual(lines[-1], "SLICKFAB-STATUS: BLOCKED")
         self.assertTrue(any(l.startswith("Nächster Schritt: `/slickfab:") for l in lines[:-1]))
-        self.assertIn("**Schon angelegt:**", aborted[0])
-        self.assertIn("**Nicht angelegt:**", aborted[0])
-        self.assertIn("**Fehlermeldung:**", aborted[0])
+        self.assertIn("**Already created:**", aborted[0])
+        self.assertIn("**Not created:**", aborted[0])
+        self.assertIn("**Error message:**", aborted[0])
         main = [t for t in self.result_templates() if t.startswith("## Ergebnis tickets\n")][0]
         self.assertNotIn("BLOCKED", main)
 
 
-STOP = re.compile(r"hör (hier |sofort )?auf|empfiehl|wartest du|legst du dem Menschen vor")
+STOP = re.compile(r"\b[Ss]top\b|recommend|you wait|you put to the human")
 
 
 class TicketsEveryEndingHasTemplateTest(unittest.TestCase):
@@ -407,7 +428,7 @@ class TicketsEveryEndingHasTemplateTest(unittest.TestCase):
         self.rows = []
         for line in result.splitlines():
             cells = [c.strip() for c in line.strip().strip("|").split("|")]
-            if len(cells) == 4 and cells[0].startswith("Schritt "):
+            if len(cells) == 4 and cells[0].startswith("Step "):
                 self.rows.append(cells)
 
     def test_every_stop_in_the_flow_has_a_row(self):
@@ -422,15 +443,15 @@ class TicketsEveryEndingHasTemplateTest(unittest.TestCase):
 
     def test_expected_endings(self):
         expected = {
-            ("Schritt 1", "`.slickfab/config` fehlt oder Tracker nicht erreichbar", "Ergebnis tickets (Abbruch)", "`BLOCKED`"),
-            ("Schritt 1", "Spec-Issue fehlt", "Ergebnis tickets (Rückfrage)", "`NEEDS_CONTEXT`"),
-            ("Schritt 1", "`challenge`-Kommentar fehlt", "Ergebnis tickets (Rückfrage)", "`NEEDS_CONTEXT`"),
-            ("Schritt 1", "Entscheidung steht noch nicht in der Spec", "Ergebnis tickets (Rückfrage)", "`NEEDS_CONTEXT`"),
-            ("Schritt 1", "letztes `challenge`-Urteil `nicht bauen`", "Ergebnis tickets (Rückfrage)", "`NEEDS_CONTEXT`"),
-            ("Schritt 6", "Tracker antwortet bei der Dublettensuche mit einem Fehler", "Ergebnis tickets (Abbruch)", "`BLOCKED`"),
-            ("Schritt 6", "Dublette, Liste wartet auf das Ja oder Befunde offen nach Runde 2", "Ergebnis tickets (Rückfrage)", "`NEEDS_CONTEXT`"),
-            ("Schritt 7", "Tracker bricht beim Anlegen ab", "Ergebnis tickets (Abbruch)", "`BLOCKED`"),
-            ("Schritt 7", "alle Tickets angelegt", "Ergebnis tickets", "`DONE` oder `DONE_WITH_CONCERNS`"),
+            ("Step 1", "`.slickfab/config` missing or tracker unreachable", "Ergebnis tickets (abort)", "`BLOCKED`"),
+            ("Step 1", "spec issue missing", "Ergebnis tickets (question)", "`NEEDS_CONTEXT`"),
+            ("Step 1", "`challenge` comment missing", "Ergebnis tickets (question)", "`NEEDS_CONTEXT`"),
+            ("Step 1", "decision not yet in the spec", "Ergebnis tickets (question)", "`NEEDS_CONTEXT`"),
+            ("Step 1", "last `challenge` verdict `nicht bauen`", "Ergebnis tickets (question)", "`NEEDS_CONTEXT`"),
+            ("Step 6", "tracker answers the duplicate search with an error", "Ergebnis tickets (abort)", "`BLOCKED`"),
+            ("Step 6", "duplicate, list waiting for the yes, or findings open after round 2", "Ergebnis tickets (question)", "`NEEDS_CONTEXT`"),
+            ("Step 7", "tracker breaks off while creating", "Ergebnis tickets (abort)", "`BLOCKED`"),
+            ("Step 7", "all tickets created", "Ergebnis tickets", "`DONE` or `DONE_WITH_CONCERNS`"),
         }
         self.assertEqual({tuple(r) for r in self.rows}, expected)
 
@@ -445,19 +466,19 @@ class TicketsEveryEndingHasTemplateTest(unittest.TestCase):
                 self.assertTrue(any(l.startswith("Nächster Schritt: `/slickfab:") for l in lines[:-1]))
 
     def test_abort_template_covers_step_one_and_names_what_the_human_does(self):
-        abort = self.templates["Ergebnis tickets (Abbruch)"]
+        abort = self.templates["Ergebnis tickets (abort)"]
         # Schritt 7 verweist beim Abbruch auf die Vorlage (überlebende Mutation, Rework 2).
-        self.assertIn("(Vorlage „Abbruch“ unten, `BLOCKED`)", subsection(self.text, "7. Anlegen"))
-        self.assertIn("**Wo:** Schritt 1 (Konfiguration oder Tracker) | Schritt 6 (Dublettensuche) "
-                      "| Schritt 7 (beim Anlegen)", abort)
-        self.assertIn("**Schon angelegt:** <IDs mit Titel und gesetzten Relationen> (in Schritt 1 und 6: keine)", abort)
-        self.assertIn("Nächster Schritt: `/slickfab:tickets <Spec-Issue>` erneut, nachdem du "
-                      "<`.slickfab/config` angelegt | den Tracker geprüft (Werkzeuge geladen, angemeldet, "
-                      "Team und Projekt vorhanden)> hast", abort)
+        self.assertIn("(template “abort” below, `BLOCKED`)", subsection(self.text, "7. Create"))
+        self.assertIn("**Where:** step 1 (configuration or tracker) | step 6 (duplicate search) "
+                      "| step 7 (while creating)", abort)
+        self.assertIn("**Already created:** <IDs with title and relations set> (in steps 1 and 6: none)", abort)
+        self.assertIn("Nächster Schritt: `/slickfab:tickets <spec issue>` again, after you have "
+                      "<created `.slickfab/config` | checked the tracker (tools loaded, logged in, "
+                      "team and project exist)>", abort)
 
 
 # Stellen im Ablauf, an denen tickets den Tracker anspricht (lesen, suchen, anlegen).
-TRACKER_CALL = re.compile(r"Lies das Spec-Issue|Suche im Projekt|Sub-Issue der Spec, Status|Kommentar am Spec-Issue")
+TRACKER_CALL = re.compile(r"Read the spec issue|search the project|sub-issue of the spec, status|comment on the spec issue")
 
 
 class TicketsTrackerErrorTest(unittest.TestCase):
@@ -492,21 +513,21 @@ class TicketsTrackerErrorTest(unittest.TestCase):
     def test_every_tracker_step_has_an_abort_row(self):
         for step in self.tracker_steps():
             with self.subTest(step=step):
-                rows = [r for r in self.ending.rows if r[0] == "Schritt %d" % step
-                        and "Tracker" in r[1] and r[2] == "Ergebnis tickets (Abbruch)" and r[3] == "`BLOCKED`"]
+                rows = [r for r in self.ending.rows if r[0] == "Step %d" % step
+                        and "tracker" in r[1] and r[2] == "Ergebnis tickets (abort)" and r[3] == "`BLOCKED`"]
                 self.assertTrue(rows, "Schritt %d spricht den Tracker an, hat aber keine Abbruch-Zeile" % step)
 
     def test_step_six_names_the_abort(self):
-        self.assertIn("Antwortet der Tracker bei der Suche mit einem Fehler, hör auf (Vorlage „Abbruch“ "
-                      "unten, `BLOCKED`).", subsection(self.text, "6. Zerlegung"))
+        self.assertIn("If the tracker answers the search with an error, stop (template “abort” "
+                      "below, `BLOCKED`).", subsection(self.text, "6. Check the split"))
 
 
 class ChallengeNotBuildEndsWithCanceledTest(unittest.TestCase):
     """Review PR #19, A1: challenge nannte bei `nicht bauen` nur „endet die Planung hier“."""
 
     def test_next_step_names_canceled(self):
-        self.assertIn("Lautet das Urteil `nicht bauen` und der Mensch stimmt zu, endet die Planung "
-                      "hier: Der Mensch setzt die Spec auf `Canceled`.",
+        self.assertIn("If the verdict is `nicht bauen` and the human agrees, planning ends "
+                      "here: the human sets the spec to `Canceled`.",
                       section(read("skills/challenge/SKILL.md"), "Nächster Schritt"))
 
 
@@ -517,14 +538,14 @@ class TicketsAbortFieldsTest(unittest.TestCase):
     def setUp(self):
         ending = TicketsEveryEndingHasTemplateTest("test_expected_endings")
         ending.setUp()
-        self.abort = ending.templates["Ergebnis tickets (Abbruch)"]
+        self.abort = ending.templates["Ergebnis tickets (abort)"]
 
     def test_error_field_takes_tracker_errors(self):
-        self.assertIn("**Fehlermeldung:** <wörtlich: fehlende Datei oder fehlender Schlüssel, oder "
-                      "die Fehlerantwort des Trackers>", self.abort)
+        self.assertIn("**Error message:** <verbatim: missing file or missing key, or "
+                      "the tracker's error response>", self.abort)
 
     def test_not_created_fits_step_six(self):
-        self.assertIn("in Schritt 6: alle Titel der noch nicht bestätigten Liste", self.abort)
+        self.assertIn("in step 6: all titles of the not yet confirmed list", self.abort)
 
 
 class TicketsNotBuildVerdictTest(unittest.TestCase):
@@ -535,16 +556,16 @@ class TicketsNotBuildVerdictTest(unittest.TestCase):
         self.text = read("skills/tickets/SKILL.md")
 
     def test_step_one_stops_on_not_build(self):
-        self.assertIn("Lautet das letzte Urteil `nicht bauen`, hör hier auf und leg die Frage dem "
-                      "Menschen vor (Vorlage „Rückfrage“ unten), außer er hat ausdrücklich gesagt, "
-                      "dass trotzdem zerlegt wird.", subsection(self.text, "1. Voraussetzung"))
+        self.assertIn("If the last verdict is `nicht bauen`, stop here and put the question to the "
+                      "human (template “question” below), unless they have explicitly said "
+                      "that the spec is to be split anyway.", subsection(self.text, "1. Check the precondition"))
 
     def test_question_template_names_next_step_without_tickets(self):
         question = [b for b in re.findall(r"^```\n(.*?)^```", section(self.text, "Ergebnis"), re.S | re.M)
-                    if b.startswith("## Ergebnis tickets (Rückfrage)")][0]
-        self.assertIn("lautet das Urteil `nicht bauen`: `/slickfab:spec <Spec-Issue>`, wenn du die Spec "
-                      "änderst (danach `/slickfab:challenge <Spec-Issue>`); stimmst du dem Urteil zu, "
-                      "endet das Vorhaben und du setzt die Spec auf `Canceled`", question)
+                    if b.startswith("## Ergebnis tickets (question)")][0]
+        self.assertIn("if the verdict is `nicht bauen`: `/slickfab:spec <spec issue>` if you change the spec "
+                      "(after that `/slickfab:challenge <spec issue>`); if you agree with the verdict, "
+                      "the work ends and you set the spec to `Canceled`", question)
 
 
 class GrillAdrRuleTest(unittest.TestCase):
@@ -553,19 +574,19 @@ class GrillAdrRuleTest(unittest.TestCase):
     Regel mit genau zwei Kriterien, die beide zutreffen müssen."""
 
     def setUp(self):
-        self.rule = subsection(read("skills/grill/SKILL.md"), "6. Nebenbei")
+        self.rule = subsection(read("skills/grill/SKILL.md"), "6. Take notes")
 
     def test_adr_rule_has_two_fixed_criteria(self):
-        self.assertIn("**ADR:** Ein ADR ist fällig, wenn beides zutrifft: (1) Die Entscheidung "
-                      "ist schwer umkehrbar. (2) Ohne Begründung würde ein späterer Leser sie "
-                      "überraschend finden oder wieder aufrollen.", self.rule)
-        self.assertIn("Trifft beides zu, legst du den ADR an; trifft eins nicht zu, legst du keinen an.",
+        self.assertIn("**ADR:** An ADR is due if both apply: (1) The decision is hard to "
+                      "reverse. (2) Without a reason, a later reader would find it surprising "
+                      "or reopen it.", self.rule)
+        self.assertIn("If both apply, you create the ADR; if one does not apply, you create none.",
                       self.rule)
 
     def test_no_third_criterion_left_to_judgement(self):
         # Widerlegt, wenn die Regel ein Ermessen ohne diese zwei Kriterien lässt.
-        self.assertNotIn("echte Abwägung", self.rule)
-        self.assertNotIn("Nur wenn", self.rule)
+        self.assertNotIn("real trade-off", self.rule)
+        self.assertNotIn("Only if", self.rule)
 
 
 class RuleAnchorsTest(unittest.TestCase):
@@ -576,34 +597,34 @@ class RuleAnchorsTest(unittest.TestCase):
     # (Datei, Abschnitt '### <Anfang>' oder '## <Name>', Ankersatz)
     ANCHORS = (
         # Fehlende Konfiguration / Tracker: melden, keine Ersatzdatei
-        ("skills/tickets/SKILL.md", "### 1. Voraussetzung", "hör hier auf und melde genau das"),
-        ("skills/tickets/SKILL.md", "### 1. Voraussetzung", "du schreibst keine Ticket-, Plan- oder State-Datei ins Repo als Ersatz"),
-        ("skills/tickets/SKILL.md", "### 7. Anlegen", "Du legst keine Datei als Ersatz an."),
-        ("skills/spec/SKILL.md", "### 6. Im Tracker", "Du legst keine Spec-, Plan- oder Ticket-Datei im Repo an."),
-        ("skills/challenge/SKILL.md", "### 5. Festhalten", "Keine Datei im Repo als Ersatz."),
+        ("skills/tickets/SKILL.md", "### 1. Check the precondition", "stop here and report exactly that"),
+        ("skills/tickets/SKILL.md", "### 1. Check the precondition", "you write no ticket, plan or state file into the repo as a substitute"),
+        ("skills/tickets/SKILL.md", "### 7. Create", "You create no file as a substitute."),
+        ("skills/spec/SKILL.md", "### 6. Create in the tracker", "You create no spec, plan or ticket file in the repo."),
+        ("skills/challenge/SKILL.md", "### 5. Record", "No file in the repo as a substitute."),
         ("tracker/linear.md", "## Access", "It writes **no** plan, ledger, state or ticket file into the repo as a substitute."),
         ("docs/projektkonfiguration.md", "## Wenn die Konfiguration fehlt", "It writes no plan, ledger or state file and no ticket list into the repo as a substitute"),
         # Anlegen erst nach Bestätigung, Dubletten vorher
-        ("skills/tickets/SKILL.md", "### 6. Zerlegung", "Angelegt wird erst nach einem ausdrücklichen Ja zur Liste"),
-        ("skills/tickets/SKILL.md", "### 7. Anlegen", "Erst nach dem Ja"),
-        ("skills/tickets/SKILL.md", "### 6. Zerlegung", "Prüf auf Dubletten"),
+        ("skills/tickets/SKILL.md", "### 6. Check the split", "Nothing is created until there is an explicit yes to the list"),
+        ("skills/tickets/SKILL.md", "### 7. Create", "Only after the yes"),
+        ("skills/tickets/SKILL.md", "### 6. Check the split", "Check for duplicates"),
         ("tracker/linear.md", "## Issues", "Before creating anything, check for duplicates"),
         # Vertagende Formulierungen
-        ("skills/tickets/SKILL.md", "### 5. Auf stille", "Ein Ticket mit so einer Formulierung legst du nicht an."),
+        ("skills/tickets/SKILL.md", "### 5. Check for silent", "A ticket with such a phrase you do not create."),
         # Keine stille Annahme in spec, keine Pfade
-        ("skills/spec/SKILL.md", "### 1. Voraussetzung", "hörst du hier auf"),
-        ("skills/spec/SKILL.md", "### 3. Jede Aussage", "**Produktfrage oder schwer umkehrbar:** Hier hörst du auf."),
-        ("skills/spec/SKILL.md", "### 5. Selbstprüfung", "kein Dateipfad, kein Dateiname, kein Code im Text"),
+        ("skills/spec/SKILL.md", "### 1. Check the precondition", "you stop here"),
+        ("skills/spec/SKILL.md", "### 3. Check every statement", "**Product question or hard to reverse:** Here you stop."),
+        ("skills/spec/SKILL.md", "### 5. Self-check", "no file path, no file name, no code in the text"),
         # challenge: frischer Blick
-        ("skills/challenge/SKILL.md", "### 2. Frischen Blick", "Prüf nicht selbst in einer Session, die das Gespräch kennt."),
+        ("skills/challenge/SKILL.md", "### 2. Establish the fresh eye", "Do not check yourself in a session that knows the conversation."),
         # Freigabe bleibt beim Menschen
-        ("skills/tickets/SKILL.md", "### 7. Anlegen", "Kein Ticket setzt du auf `Todo`"),
+        ("skills/tickets/SKILL.md", "### 7. Create", "You set no ticket to `Todo`"),
         ("tracker/linear.md", "## Status flow", "No step sets a ticket to `Todo` by itself."),
         # Konfiguration nie ausführen
         ("docs/projektkonfiguration.md", "## Format", "not executed as a shell script (no `source`)"),
         # prototype: fremde Arbeit und Hauptzweig unangetastet
-        ("skills/prototype/SKILL.md", "### 1. Voraussetzung", "Sind Änderungen offen, hör auf und sag es. Du verschiebst oder versteckst keine fremden Änderungen."),
-        ("skills/prototype/SKILL.md", "### 6. Festhalten", "Vom Prototyp kommt nichts in den Hauptzweig"),
+        ("skills/prototype/SKILL.md", "### 1. Check the precondition", "If changes are open, stop and say so. You do not move or hide anyone else's changes."),
+        ("skills/prototype/SKILL.md", "### 6. Record", "Nothing from the prototype goes into the main branch"),
         ("tracker/linear.md", "## Labels", "a step does not create new ones"),
     )
 
@@ -614,6 +635,45 @@ class RuleAnchorsTest(unittest.TestCase):
                 part = subsection(text, scope[4:]) if scope.startswith("### ") else section(text, scope[3:])
                 self.assertTrue(part, "%s: Abschnitt '%s' fehlt" % (rel, scope))
                 self.assertIn(sentence, part)
+
+
+# Die Planungs-Schritte sind englisch (öffentliches Repo). Deutsch bleiben nur Namen, die andere
+# Dateien, der Dispatcher oder schon angelegte Issues lesen; sie stehen in `Code`, in Codeblöcken,
+# in Vertragsblöcken oder als feste Überschrift (check_structure.py).
+PLANNING_STEPS = ("fab", "grill", "spec", "prototype", "challenge", "tickets")
+GERMAN = re.compile(r"[äöüÄÖÜß„]|\b(und|oder|nicht|der|die|das|ist|wird|eine?|keine?|du|dich|wenn|mit|auf|sie)\b", re.I)
+FIXED = re.compile(r"^## (Wann|Ablauf|Vertrag|Ergebnis|Nächster Schritt)$", re.M)
+
+
+def prose(text):
+    """Fließtext ohne Frontmatter-Schlüssel, Vertragsblöcke, Codeblöcke, `Code`, Marker und feste Überschriften."""
+    text = re.sub(r"<!-- vertrag:([a-z-]+) -->.*?<!-- /vertrag:\1 -->", "", text, flags=re.S)
+    text = re.sub(r"(?ms)^```.*?^```", "", text)
+    text = re.sub(r"<!--.*?-->", "", text)
+    text = FIXED.sub("", text)
+    return re.sub(r"`[^`\n]*`", "", text)
+
+
+class EnglishPlanningStepsTest(unittest.TestCase):
+    def test_planning_steps_are_english(self):
+        for step in PLANNING_STEPS:
+            with self.subTest(step=step):
+                text = prose(read("skills/%s/SKILL.md" % step))
+                found = GERMAN.search(text)
+                self.assertIsNone(found, found and text[max(0, found.start() - 40):found.end() + 40])
+
+    def test_german_guard_is_sharp(self):
+        # Mutationsprobe des Wächters: ein deutscher Satz im Fließtext fällt auf, Namen in `Code` nicht.
+        self.assertIsNotNone(GERMAN.search(prose("You read it. Du liest es selbst.")))
+        self.assertIsNotNone(GERMAN.search(prose("Name it under „Bedenken“.")))
+        self.assertIsNone(GERMAN.search(prose("Name it under `Nicht im Umfang`.\n## Nächster Schritt\n")))
+        self.assertIsNotNone(GERMAN.search(prose("## Nächster Schritt: weiter\n")))
+
+    def test_every_step_carries_the_language_rule(self):
+        for step in PLANNING_STEPS:
+            with self.subTest(step=step):
+                intro = read("skills/%s/SKILL.md" % step).split("<!-- /regel:einleitung -->")[0]
+                self.assertIn("Answer in the user's language.", intro)
 
 
 if __name__ == "__main__":

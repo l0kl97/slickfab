@@ -1,124 +1,124 @@
 ---
 name: fab
-description: Verwenden, wenn unklar ist, wo ein Vorhaben im slickfab-Prozess steht und welcher Schritt als Nächstes kommt, oder wenn jemand „wo stehe ich?“, „was jetzt?“ oder „fab“ sagt.
-argument-hint: "[Spec-Issue | Ticket | Thema]"
+description: Use when it is unclear where a piece of work stands in the slickfab process and which step comes next, or when someone says “where am I?”, “what now?” or “fab”.
+argument-hint: "[spec issue | ticket | topic]"
 ---
 
 <!-- regel:einleitung -->
-# fab: Wegweiser
+# fab: signpost
 
-Ziel: Du sagst, wo das Vorhaben steht, welcher Schritt als Nächstes kommt und ob er im selben Gespräch oder in einer frischen Session läuft. Den Stand liest du aus dem Tracker und dem Repo, nie aus dem Gedächtnis und nie aus einer Zustandsdatei.
+Goal: You say where the work stands, which step comes next, and whether it runs in the same conversation or in a fresh session. You read the state from the tracker and the repo, never from memory and never from a state file.
 
-Du liest nur. Du schreibst keine Datei, keinen Kommentar, kein Label und keinen Status, auch nicht `.slickfab/config`. Was fehlt, nennst du; anlegen tut es der Mensch.
+You only read. You write no file, no comment, no label and no status, not even `.slickfab/config`. What is missing, you name; the human creates it.
 
-Antworte in der Sprache des Menschen. Tracker-Regeln und Projektkonfiguration stehen unten im Abschnitt „Vertrag“.
+Answer in the user's language. Tracker rules and project configuration are below in the section `Vertrag`.
 <!-- /regel:einleitung -->
 
 ## Wann
 
 <!-- regel:wann -->
-- Am Anfang, wenn noch nichts da ist: fab nennt den ersten Schritt.
-- Zwischen zwei Schritten oder nach einer Pause, wenn unklar ist, was als Nächstes kommt.
-- Nicht als Ersatz für einen Schritt: fab führt keinen Schritt aus, es nennt ihn.
+- At the start, when nothing exists yet: fab names the first step.
+- Between two steps or after a break, when it is unclear what comes next.
+- Not as a substitute for a step: fab does not run a step, it names it.
 <!-- /regel:wann -->
 
 ## Ablauf
 
 <!-- regel:repo-lesen -->
-### 1. Repo lesen
+### 1. Read the repo
 
-Nur lesende Befehle, jeder mit Ergebnis festgehalten:
+Read-only commands only, each with its result recorded:
 
 - `git rev-parse --show-toplevel`, `git branch --show-current`, `git status --short`, `git remote -v`.
-- Ob `.slickfab/config` existiert und die Pflichtwerte hat (Format im Vertrag), und ob `.slickrails/config.sh` existiert. Beide liest du als Text.
-- Offene Pull Requests mit `gh pr list --state open --json number,title,headRefName,url`. Zu jedem PR, der ein Ticket nennt (Ticket-ID im Titel oder Branch-Namen), liest du mit `gh pr view <PR> --json commits,comments,reviews` die letzte `SLICKFAB-VERDICT:`-Zeile mit Zeitpunkt und ob danach noch Commits kamen (Committer-Datum).
+- Whether `.slickfab/config` exists and has the required values (format in the contract), and whether `.slickrails/config.sh` exists. You read both as text.
+- Open pull requests with `gh pr list --state open --json number,title,headRefName,url`. For every PR that names a ticket (ticket ID in the title or branch name), you read with `gh pr view <PR> --json commits,comments,reviews` the last `SLICKFAB-VERDICT:` line with its time, and whether commits came after it (committer date).
 
-Scheitert ein Befehl (kein Git-Repo, `gh` fehlt oder ist nicht angemeldet, kein Remote), notierst du das als Lücke mit der Fehlermeldung und machst mit dem Rest weiter. Was du nicht lesen konntest, gilt als unbekannt, nicht als leer.
+If a command fails (not a Git repo, `gh` missing or not logged in, no remote), you record that as a gap with the error message and carry on with the rest. What you could not read counts as unknown, not as empty.
 <!-- /regel:repo-lesen -->
 
 <!-- regel:tracker-lesen -->
-### 2. Tracker lesen
+### 2. Read the tracker
 
-Nur wenn `.slickfab/config` vollständig ist und der Tracker erreichbar ist (Linear-Werkzeuge der Session, in Claude Code per Werkzeugsuche `+linear` laden). Ist ein Spec-Issue oder Ticket als Argument genannt, liest du das; sonst im Projekt aus der Konfiguration die offenen Issues mit Titel `Spec: …` und ihre Sub-Issues:
+Only if `.slickfab/config` is complete and the tracker is reachable (the session's Linear tools, in Claude Code loaded via tool search `+linear`). If a spec issue or ticket is given as argument, you read that; otherwise, in the project from the configuration, the open issues titled `Spec: …` and their sub-issues:
 
-- Status des Spec-Issues, Status jedes Tickets und Labels (`slickfab:needs-human`, `slickfab:rework`, `slickfab:replan`, `slickfab:ready`),
-- Relationen „blockiert von“,
-- die Kommentare von `challenge`, `verify` (mit Status `bestanden`, `Lücken gefunden` oder `Mensch nötig`), Übergaben (`handoff`) und Überarbeitungen der Spec (erste Zeile `## Spec überarbeitet`), jeweils mit Zeitpunkt und ihrer letzten Marker-Zeile.
+- status of the spec issue, status of every ticket, and labels (`slickfab:needs-human`, `slickfab:rework`, `slickfab:replan`, `slickfab:ready`),
+- “blocked by” relations,
+- the comments from `challenge`, `verify` (with status `bestanden`, `Lücken gefunden` or `Mensch nötig`), handoffs (`handoff`) and revisions of the spec (first line `## Spec überarbeitet`), each with its time and its last marker line.
 
-Fehlt die Konfiguration oder ist der Tracker nicht erreichbar, liest du ihn nicht und rätst nichts über ihn: keine Spec, kein Ticket und kein Status, den du nicht gesehen hast. Du entscheidest dann nur mit dem, was Repo und Gespräch zeigen, und nennst unter „Fehlt zur Einrichtung“, was fehlt. Du brichst nicht ab.
+If the configuration is missing or the tracker is unreachable, you do not read it and guess nothing about it: no spec, no ticket and no status you have not seen. You then decide only with what the repo and the conversation show, and name under “Missing for setup” what is missing. You do not abort.
 <!-- /regel:tracker-lesen -->
 
 <!-- regel:entscheiden -->
-### 3. Nächsten Schritt bestimmen
+### 3. Determine the next step
 
-Geh die Tabelle von oben nach unten durch; die erste Zeile, die zutrifft, gilt. Arbeit nah am Merge geht vor neuer Arbeit. Treffen mehrere Specs oder Tickets auf dieselbe Zeile, nennst du alle und empfiehlst das älteste. Eine Spec auf `Done` oder `Canceled` ist abgeschlossen: Sie zählt nicht als offene Spec, auch wenn sie als Argument genannt ist.
+Go through the table from top to bottom; the first row that applies counts. Work close to the merge comes before new work. If several specs or tickets match the same row, you name all of them and recommend the oldest. A spec in `Done` or `Canceled` is finished: it does not count as an open spec, even if it is given as argument.
 
-| # | Wenn (gesehen, nicht vermutet) | Dann |
+| # | If (seen, not assumed) | Then |
 |---|---|---|
-| 1 | Das Argument oder der Mensch beschreibt einen Fehler mit unbekannter Ursache | `/slickfab:debug <Fehler>` |
-| 2 | Ein Ticket hat `slickfab:needs-human`, oder der letzte slickfab-Kommentar daran endet mit `BLOCKED` | kein Schritt: der Mensch entscheidet; nenne, was offen ist, mit Link |
-| 3 | Offener PR zu einem Ticket ohne `SLICKFAB-VERDICT` | `/slickfab:review <PR>` |
-| 4 | Offener PR, letztes Urteil `REWORK` oder `MERGE`, danach neue Commits | `/slickfab:review Re-Review <PR>` |
-| 5 | Offener PR, letztes Urteil `REWORK`, danach keine Commits | `/slickfab:implement <Ticket>` (Nachbessern) |
-| 6 | Offener PR, letztes Urteil `REPLAN`, oder Ticket mit `slickfab:replan` | `/slickfab:tickets <Spec-Issue>` |
-| 7 | Offener PR, letztes Urteil `MERGE`, danach keine Commits | kein Schritt: der Mensch mergt |
-| 8 | Ticket in `In Review` ohne offenen PR | kein Schritt: der Mensch prüft, ob der PR gemergt ist (dann Ticket auf `Done`) oder fehlt; nenne Ticket und letzten PR mit Link |
-| 9 | Ticket in `In Progress` ohne offenen PR | `/slickfab:implement <Ticket>` (liest eine Übergabe am Ticket zuerst) |
-| 10 | Ticket in `Todo`, kein offener Blocker | `/slickfab:implement <Ticket>` |
-| 11 | Ticket in `Todo`, sein Blocker steht noch in `Backlog` | kein Schritt: der Mensch gibt den Blocker frei (`Todo`); nenne beide Tickets |
-| 12 | Spec-Issue noch offen, alle Tickets geschlossen, mindestens eins `Done`, kein `verify`-Ergebnis nach dem letzten Merge | `/slickfab:verify <Spec-Issue>` |
-| 13 | Spec-Issue noch offen, alle Tickets geschlossen, mindestens eins `Done`, letztes `verify`-Ergebnis `bestanden` | `/slickfab:retro <Spec-Issue>`; danach setzt der Mensch die Spec auf `Done` (retro schreibt nichts in den Tracker, das ist das Ende), mit dem nächsten Vorhaben `/slickfab:grill` |
-| 14 | Spec-Issue noch offen, alle Tickets geschlossen, mindestens eins `Done`, letztes `verify`-Ergebnis `Lücken gefunden` | `/slickfab:verify <Spec-Issue>`: schlägt die Fix-Tickets vor und legt sie nach dem Ja des Menschen an |
-| 15 | Spec-Issue noch offen, alle Tickets geschlossen, mindestens eins `Done`, letztes `verify`-Ergebnis `Mensch nötig` | kein Schritt: der Mensch prüft die Punkte aus dem `verify`-Kommentar, danach `/slickfab:verify <Spec-Issue>` |
-| 16 | Spec hat Tickets in `Backlog`, keines in `Todo`, `In Progress` oder `In Review` | kein Schritt: der Mensch gibt das nächste Ticket frei (`Todo`) |
-| 17 | Alle Tickets der Spec `Canceled` oder `Duplicate` | kein Schritt: der Mensch entscheidet, ob die Spec neu zerlegt wird (`/slickfab:tickets <Spec-Issue>`) oder endet; Status `NEEDS_CONTEXT` |
-| 18 | Spec ohne Tickets und ohne `challenge`-Kommentar, oder letztes `challenge`-Urteil `nicht bauen` und danach ein Kommentar `## Spec überarbeitet` (zeitlich nach dem letzten `challenge`-Kommentar) | `/slickfab:challenge <Spec-Issue>` |
-| 19 | Spec ohne Tickets, letztes `challenge`-Urteil `nicht bauen`, kein Kommentar `## Spec überarbeitet` danach | kein Schritt: der Mensch entscheidet, ob das Vorhaben endet (Spec auf `Canceled`) oder ob er die Spec mit `/slickfab:spec <Spec-Issue>` ändert und neu prüfen lässt; nenne den `challenge`-Kommentar mit Link; Status `NEEDS_CONTEXT` |
-| 20 | Spec ohne Tickets, `challenge`-Kommentar da, letztes Urteil `bauen` oder `kleiner bauen` | `/slickfab:tickets <Spec-Issue>` |
-| 21 | In diesem Gespräch steht ein bestätigtes „Ergebnis grill“ | `/slickfab:spec` |
-| 22 | Keine offene Spec gesehen und nichts von oben | `/slickfab:grill [Thema]` |
-| 23 | Eine offene Spec gesehen, aber keine Zeile passt | kein Befehl: nenne den Stand mit Links und was du nicht einordnen kannst; Status `NEEDS_CONTEXT` |
+| 1 | The argument or the human describes a bug with an unknown cause | `/slickfab:debug <bug>` |
+| 2 | A ticket has `slickfab:needs-human`, or the last slickfab comment on it ends with `BLOCKED` | no step: the human decides; name what is open, with link |
+| 3 | Open PR for a ticket without `SLICKFAB-VERDICT` | `/slickfab:review <PR>` |
+| 4 | Open PR, last verdict `REWORK` or `MERGE`, new commits after it | `/slickfab:review Re-Review <PR>` |
+| 5 | Open PR, last verdict `REWORK`, no commits after it | `/slickfab:implement <ticket>` (rework) |
+| 6 | Open PR, last verdict `REPLAN`, or ticket with `slickfab:replan` | `/slickfab:tickets <spec issue>` |
+| 7 | Open PR, last verdict `MERGE`, no commits after it | no step: the human merges |
+| 8 | Ticket in `In Review` without an open PR | no step: the human checks whether the PR is merged (then ticket to `Done`) or missing; name the ticket and the last PR with link |
+| 9 | Ticket in `In Progress` without an open PR | `/slickfab:implement <ticket>` (reads a handoff on the ticket first) |
+| 10 | Ticket in `Todo`, no open blocker | `/slickfab:implement <ticket>` |
+| 11 | Ticket in `Todo`, its blocker is still in `Backlog` | no step: the human approves the blocker (`Todo`); name both tickets |
+| 12 | Spec issue still open, all tickets closed, at least one `Done`, no `verify` result after the last merge | `/slickfab:verify <spec issue>` |
+| 13 | Spec issue still open, all tickets closed, at least one `Done`, last `verify` result `bestanden` | `/slickfab:retro <spec issue>`; after that the human sets the spec to `Done` (retro writes nothing to the tracker, that is the end), with the next piece of work `/slickfab:grill` |
+| 14 | Spec issue still open, all tickets closed, at least one `Done`, last `verify` result `Lücken gefunden` | `/slickfab:verify <spec issue>`: proposes the fix tickets and creates them after the human's yes |
+| 15 | Spec issue still open, all tickets closed, at least one `Done`, last `verify` result `Mensch nötig` | no step: the human checks the points from the `verify` comment, then `/slickfab:verify <spec issue>` |
+| 16 | Spec has tickets in `Backlog`, none in `Todo`, `In Progress` or `In Review` | no step: the human approves the next ticket (`Todo`) |
+| 17 | All tickets of the spec `Canceled` or `Duplicate` | no step: the human decides whether the spec is split again (`/slickfab:tickets <spec issue>`) or ends; status `NEEDS_CONTEXT` |
+| 18 | Spec without tickets and without a `challenge` comment, or last `challenge` verdict `nicht bauen` and after it a comment `## Spec überarbeitet` (later than the last `challenge` comment) | `/slickfab:challenge <spec issue>` |
+| 19 | Spec without tickets, last `challenge` verdict `nicht bauen`, no comment `## Spec überarbeitet` after it | no step: the human decides whether the work ends (spec to `Canceled`) or whether they change the spec with `/slickfab:spec <spec issue>` and have it checked again; name the `challenge` comment with link; status `NEEDS_CONTEXT` |
+| 20 | Spec without tickets, `challenge` comment present, last verdict `bauen` or `kleiner bauen` | `/slickfab:tickets <spec issue>` |
+| 21 | This conversation contains a confirmed `Ergebnis grill` | `/slickfab:spec` |
+| 22 | No open spec seen and nothing from above | `/slickfab:grill [topic]` |
+| 23 | An open spec seen, but no row fits | no command: name the state with links and what you cannot place; status `NEEDS_CONTEXT` |
 
-„Geschlossen“ heißt `Done`, `Canceled` oder `Duplicate` (Statusfolge im Tracker-Vertrag). „Danach neue Commits“ heißt: Ein Commit des PR hat ein Committer-Datum nach dem Zeitpunkt des letzten Urteils. Das gilt auch nach einem Rebase, denn den neuen Stand hat noch kein Review gesehen.
+“Closed” means `Done`, `Canceled` or `Duplicate` (status flow in the tracker contract). “New commits after it” means: a commit of the PR has a committer date after the time of the last verdict. This also applies after a rebase, because no review has seen the new state yet.
 
-Zeilen, für die du den Tracker brauchst, prüfst du ohne Tracker nicht; sie zählen dann als nicht zutreffend, und du sagst das. Ein PR, dessen Ticket du ohne Tracker nicht lesen kannst, zählt trotzdem für die Zeilen 3 bis 7, wenn sein Titel oder Branch eine Ticket-ID nennt. Kommst du ohne Tracker bei Zeile 22 an, sagst du dazu, dass offene Specs unbekannt sind.
+Rows that need the tracker you do not check without the tracker; they then count as not applicable, and you say so. A PR whose ticket you cannot read without the tracker still counts for rows 3 to 7 if its title or branch names a ticket ID. If you reach row 22 without the tracker, you add that open specs are unknown.
 <!-- /regel:entscheiden -->
 
 <!-- regel:kontext -->
-### 4. Frischer Kontext oder weiter
+### 4. Fresh context or continue
 
-- **Im selben Gespräch:** `/slickfab:spec` direkt nach `grill` oder `prototype`, weil spec das Gespräch liest; `docs-lookup` aus dem Schritt heraus, der die Frage hat.
-- **Frische Session:** alle anderen Schritte. Prüfende Schritte (`challenge`, `review`, `verify`) dürfen nicht wissen, wie das Artefakt entstand; `implement`, `debug`, `tickets` und `retro` lesen alles Nötige aus Tracker und Repo.
-- **Kontext voll:** Ist dieses Gespräch schon lang (Warnung von context-guard, rund zwei Drittel des Kontexts oder mehr als etwa 150k Tokens), empfiehlst du vor dem nächsten Schritt `/slickfab:handoff <Ticket>`, wenn an einem Ticket gearbeitet wird, und den nächsten Schritt in einer frischen Session.
+- **In the same conversation:** `/slickfab:spec` directly after `grill` or `prototype`, because spec reads the conversation; `docs-lookup` from within the step that has the question.
+- **Fresh session:** all other steps. Checking steps (`challenge`, `review`, `verify`) must not know how the artifact came about; `implement`, `debug`, `tickets` and `retro` read everything they need from the tracker and the repo.
+- **Context full:** If this conversation is already long (warning from context-guard, about two thirds of the context or more than roughly 150k tokens), you recommend `/slickfab:handoff <ticket>` before the next step if work on a ticket is in progress, and the next step in a fresh session.
 <!-- /regel:kontext -->
 
 <!-- regel:schritte -->
-### Die Schritte
+### The steps
 
-| Schritt | Wofür | Kontext |
+| Step | What for | Context |
 |---|---|---|
-| `fab` | Wegweiser: wo stehe ich, was kommt als Nächstes | beliebig |
-| `grill` | offene Entscheidungen in Runden klären | Gespräch mit dem Menschen |
-| `spec` | Spezifikation aus dem geklärten Gespräch | selbes Gespräch wie grill |
-| `prototype` | Fragen klären, die man nicht erfragen kann | selbes Gespräch, danach spec |
-| `challenge` | frischer Blick auf Spec und Zerlegung | frische Session |
-| `tickets` | Spec in dünne, vertikale Tickets schneiden | frische Session |
-| `implement` | ein Ticket per TDD bis zum PR | frische Session je Ticket |
-| `review` | PR auf zwei Achsen prüfen | frische Session |
-| `debug` | Fehler mit roter Schleife finden | frische Session |
-| `verify` | Ziel der Spec über alle Tickets prüfen | frische Session |
-| `retro` | aus wiederkehrenden Fehlern Regeln machen | frische Session |
-| `handoff` | Übergabe, bevor der Kontext voll ist | am Ende der laufenden Session |
-| `docs-lookup` | versionsgenaue Library-Doku | aus dem laufenden Schritt |
+| `fab` | signpost: where am I, what comes next | any |
+| `grill` | clarify open decisions in rounds | conversation with the human |
+| `spec` | specification from the clarified conversation | same conversation as grill |
+| `prototype` | clarify questions that cannot be settled by asking | same conversation, then spec |
+| `challenge` | fresh eye on spec and split | fresh session |
+| `tickets` | cut the spec into thin, vertical tickets | fresh session |
+| `implement` | one ticket via TDD up to the PR | fresh session per ticket |
+| `review` | check a PR on two axes | fresh session |
+| `debug` | find bugs with a red loop | fresh session |
+| `verify` | check the spec's goal across all tickets | fresh session |
+| `retro` | turn recurring mistakes into rules | fresh session |
+| `handoff` | handover before the context is full | at the end of the running session |
+| `docs-lookup` | library docs for the exact version | from within the running step |
 <!-- /regel:schritte -->
 
 ## Vertrag
 
 <!-- regel:vertrag-quelle -->
-Wörtlich aus `tracker/linear.md` und `docs/projektkonfiguration.md` des slickfab-Plugins. Es steht hier, damit du nichts außerhalb des Projekts lesen musst; es gilt genau so. fab liest nur: Das Anlegen der Konfiguration bietest du nicht an, du zeigst den Inhalt.
+Verbatim from `tracker/linear.md` and `docs/projektkonfiguration.md` of the slickfab plugin. It is here so that you do not have to read anything outside the project; it applies exactly as written. fab only reads: you do not offer to create the configuration, you show its content.
 <!-- /regel:vertrag-quelle -->
 
-### Projektkonfiguration: Format
+### Project configuration: format
 
 <!-- vertrag:config-format -->
 `.slickfab/config` in the repo root: one line per value, `KEY="value"`. Blank lines and lines starting with `#` do not count.
@@ -148,7 +148,7 @@ The file is read as text, not executed as a shell script (no `source`), so that 
 Answer in the user's language.
 <!-- /vertrag:config-format -->
 
-### Tracker: Marker
+### Tracker: marker
 
 <!-- vertrag:marker -->
 Every comment that a slickfab step or role writes, and every report to a caller, ends with the marker block, with no text after it:
@@ -187,20 +187,20 @@ Answer in the user's language.
 ```
 ## Ergebnis fab
 
-**Stand:** <ein bis drei Sätze, je mit Quelle: Issue-Link, PR-Link oder Befehl>
-**Gelesen:** Repo <ja|nein: Grund>, Pull Requests <ja|nein: Grund>, Tracker <ja|nein: Grund>
-**Fehlt zur Einrichtung:** <z. B. `.slickfab/config` mit TRACKER, TRACKER_TEAM, TRACKER_PROJECT (Vorschlag darunter), Linear-Werkzeuge, `gh`-Anmeldung> oder „nichts“
+**State:** <one to three sentences, each with a source: issue link, PR link or command>
+**Read:** repo <yes|no: reason>, pull requests <yes|no: reason>, tracker <yes|no: reason>
+**Missing for setup:** <e.g. `.slickfab/config` with TRACKER, TRACKER_TEAM, TRACKER_PROJECT (proposal below), Linear tools, `gh` login> or “nothing”
 
-Nächster Schritt: `/slickfab:<schritt> <Argument>` in <diesem Gespräch|einer frischen Session>, weil <Zeile der Tabelle>
+Nächster Schritt: `/slickfab:<step> <argument>` in <this conversation|a fresh session>, because <row of the table>
 
 SLICKFAB-STATUS: <DONE|DONE_WITH_CONCERNS|NEEDS_CONTEXT>
 ```
 
-`DONE`, wenn alles gelesen werden konnte; `DONE_WITH_CONCERNS`, wenn etwas unlesbar war und die Empfehlung deshalb nur auf dem Rest beruht; `NEEDS_CONTEXT`, wenn zwei Wege gleich gut passen und nur der Mensch wählen kann (dann beide nennen) oder Zeile 17, 19 oder 23 gilt. Ist der nächste Zug eine Entscheidung des Menschen (Zeilen 2, 7, 8, 11, 15, 16, 17, 19), steht sie statt eines Befehls in der Zeile „Nächster Schritt“; bei Zeile 23 steht dort, was du nicht einordnen kannst. Die Zeile fehlt nie.
+`DONE` if everything could be read; `DONE_WITH_CONCERNS` if something was unreadable and the recommendation therefore rests only on the rest; `NEEDS_CONTEXT` if two paths fit equally well and only the human can choose (then name both) or row 17, 19 or 23 applies. If the next move is a decision by the human (rows 2, 7, 8, 11, 15, 16, 17, 19), it stands in the line `Nächster Schritt` instead of a command; for row 23, that line states what you cannot place. The line is never missing.
 <!-- /regel:ergebnis -->
 
 ## Nächster Schritt
 
 <!-- regel:naechster-schritt -->
-Der Schritt, den das Ergebnis nennt, in dem Kontext, den es nennt. Danach wieder `/slickfab:fab`, wenn unklar ist, wie es weitergeht.
+The step the result names, in the context it names. After that, `/slickfab:fab` again if it is unclear how to continue.
 <!-- /regel:naechster-schritt -->

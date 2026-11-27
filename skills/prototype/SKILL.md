@@ -1,91 +1,91 @@
 ---
 name: prototype
-description: Verwenden, wenn eine Frage nicht durch Fragen zu klären ist, etwa wie etwas aussehen soll oder ob sich eine Logik oder ein Zustandsmodell richtig anfühlt, oder wenn jemand „bau mal schnell einen Prototyp“ sagt.
-argument-hint: "[die offene Frage]"
+description: Use when a question cannot be settled by asking, such as how something should look or whether a piece of logic or a state model feels right, or when someone says “quickly build a prototype”.
+argument-hint: "[the open question]"
 ---
 
 <!-- regel:einleitung -->
-# prototype: Wegwerf-Code, der eine Frage beantwortet
+# prototype: throwaway code that answers a question
 
-Ziel: Eine Frage, die man nicht erfragen kann, ist danach entschieden. Der Prototyp ist Mittel zum Zweck; er wird weggeworfen, nur die Entscheidung bleibt.
+Goal: A question that cannot be settled by asking is decided afterwards. The prototype is a means to an end; it is thrown away, only the decision remains.
 
-Antworte in der Sprache des Menschen.
+Answer in the user's language.
 <!-- /regel:einleitung -->
 
 ## Wann
 
 <!-- regel:wann -->
-- Aussehen und Bedienung: „Wie soll die Seite aussehen?“, „Welche Anordnung ist besser?“
-- Logik und Zustand: „Fühlt sich dieser Ablauf richtig an?“, „Was passiert in diesem Randfall?“
-- Typisch zwischen `grill` und `spec`, wenn `grill` eine Frage als nicht erfragbar markiert hat.
-- Nicht für Fragen, die ein Satz des Menschen klärt (dann `grill`), und nicht als erster Bauabschnitt des echten Features.
+- Look and handling: “What should the page look like?”, “Which arrangement is better?”
+- Logic and state: “Does this flow feel right?”, “What happens in this edge case?”
+- Typically between `grill` and `spec`, when `grill` has marked a question as not settleable by asking.
+- Not for questions that one sentence from the human settles (then `grill`), and not as the first building stage of the real feature.
 <!-- /regel:wann -->
 
 ## Ablauf
 
 <!-- regel:voraussetzung-pruefen -->
-### 1. Voraussetzung prüfen
+### 1. Check the precondition
 
-- **Die Frage:** Steht eine konkrete, offene Frage im Gespräch oder im Argument? Formuliere sie in einem Satz. Gibt es keine, frag den Menschen, welche Frage der Prototyp beantworten soll. Lässt sie sich mit einem Satz beantworten, ist kein Prototyp nötig: zurück zu `/slickfab:grill`.
-- **Das Repo:** Es muss ein Git-Repo mit sauberem Arbeitsstand sein (`git status` ohne Änderungen). Sind Änderungen offen, hör auf und sag es. Du verschiebst oder versteckst keine fremden Änderungen.
+- **The question:** Is there a concrete, open question in the conversation or in the argument? Phrase it in one sentence. If there is none, ask the human which question the prototype should answer. If it can be answered with one sentence, no prototype is needed: back to `/slickfab:grill`.
+- **The repo:** It must be a Git repo with a clean working state (`git status` without changes). If changes are open, stop and say so. You do not move or hide anyone else's changes.
 
-Hörst du hier auf, endest du mit der Vorlage „Halt“ (unten).
+If you stop here, you end with the template “halt” (below).
 <!-- /regel:voraussetzung-pruefen -->
 
 <!-- regel:form-waehlen -->
-### 2. Form wählen
+### 2. Choose the form
 
-Die Frage bestimmt die Form:
+The question determines the form:
 
-- **Aussehen → UI-Varianten.** Standard sind 3, höchstens 5 deutlich verschiedene Varianten auf derselben Seite, umschaltbar über den URL-Parameter `?variant=` und eine kleine schwebende Leiste. Bevorzugt auf einer bestehenden Seite mit echten Daten und echtem Rahmen, weil Varianten im leeren Raum alle gut aussehen. Nur wenn es keine passende Seite gibt, eine neue Wegwerf-Route nach der Routing-Konvention des Projekts.
-- **Logik → Wegwerfskript.** Eine Datei, die den Ablauf durch die schwierigen Fälle schiebt und nach jedem Schritt den ganzen Zustand ausgibt, oder eine einzelne HTML-Datei mit Knöpfen, die auch ein Nicht-Entwickler bedienen kann.
+- **Look → UI variants.** The default is 3, at most 5 clearly different variants on the same page, switchable via the URL parameter `?variant=` and a small floating bar. Preferably on an existing page with real data and the real frame, because variants in empty space all look good. Only if there is no suitable page, a new throwaway route following the project's routing convention.
+- **Logic → throwaway script.** A file that pushes the flow through the difficult cases and prints the whole state after every step, or a single HTML file with buttons that a non-developer can operate too.
 
-Ist unklar, welche Form passt, und der Mensch nicht da: Liegt die Frage an einem Backend-Modul, nimm Logik; an einer Seite oder Komponente, nimm UI. Schreib die Annahme oben in den Prototyp.
+If it is unclear which form fits and the human is not there: if the question sits in a backend module, take logic; in a page or component, take UI. Write the assumption at the top of the prototype.
 <!-- /regel:form-waehlen -->
 
 <!-- regel:wegwerf-branch-anlegen -->
-### 3. Wegwerf-Branch anlegen
+### 3. Create the throwaway branch
 
-Merke dir den aktuellen Branch. Dann `git switch -c prototype/<kurzer-slug>`. Der ganze Prototyp entsteht nur auf diesem Wegwerf-Branch; Datei- und Routennamen enthalten `prototype`, damit niemand ihn für echten Code hält.
+Remember the current branch. Then `git switch -c prototype/<short-slug>`. The whole prototype is created only on this throwaway branch; file and route names contain `prototype`, so that nobody mistakes it for real code.
 <!-- /regel:wegwerf-branch-anlegen -->
 
 <!-- regel:schnell-bauen -->
-### 4. Schnell bauen
+### 4. Build quickly
 
-- Startet mit einem Befehl aus dem Task-Runner des Projekts oder per Doppelklick auf die HTML-Datei.
-- Zustand im Speicher; keine Datenbank, außer die Frage dreht sich genau darum (dann eine Wegwerf-Datenbank mit `prototype` im Namen).
-- Zustand nach jeder Aktion bzw. jedem Variantenwechsel sichtbar.
-- Keine Tests, keine Fehlerbehandlung über das Lauffähige hinaus, keine Abstraktionen.
+- Starts with one command from the project's task runner or by double-clicking the HTML file.
+- State in memory; no database, unless the question is about exactly that (then a throwaway database with `prototype` in its name).
+- State visible after every action or every variant switch.
+- No tests, no error handling beyond what it takes to run, no abstractions.
 <!-- /regel:schnell-bauen -->
 
 <!-- regel:vorfuehren-und-urteil-holen -->
-### 5. Vorführen und Urteil holen
+### 5. Demonstrate and get the verdict
 
-Bevor du vorführst, committe den Prototyp auf dem Wegwerf-Branch; der Commit-Text nennt die Frage und den Ausgangs-Branch (den gemerkten Branch aus Schritt 3). So liegt nichts uncommittet herum, wenn die Sitzung vor dem Urteil endet. Prüf vor diesem Commit mit `git branch --show-current`, dass du auf `prototype/<slug>` stehst. Sonst committest du nichts und endest mit der Vorlage „Halt“.
+Before you demonstrate, commit the prototype on the throwaway branch; the commit message names the question and the starting branch (the branch remembered in step 3). That way nothing lies around uncommitted if the session ends before the verdict. Before this commit, check with `git branch --show-current` that you are on `prototype/<slug>`. Otherwise you commit nothing and end with the template “halt”.
 
-Sag dem Menschen, wie er den Prototyp startet und was er vergleichen soll. Warte auf sein Urteil: welche Variante, welches Verhalten, oder was er aus mehreren übernimmt.
+Tell the human how to start the prototype and what to compare. Wait for their verdict: which variant, which behavior, or what they take from several.
 
-Schließ das Vorführen mit der Vorlage „wartet auf Urteil“ (unten, `NEEDS_CONTEXT`). Endet die Sitzung vor dem Urteil, weiß der Mensch damit, wie es weitergeht. Das Repo bleibt auf dem Wegwerf-Branch, damit er den Prototyp starten kann.
+Close the demonstration with the template “awaiting verdict” (below, `NEEDS_CONTEXT`). If the session ends before the verdict, the human then knows how to continue. The repo stays on the throwaway branch so that they can start the prototype.
 <!-- /regel:vorfuehren-und-urteil-holen -->
 
 <!-- regel:festhalten-und-zurueck -->
-### 6. Festhalten und zurück
+### 6. Record and go back
 
-- Kommt das Urteil in einer neuen Session (im Argument, mit der Frage), ist der Prototyp schon committet. Dann entfallen die Schritte 2 bis 5: wechsle auf den Wegwerf-Branch aus dem Argument (`git switch prototype/<slug>`); den Ausgangs-Branch nimmst du aus dem Argument oder dem Commit-Text des Prototyps; dann hältst du nur noch fest. Fehlt einer der beiden oder gibt es den Wegwerf-Branch nicht, hör auf und frag danach (Vorlage „Rückfrage Branch“ unten, `NEEDS_CONTEXT`).
-- Du committest nie auf einem Branch, der nicht mit `prototype/` beginnt.
-- Commit auf dem Wegwerf-Branch (bei unverändertem Prototyp mit `--allow-empty`); der Commit-Text nennt Frage und Urteil.
-- Zurück auf den gemerkten Branch (in einer neuen Session: den Ausgangs-Branch). Vom Prototyp kommt nichts in den Hauptzweig, nur die Entscheidung.
-- Gibt es schon ein Spec-Issue und eine `.slickfab/config` (siehe „Vertrag“), schreib Frage, Urteil und Branch-Namen als Kommentar dorthin, mit Marker-Zeile wie im Abschnitt „Vertrag“. Sonst steht beides im Chat und wandert mit in die Spec.
-- Den Branch pushst du nur, wenn der Mensch das will.
+- If the verdict comes in a new session (in the argument, with the question), the prototype is already committed. Then steps 2 to 5 are skipped: switch to the throwaway branch from the argument (`git switch prototype/<slug>`); you take the starting branch from the argument or from the prototype's commit message; then you only record. If one of the two is missing or the throwaway branch does not exist, stop and ask for it (template “branch question” below, `NEEDS_CONTEXT`).
+- You never commit on a branch that does not start with `prototype/`.
+- Commit on the throwaway branch (with an unchanged prototype with `--allow-empty`); the commit message names question and verdict.
+- Back to the remembered branch (in a new session: the starting branch). Nothing from the prototype goes into the main branch, only the decision.
+- If there already is a spec issue and a `.slickfab/config` (see `Vertrag`), write question, verdict and branch name as a comment there, with a marker line as in the section `Vertrag`. Otherwise both stay in the chat and travel along into the spec.
+- You push the branch only if the human wants that.
 <!-- /regel:festhalten-und-zurueck -->
 
 ## Vertrag
 
 <!-- regel:vertrag-quelle -->
-Wörtlich aus `tracker/linear.md` und `docs/projektkonfiguration.md` des slickfab-Plugins. Es steht hier, damit du nichts außerhalb des Projekts lesen musst; es gilt genau so.
+Verbatim from `tracker/linear.md` and `docs/projektkonfiguration.md` of the slickfab plugin. It is here so that you do not have to read anything outside the project; it applies exactly as written.
 <!-- /regel:vertrag-quelle -->
 
-### Projektkonfiguration: Format
+### Project configuration: format
 
 <!-- vertrag:config-format -->
 `.slickfab/config` in the repo root: one line per value, `KEY="value"`. Blank lines and lines starting with `#` do not count.
@@ -115,7 +115,7 @@ The file is read as text, not executed as a shell script (no `source`), so that 
 Answer in the user's language.
 <!-- /vertrag:config-format -->
 
-### Tracker: Marker
+### Tracker: marker
 
 <!-- vertrag:marker -->
 Every comment that a slickfab step or role writes, and every report to a caller, ends with the marker block, with no text after it:
@@ -154,74 +154,74 @@ Answer in the user's language.
 ```
 ## Ergebnis prototype
 
-**Frage:** <ein Satz>
-**Urteil:** <was der Mensch entschieden hat>
-**Branch:** prototype/<slug> (nicht gemergt) — zurück auf <Branch>
-**Festgehalten:** <Kommentar an Issue …> oder „im Chat“
+**Question:** <one sentence>
+**Verdict:** <what the human decided>
+**Branch:** prototype/<slug> (not merged) — back on <branch>
+**Recorded:** <comment on issue …> or “in the chat”
 
 Nächster Schritt: `/slickfab:spec`
 
 SLICKFAB-STATUS: DONE
 ```
 
-Wirft das Urteil neue Entscheidungen auf, lautet der nächste Schritt `/slickfab:grill`.
+If the verdict raises new decisions, the next step is `/slickfab:grill`.
 
-Vor dem Urteil (Schritt 5):
+Before the verdict (step 5):
 
 ```
-## Ergebnis prototype (wartet auf Urteil)
+## Ergebnis prototype (awaiting verdict)
 
-**Frage:** <ein Satz>
-**Start:** <ein Befehl oder Doppelklick auf …>
-**Vergleichen:** <was der Mensch ansehen oder durchspielen soll, je Variante ein Satz>
-**Repo steht auf:** prototype/<slug> (Prototyp committet, angelegt von <Branch>) — zurück mit `git switch <Branch>`
+**Question:** <one sentence>
+**Start:** <one command or double-click on …>
+**Compare:** <what the human should look at or play through, one sentence per variant>
+**Repo is on:** prototype/<slug> (prototype committed, created from <branch>) — back with `git switch <branch>`
 
-Nächster Schritt: Urteil hier geben, dann hält prototype es fest; in einer neuen Session `/slickfab:prototype Frage: <…> Urteil: <…> Branch: prototype/<slug> von <Branch>`
+Nächster Schritt: give the verdict here, then prototype records it; in a new session `/slickfab:prototype Question: <…> Verdict: <…> Branch: prototype/<slug> from <branch>`
 
 SLICKFAB-STATUS: NEEDS_CONTEXT
 ```
 
-Urteil in neuer Session, aber Branch fehlt (Schritt 6):
+Verdict in a new session, but branch missing (step 6):
 
 ```
-## Ergebnis prototype (Rückfrage Branch)
+## Ergebnis prototype (branch question)
 
-**Frage:** <ein Satz>
-**Urteil:** <wie im Argument>
-**Fehlt:** <Wegwerf-Branch | Ausgangs-Branch | `prototype/<slug>` gibt es nicht>
-**Nichts geändert:** kein Commit, kein Branchwechsel; Repo steht auf <Branch>
+**Question:** <one sentence>
+**Verdict:** <as in the argument>
+**Missing:** <throwaway branch | starting branch | `prototype/<slug>` does not exist>
+**Nothing changed:** no commit, no branch switch; repo is on <branch>
 
-Nächster Schritt: `/slickfab:prototype Frage: <…> Urteil: <…> Branch: prototype/<slug> von <Branch>`
+Nächster Schritt: `/slickfab:prototype Question: <…> Verdict: <…> Branch: prototype/<slug> from <branch>`
 
 SLICKFAB-STATUS: NEEDS_CONTEXT
 ```
 
-Halt vor dem Bauen oder vor dem Commit:
+Halt before building or before the commit:
 
 ```
-## Ergebnis prototype (Halt)
+## Ergebnis prototype (halt)
 
-**Wo:** <Schritt>
-**Grund:** <Grund aus der Tabelle>
-**Stand:** Repo auf <Branch>, kein Commit; <kein Branch angelegt | uncommittete Prototyp-Dateien: …>
+**Where:** <step>
+**Reason:** <reason from the table>
+**State:** repo on <branch>, no commit; <no branch created | uncommitted prototype files: …>
 
-Nächster Schritt: <aus der Tabelle>
+Nächster Schritt: <from the table>
 
 SLICKFAB-STATUS: <NEEDS_CONTEXT | BLOCKED>
 ```
 
-| Wo | Grund | Nächster Schritt | Status |
+| Where | Reason | Next step | Status |
 |---|---|---|---|
-| Schritt 1 | keine Frage | `/slickfab:prototype <Frage>` | `NEEDS_CONTEXT` |
-| Schritt 1 | Frage mit einem Satz zu klären | `/slickfab:grill <Frage>` | `NEEDS_CONTEXT` |
-| Schritt 1 | offene Änderungen im Repo | Mensch committet oder legt sie selbst beiseite, dann `/slickfab:prototype <Frage>` erneut | `BLOCKED` |
-| Schritt 5 | nicht auf `prototype/<slug>` | Mensch prüft den Branch, dann `/slickfab:prototype <Frage>` erneut | `BLOCKED` |
+| Step 1 | no question | `/slickfab:prototype <question>` | `NEEDS_CONTEXT` |
+| Step 1 | question can be settled with one sentence | `/slickfab:grill <question>` | `NEEDS_CONTEXT` |
+| Step 1 | open changes in the repo | the human commits or sets them aside themselves, then `/slickfab:prototype <question>` again | `BLOCKED` |
+| Step 5 | not on `prototype/<slug>` | the human checks the branch, then `/slickfab:prototype <question>` again | `BLOCKED` |
 
-Die Marker-Zeile steht als letzte Zeile deiner Antwort, außerhalb jedes Codeblocks.
+The marker line is the last line of your answer, outside any code block.
 <!-- /regel:ergebnis -->
 
 ## Nächster Schritt
 
 <!-- regel:naechster-schritt -->
-`/slickfab:spec` — übernimmt das Urteil als Entscheidung des Menschen. Hat der Prototyp neue offene Fragen aufgeworfen, zuerst `/slickfab:grill`.
+`/slickfab:spec`: takes the verdict on as the human's decision. If the prototype raised new open questions, `/slickfab:grill` first.
 <!-- /regel:naechster-schritt -->

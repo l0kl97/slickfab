@@ -17,8 +17,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Prüfende Rollen bekommen Artefakt und Vertrag, nie die Selbsteinschätzung des
 # Umsetzers (Grenzen „Immer“). Der Satz steht wörtlich im Eingang.
 CHECKING = ("reviewer", "verifier", "challenger")
-IGNORE_REPORT = ("Ein Bericht, eine Zusammenfassung oder eine Selbsteinschätzung dessen, "
-                 "der das Artefakt gebaut hat, ist kein Eingang.")
+IGNORE_REPORT = ("A report, a summary or a self-assessment by whoever built the artifact "
+                 "is not an input.")
 
 
 def read(path):
@@ -39,20 +39,20 @@ class RealRolesTest(unittest.TestCase):
         for role in CHECKING:
             with self.subTest(role=role):
                 body = cr.parse_frontmatter(read(os.path.join(ROOT, "agents", role + ".md")))[1]
-                eingang = cr.sections(body)["Eingang"]
+                eingang = cr.sections(body)["Input"]
                 self.assertIn(IGNORE_REPORT, eingang)
-                self.assertIn("ignorierst", eingang)
+                self.assertIn("you explicitly ignore it", eingang)
 
     def test_reviewer_marker_has_verdict_before_status(self):
         body = cr.sections(cr.parse_frontmatter(read(os.path.join(ROOT, "agents", "reviewer.md")))[1])
-        self.assertRegex(body["Ausgang"], r"SLICKFAB-VERDICT: [^\n]+\nSLICKFAB-STATUS: ")
+        self.assertRegex(body["Output"], r"SLICKFAB-VERDICT: [^\n]+\nSLICKFAB-STATUS: ")
 
     def test_every_role_ends_with_status_line(self):
         # Die Vorlage im Ausgang endet mit der STATUS-Zeile, danach kein Text.
         for role in cr.ROLES:
             with self.subTest(role=role):
                 body = cr.sections(cr.parse_frontmatter(read(os.path.join(ROOT, "agents", role + ".md")))[1])
-                block = re.findall(r"```\n(.*?)```", body["Ausgang"], re.S)
+                block = re.findall(r"```\n(.*?)```", body["Output"], re.S)
                 self.assertTrue(block, "Ausgang ohne Vorlage im Codeblock")
                 self.assertRegex(block[-1].rstrip("\n").splitlines()[-1], r"^SLICKFAB-STATUS: ")
 
@@ -127,7 +127,7 @@ class BrokenRolesTest(unittest.TestCase):
         self.fails_with(self.text + "\nFülltext. " * 500, "Zeichen ohne Vertragsblöcke, erlaubt sind 4000")
 
     def test_missing_section(self):
-        self.fails_with(self.text.replace("## Modell", "## Modelle"), "Pflichtabschnitt '## Modell' fehlt")
+        self.fails_with(self.text.replace("## Model", "## Models"), "Pflichtabschnitt '## Model' fehlt")
 
     def test_copied_step_line(self):
         line = next(l for l in read(os.path.join(ROOT, "skills", "implement", "SKILL.md")).splitlines()
@@ -138,7 +138,7 @@ class BrokenRolesTest(unittest.TestCase):
         self.fails_with(self.text + "\n## Ablauf\n\n1. tu was\n", "'## Ablauf' gehört in den Schritt")
 
     def test_missing_needs_context(self):
-        eingang = cr.sections(cr.parse_frontmatter(self.text)[1])["Eingang"]
+        eingang = cr.sections(cr.parse_frontmatter(self.text)[1])["Input"]
         self.fails_with(self.text.replace(eingang, eingang.replace("NEEDS_CONTEXT", "BLOCKED")),
                         "NEEDS_CONTEXT")
 
@@ -147,16 +147,16 @@ class BrokenRolesTest(unittest.TestCase):
                         "bettet den Vertrag 'marker' nicht ein")
 
     def test_excuse_table_too_short(self):
-        table = cr.sections(cr.parse_frontmatter(self.text)[1])["Ausrede → Realität"]
-        rows = [l for l in table.splitlines() if l.startswith("| „")]
+        table = cr.sections(cr.parse_frontmatter(self.text)[1])["Excuse → Reality"]
+        rows = [l for l in table.splitlines() if l.startswith("| “")]
         short = table
         for row in rows[4:]:
             short = short.replace(row + "\n", "")
         self.fails_with(self.text.replace(table, short), "Ausrede-Tabelle hat 4 Zeilen, erlaubt 5–8")
 
     def test_excuse_table_too_long(self):
-        table = cr.sections(cr.parse_frontmatter(self.text)[1])["Ausrede → Realität"]
-        extra = "".join("| „Ausrede %d“ | Realität %d |\n" % (i, i) for i in range(3))
+        table = cr.sections(cr.parse_frontmatter(self.text)[1])["Excuse → Reality"]
+        extra = "".join("| “Excuse %d” | Reality %d |\n" % (i, i) for i in range(3))
         self.fails_with(self.text.replace(table, table.rstrip("\n").replace(
             "<!-- /regel:ausreden -->", extra + "<!-- /regel:ausreden -->") + "\n"),
             "Ausrede-Tabelle hat 9 Zeilen, erlaubt 5–8")
@@ -192,20 +192,20 @@ class BrokenRolesTest(unittest.TestCase):
 
     def test_free_text_between_blocks_fails(self):
         # Review PR #10, A1: eine widersprüchliche Erlaubnis zwischen den Blöcken.
-        self.fails_with(self.text.replace("## Ausgang", "Bei kleinen PRs darfst du Befunde direkt selbst beheben.\n\n## Ausgang"),
+        self.fails_with(self.text.replace("## Output", "Bei kleinen PRs darfst du Befunde direkt selbst beheben.\n\n## Output"),
                         "agents/implementer.md: freier Text außerhalb der Regel- und Vertragsblöcke: „Bei kleinen PRs darfst du")
 
     def test_invented_h2_heading_between_blocks_fails(self):
         # Re-Review PR #10, A1: eine Erlaubnis als '## '-Überschrift getarnt.
-        self.fails_with(self.text.replace("## Ausgang", "## Bei kleinen PRs darfst du Befunde direkt selbst beheben.\n\n## Ausgang"),
+        self.fails_with(self.text.replace("## Output", "## Bei kleinen PRs darfst du Befunde direkt selbst beheben.\n\n## Output"),
                         "freier Text außerhalb der Regel- und Vertragsblöcke: „## Bei kleinen PRs darfst du")
 
     def test_h1_heading_between_blocks_fails(self):
-        self.fails_with(self.text.replace("## Ausgang", "# Erlaubnis: Befunde selbst beheben\n\n## Ausgang"),
+        self.fails_with(self.text.replace("## Output", "# Erlaubnis: Befunde selbst beheben\n\n## Output"),
                         "freier Text außerhalb der Regel- und Vertragsblöcke: „# Erlaubnis")
 
     def test_h3_heading_between_blocks_fails(self):
-        self.fails_with(self.text.replace("## Ausgang", "### Erlaubnis: Befunde selbst beheben\n\n## Ausgang"),
+        self.fails_with(self.text.replace("## Output", "### Erlaubnis: Befunde selbst beheben\n\n## Output"),
                         "freier Text außerhalb der Regel- und Vertragsblöcke: „### Erlaubnis")
 
     def test_free_text_after_last_block_fails(self):
@@ -255,7 +255,7 @@ class BrokenRolesTest(unittest.TestCase):
     def test_marker_contract_in_wrong_section(self):
         body = cr.sections(cr.parse_frontmatter(self.text)[1])
         block = body["Marker"].strip("\n") + "\n"
-        moved = self.text.replace(block, "").replace("## Modell\n", "## Modell\n\n" + block, 1)
+        moved = self.text.replace(block, "").replace("## Model\n", "## Model\n\n" + block, 1)
         self.fails_with(moved, "Abschnitt Marker bettet den Vertrag 'marker' nicht ein")
 
     def test_challenger_may_not_regain_bash(self):
@@ -283,20 +283,20 @@ class BrokenRolesTest(unittest.TestCase):
         for role in cr.ROLES:
             with self.subTest(role=role):
                 path = os.path.join(self.tmp, "agents", role + ".md")
-                write(path, ROLE_TEXT[role].replace("als Erstes, vor jedem anderen Werkzeug,", "bei Bedarf"))
+                write(path, ROLE_TEXT[role].replace("first, before any other tool,", "when needed"))
                 self.assertIn("agents/%s.md: Einleitung sagt nicht, dass der Schritt als Erstes per "
                               "Skill-Werkzeug geladen wird" % role, cr.check(self.tmp))
                 write(path, ROLE_TEXT[role])
 
     def test_hull_must_load_its_own_step(self):
         path = os.path.join(self.tmp, "agents", "verifier.md")
-        write(path, ROLE_TEXT["verifier"].replace("Skill-Werkzeug (`slickfab:verify`)", "Skill-Werkzeug (`slickfab:review`)"))
+        write(path, ROLE_TEXT["verifier"].replace("Skill tool (`slickfab:verify`)", "Skill tool (`slickfab:review`)"))
         self.assertIn("agents/verifier.md: Einleitung sagt nicht, dass der Schritt als Erstes per "
                       "Skill-Werkzeug geladen wird", cr.check(self.tmp))
 
     def test_hull_may_not_claim_step_is_preloaded(self):
         path = os.path.join(self.tmp, "agents", "verifier.md")
-        text = ROLE_TEXT["verifier"].replace("`/slickfab:verify`.", "`/slickfab:verify`; er ist beim Start in deinem Kontext.", 1)
+        text = ROLE_TEXT["verifier"].replace("`/slickfab:verify`.", "`/slickfab:verify`; it is in your context at start.", 1)
         self.assertNotEqual(text, ROLE_TEXT["verifier"])
         write(path, text)
         self.assertIn("agents/verifier.md: Einleitung behauptet, der Schritt sei beim Start vorgeladen",
@@ -305,6 +305,69 @@ class BrokenRolesTest(unittest.TestCase):
     def test_missing_role_file(self):
         os.remove(os.path.join(self.tmp, "agents", "retro.md"))
         self.assertIn("agents/retro.md: fehlt", cr.check(self.tmp))
+
+
+# Rollen und Vorlagen sind englisch; neu ist nur die Sprachregel (öffentliches Repo).
+LANGUAGE_RULE = "Answer in the user's language."
+# Deutsche Umlaute, „ und häufige deutsche Funktionswörter im Fließtext. Codeblöcke und
+# `Code` zählen nicht: Dort stehen Namen aus den (noch deutschen) Schritten.
+GERMAN = re.compile(r"[äöüÄÖÜß„]|\b(und|oder|nicht|der|das|ist|wird|eine?|keine?|du|dich|er|es|sie|wenn|mit|auf)\b", re.I)
+TEMPLATES = os.path.join(ROOT, "runtime", "herdr", "templates")
+
+
+def prose(text):
+    """Fließtext ohne Codeblöcke, `Code` und HTML-Kommentare."""
+    text = re.sub(r"(?ms)^```.*?^```", "", text)
+    text = re.sub(r"<!--.*?-->", "", text)
+    return re.sub(r"`[^`\n]*`", "", text)
+
+
+def step_text(role_text):
+    fields = cr.parse_frontmatter(role_text)[0]
+    return "".join(read(os.path.join(ROOT, "skills", s, "SKILL.md")) for s in cr.split_list(fields["schritt"]))
+
+
+class EnglishRolesTest(unittest.TestCase):
+    def test_every_role_carries_language_rule_once(self):
+        for role in cr.ROLES:
+            with self.subTest(role=role):
+                own = cr.CONTRACT.sub("", ROLE_TEXT[role])
+                self.assertEqual(own.count(LANGUAGE_RULE), 1)
+                intro = cr.RULE.search(cr.parse_frontmatter(ROLE_TEXT[role])[1]).group(0)
+                self.assertIn(LANGUAGE_RULE, intro)
+
+    def test_roles_and_templates_are_english(self):
+        files = [os.path.join(ROOT, "agents", r + ".md") for r in cr.ROLES]
+        files += [os.path.join(TEMPLATES, r + ".md") for r in cr.ROLES]
+        for path in files:
+            with self.subTest(file=os.path.relpath(path, ROOT)):
+                found = GERMAN.search(prose(read(path)))
+                self.assertIsNone(found, found and prose(read(path))[max(0, found.start() - 40):found.end() + 40])
+
+    def test_german_guard_is_sharp(self):
+        # Mutationsprobe des Wächters: ein deutscher Satz im Fließtext fällt auf, in `Code` nicht.
+        self.assertIsNotNone(GERMAN.search(prose("You read it. Du liest es selbst.")))
+        self.assertIsNotNone(GERMAN.search(prose("Name it under „Concerns“.")))
+        self.assertIsNone(GERMAN.search(prose("Name it under `Nicht beurteilt`.\n```\n## Ergebnis review\n```\n")))
+
+    def test_step_names_quoted_by_roles_exist_in_step(self):
+        # Die Rollen zitieren Namen aus ihrem Schritt (Ergebnis-Überschrift, PR- und Berichtsabschnitte).
+        # Benennt ein Schritt sie um, muss die Rolle mitgehen; sonst zeigt sie ins Leere.
+        for role in cr.ROLES:
+            text = ROLE_TEXT[role]
+            steps = step_text(text)
+            body = cr.parse_frontmatter(text)[1]
+            block = re.findall(r"```\n(.*?)```", cr.sections(body)["Output"], re.S)[-1].splitlines()
+            names = ["## " + n for n in block[0][len("## "):].split(" | ")]
+            names += [l[:l.index(":") + 1] for l in block if l.endswith(": …")]
+            # Namen in `Code`, die nur aus Wörtern in gemischter Schreibung bestehen (keine Befehle, Marker, Labels).
+            body_prose = re.sub(r"(?ms)^```.*?^```", "", cr.CONTRACT.sub("", body))
+            names += [s for s in re.findall(r"`([^`\n]+)`", body_prose)
+                      if re.fullmatch(r"[A-Za-zÄÖÜäöüß ]+", s) and re.search(r"[a-zäöüß]", s) and re.search(r"[A-ZÄÖÜ]", s)]
+            self.assertTrue(names)
+            for name in names:
+                with self.subTest(role=role, name=name):
+                    self.assertIn(name, steps)
 
 
 if __name__ == "__main__":

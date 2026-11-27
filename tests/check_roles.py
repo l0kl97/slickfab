@@ -19,7 +19,7 @@ import re
 import sys
 
 ROLES = ("planner", "challenger", "implementer", "reviewer", "debugger", "verifier", "retro")
-SECTIONS = ("Eingang", "Ausgang", "Marker", "Modell", "Ausrede → Realität")
+SECTIONS = ("Input", "Output", "Marker", "Model", "Excuse → Reality")
 HEADINGS = {"## " + s for s in SECTIONS}
 MODELS = ("sonnet", "opus", "haiku", "inherit")
 # Zeichen der Hülle ohne eingebettete Vertragsblöcke (die kommen wörtlich aus
@@ -45,8 +45,8 @@ NO_AGENT = {"challenger": ("Agent", "Task")}
 # Beim Start mit `claude --agent` und aus der Herdr-Vorlage lädt Claude Code `skills:` nicht vor
 # (Doku sub-agents: „Preload skills into subagents“ gilt für Subagents). Jede Hülle lädt ihren
 # Schritt deshalb als Erstes per Skill-Werkzeug und behauptet nicht, er sei schon da (Punkt 2).
-LOAD_FIRST = "als Erstes, vor jedem anderen Werkzeug, mit dem Skill-Werkzeug"
-PRELOAD_CLAIM = re.compile(r"(ist|sind) beim Start in deinem Kontext")
+LOAD_FIRST = "first, before any other tool, with the Skill tool"
+PRELOAD_CLAIM = re.compile(r"\b(is|are) (already )?(preloaded|in your context) (at|on) start")
 CONTRACT = re.compile(r"<!-- vertrag:([a-z-]+) -->\n.*?<!-- /vertrag:\1 -->\n?", re.S)
 COMMENT = re.compile(r"<!--.*?-->")
 RULE = re.compile(r"<!-- regel:([a-z0-9-]+) -->\n.*?<!-- /regel:\1 -->\n?", re.S)
@@ -147,11 +147,11 @@ def check_role(root, name, text, fails):
             fails.append("%s: Pflichtabschnitt '## %s' fehlt" % (rel, section))
     if "Ablauf" in found:
         fails.append("%s: '## Ablauf' gehört in den Schritt, nicht in die Hülle" % rel)
-    if "NEEDS_CONTEXT" not in found.get("Eingang", ""):
+    if "NEEDS_CONTEXT" not in found.get("Input", ""):
         fails.append("%s: Eingang sagt nicht, dass ein fehlender Pflicht-Eingang mit NEEDS_CONTEXT endet" % rel)
     if "<!-- vertrag:marker -->" not in found.get("Marker", ""):
         fails.append("%s: Abschnitt Marker bettet den Vertrag 'marker' nicht ein" % rel)
-    rows = [l for l in found.get("Ausrede → Realität", "").splitlines()
+    rows = [l for l in found.get("Excuse → Reality", "").splitlines()
             if l.startswith("|") and not re.fullmatch(r"\|[\s|:-]*\|", l.strip())][1:]
     if not TABLE_ROWS[0] <= len(rows) <= TABLE_ROWS[1]:
         fails.append("%s: Ausrede-Tabelle hat %d Zeilen, erlaubt %d–%d" % (rel, len(rows), *TABLE_ROWS))

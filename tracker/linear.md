@@ -1,102 +1,114 @@
-# Tracker-Vertrag: Linear
+# Tracker contract: Linear
 
-Dieser Vertrag gilt für jeden slickfab-Schritt, der den Tracker liest oder schreibt. Team und Projekt kommen aus der Projektkonfiguration (`docs/projektkonfiguration.md`). Linear ist die einzige Wahrheit über Plan und Zustand: Was hier nicht steht, gilt nicht als entschieden.
+This contract applies to every slickfab step that reads or writes the tracker. Team and project come from the project configuration (`docs/projektkonfiguration.md`). Linear is the single source of truth about plan and state: whatever is not written there does not count as decided.
 
-Diese Datei ist die Quelle. Die Schritte tragen die Teile, die sie brauchen, wörtlich in ihrer `SKILL.md` (zwischen `<!-- vertrag:NAME -->` und `<!-- /vertrag:NAME -->`), weil ein Schritt Dateien im Plugin-Ordner ohne Leseerlaubnis nicht lesen kann. Wer hier etwas ändert, ändert die Kopien mit; `tests/test_contract_blocks.py` prüft, dass sie gleich sind.
+This file is the source. The steps carry the parts they need verbatim in their `SKILL.md` (between `<!-- vertrag:NAME -->` and `<!-- /vertrag:NAME -->`), because a step cannot read files in the plugin folder without read permission. Whoever changes something here changes the copies too; `tests/test_contract_blocks.py` checks that they are identical.
 
-## Zugang
+## Access
 
 <!-- vertrag:zugang -->
-- Linear wird über die Linear-Werkzeuge der Session angesprochen (in Claude Code per Werkzeugsuche `+linear` laden).
-- Ist Linear nicht erreichbar (keine Werkzeuge, keine Anmeldung, Fehlerantwort, Team oder Projekt aus der Konfiguration existiert nicht), meldet der Schritt genau das mit der Fehlermeldung und hört auf. Er schreibt **keine** Plan-, Ledger-, State- oder Ticket-Datei ins Repo als Ersatz. Was schon erarbeitet ist, zeigt er im Chat, damit nichts verloren geht.
-- Ausnahme `verify`: Liegt die Spec als Text vor, prüft verify dagegen weiter, statt aufzuhören. Es schreibt nichts in den Tracker, zeigt Ergebnis und Fix-Ticket-Vorschläge nur im Chat, und das Ergebnis endet mit `SLICKFAB-STATUS: DONE_WITH_CONCERNS` und nennt darüber „Tracker nicht geprüft“, auch wenn jede Aussage erfüllt ist; das gilt, sofern geprüft werden konnte, sonst mit `BLOCKED`. Liegt die Spec nicht als Text vor, gilt der Punkt davor.
+- Linear is accessed through the session's Linear tools (in Claude Code, load them via tool search `+linear`).
+- If Linear is unreachable (no tools, not logged in, error response, team or project from the configuration does not exist), the step reports exactly that, with the error message, and stops. It writes **no** plan, ledger, state or ticket file into the repo as a substitute. Whatever has already been worked out, it shows in the chat, so that nothing is lost.
+- Exception `verify`: If the spec is available as text, verify keeps checking against it instead of stopping. It writes nothing to the tracker, shows the result and fix-ticket proposals only in the chat, and the result ends with `SLICKFAB-STATUS: DONE_WITH_CONCERNS` and states “Tracker not checked” above it, even if every statement is met; this applies provided checking was possible, otherwise with `BLOCKED`. If the spec is not available as text, the previous point applies.
+
+Answer in the user's language.
 <!-- /vertrag:zugang -->
 
 ## Issues
 
 <!-- vertrag:issues -->
-| Art | Titel | Ort | Anfangsstatus |
+| Kind | Title | Location | Initial status |
 |---|---|---|---|
-| Spec | `Spec: <Feature>` | Projekt aus der Konfiguration | `Backlog` |
-| Ticket | Verb + Ergebnis, ohne „und“ | Sub-Issue der Spec | `Backlog` |
+| Spec | `Spec: <Feature>` | project from the configuration | `Backlog` |
+| Ticket | verb + outcome, without “and” | sub-issue of the spec | `Backlog` |
 
-- Vor jedem Anlegen auf Dubletten prüfen: offene und erledigte Issues im Projekt mit ähnlichem Titel suchen. Gibt es einen Treffer, nennen und fragen, statt doppelt anzulegen.
-- Abhängigkeiten sind Linear-Relationen „blockiert von“, nicht Text in der Beschreibung.
-- Details für Agents (betroffene Dateien, Fundstellen) stehen in einem einklappbaren Abschnitt „Agent notes“ am Ende der Beschreibung.
+- Before creating anything, check for duplicates: search open and completed issues in the project with a similar title. If there is a match, name it and ask instead of creating a duplicate.
+- Dependencies are Linear relations “blocked by”, not text in the description.
+- Details for agents (affected files, locations) go in a collapsible section “Agent notes” at the end of the description.
+
+Answer in the user's language.
 <!-- /vertrag:issues -->
 
-## Statusfolge
+## Status flow
 
 <!-- vertrag:status -->
-`Backlog` → `Todo` → `In Progress` → `In Review` → `Done` (Abbruch: `Canceled`, Dublette: `Duplicate`)
+`Backlog` → `Todo` → `In Progress` → `In Review` → `Done` (abort: `Canceled`, duplicate: `Duplicate`)
 
-| Übergang | Wer |
+| Transition | Who |
 |---|---|
-| anlegen in `Backlog` | `spec`, `tickets` |
-| `Backlog` → `Todo` | nur der Mensch (das ist die Freigabe zum Bauen) |
-| `Todo` → `In Progress` | der Umsetzer beim Start |
-| `In Progress` → `In Review` | der Umsetzer, wenn der Pull Request offen ist |
-| `In Review` → `Done` | nach dem Merge |
+| create in `Backlog` | `spec`, `tickets` |
+| `Backlog` → `Todo` | only the human (this is the approval to build) |
+| `Todo` → `In Progress` | the implementer at the start |
+| `In Progress` → `In Review` | the implementer, once the pull request is open |
+| `In Review` → `Done` | after the merge |
 
-Kein Schritt setzt ein Ticket selbst auf `Todo`.
+No step sets a ticket to `Todo` by itself.
+
+Answer in the user's language.
 <!-- /vertrag:status -->
 
 ## Labels
 
 <!-- vertrag:labels -->
-Die Labels existieren im Team; ein Schritt legt keine neuen an. Fehlt eines, meldet er das.
+The labels exist in the team; a step does not create new ones. If one is missing, it reports that.
 
-| Label | Bedeutung |
+| Label | Meaning |
 |---|---|
-| `slickfab:rework` | Reviewer verlangt Nachbesserung |
-| `slickfab:ready` | Review bestanden, wartet auf den Merge durch einen Menschen |
-| `slickfab:needs-human` | Schleife erschöpft oder Agent blockiert: ein Mensch entscheidet |
-| `slickfab:replan` | Ticket oder Spec ist falsch geschnitten: zurück zur Planung |
-| `door:one-way` | schwer umkehrbar (Migration, Auth, Zahlung, Löschen, Deploy): immer menschliches Gate, nie Auto-Merge |
-| `S`, `M`, `L` | Größe (Aufwand klein, mittel, groß); genau eines je Ticket. `L` ist ein Hinweis, das Ticket eher zu teilen |
+| `slickfab:rework` | reviewer demands rework |
+| `slickfab:ready` | review passed, waiting for a human to merge |
+| `slickfab:needs-human` | loop exhausted or agent blocked: a human decides |
+| `slickfab:replan` | ticket or spec is cut wrong: back to planning |
+| `door:one-way` | hard to reverse (migration, auth, payment, deletion, deploy): always a human gate, never auto-merge |
+| `S`, `M`, `L` | size (effort small, medium, large); exactly one per ticket. `L` is a hint that the ticket should rather be split |
 
-In Linear sind `rework`, `ready`, `needs-human` und `replan` Kinder der Label-Gruppe `slickfab`; in Texten, Kommentaren und diesem Vertrag wird `slickfab:<name>` geschrieben. Beim Suchen und Setzen über die Linear-Werkzeuge heißt das Label `rework`, `ready`, `needs-human` bzw. `replan` in der Gruppe `slickfab`; eine Suche nach `slickfab:rework` findet nichts, das Label fehlt dann nicht. Die Gruppe erlaubt nur eines zur Zeit.
+In Linear, `rework`, `ready`, `needs-human` and `replan` are children of the label group `slickfab`; in texts, comments and this contract they are written as `slickfab:<name>`. When searching and setting via the Linear tools, the label is called `rework`, `ready`, `needs-human` or `replan` in the group `slickfab`; a search for `slickfab:rework` finds nothing, and that does not mean the label is missing. The group allows only one at a time.
+
+Answer in the user's language.
 <!-- /vertrag:labels -->
 
 ## Marker
 
 <!-- vertrag:marker -->
-Jeder Kommentar, den ein slickfab-Schritt oder eine Rolle schreibt, und jede Rückmeldung an einen Auftraggeber endet mit dem Marker-Block, ohne Text danach:
+Every comment that a slickfab step or role writes, and every report to a caller, ends with the marker block, with no text after it:
 
-- Letzte Zeile, immer: `SLICKFAB-STATUS: DONE|DONE_WITH_CONCERNS|BLOCKED|NEEDS_CONTEXT`
-- Vorletzte Zeile, nur beim Reviewer: `SLICKFAB-VERDICT: MERGE|REWORK|REPLAN`
+- Last line, always: `SLICKFAB-STATUS: DONE|DONE_WITH_CONCERNS|BLOCKED|NEEDS_CONTEXT`
+- Second-to-last line, only for the reviewer: `SLICKFAB-VERDICT: MERGE|REWORK|REPLAN`
 
-Alle anderen Schritte und Rollen schreiben nur die STATUS-Zeile. Je Zeile steht genau ein Wert.
+All other steps and roles write only the STATUS line. Each line holds exactly one value.
 
-| Wert | Bedeutung |
+| Value | Meaning |
 |---|---|
-| `DONE` | Auftrag erfüllt, nichts offen |
-| `DONE_WITH_CONCERNS` | erfüllt, aber mit genannten Bedenken |
-| `BLOCKED` | kann nicht weiter; der Grund steht darüber |
-| `NEEDS_CONTEXT` | es fehlt Information oder Kontext; was fehlt, steht darüber |
+| `DONE` | task fulfilled, nothing open |
+| `DONE_WITH_CONCERNS` | fulfilled, but with stated concerns |
+| `BLOCKED` | cannot continue; the reason is stated above |
+| `NEEDS_CONTEXT` | information or context is missing; what is missing is stated above |
 
-Beispiel (jeder Schritt):
+Example (every step):
 
 ```
 SLICKFAB-STATUS: BLOCKED
 ```
 
-Beispiel (Reviewer):
+Example (reviewer):
 
 ```
 SLICKFAB-VERDICT: REWORK
 SLICKFAB-STATUS: DONE
 ```
+
+Answer in the user's language.
 <!-- /vertrag:marker -->
 
 ## Rulings
 
 <!-- vertrag:rulings -->
-Entscheidet ein Agent selbst etwas, das ein Mensch anders hätte entscheiden können, schreibt er sofort einen Kommentar am betroffenen Issue in genau dieser Form:
+If an agent decides something itself that a human could have decided differently, it immediately writes a comment on the affected issue in exactly this form:
 
-`Ruling: was — warum — Kosten falls falsch`
+`Ruling: what — why — cost if wrong`
 
-Beispiel: `Ruling: Datum als ISO-String gespeichert — so liest es die bestehende API — eine Migration der Spalte, falls Zeitzonen nötig werden`
+Example: `Ruling: date stored as ISO string — that is how the existing API reads it — a migration of the column if time zones become necessary`
 
-Rulings werden gesammelt und dem Menschen am Ende vorgelegt; sie ersetzen keine Rückfrage bei Produktfragen oder schwer umkehrbaren Entscheidungen.
+Rulings are collected and presented to the human at the end; they do not replace asking back on product questions or hard-to-reverse decisions.
+
+Answer in the user's language.
 <!-- /vertrag:rulings -->

@@ -124,5 +124,41 @@ class ReviewerExampleTest(unittest.TestCase):
                 self.assertIn(self.NEW, marker)
 
 
+LANGUAGE_RULE = "Answer in the user's language."
+# Deutsche Umlaute, „ und häufige deutsche Funktionswörter im Fließtext; `Code` und Codeblöcke zählen nicht.
+GERMAN = re.compile(r"[äöüÄÖÜß„]|\b(und|oder|nicht|der|das|ist|wird|eine?|keine?|du|dich|er|es|sie|wenn|mit|auf)\b", re.I)
+
+
+def prose(text):
+    text = re.sub(r"(?ms)^```.*?^```", "", text)
+    text = re.sub(r"<!--.*?-->", "", text)
+    return re.sub(r"`[^`\n]*`", "", text)
+
+
+class EnglishContractTest(unittest.TestCase):
+    """Der Vertrag ist englisch (öffentliches Repo). Neu ist nur die Sprachregel, in jedem Block genau
+    einmal als letzte Zeile; über die Gleichheit oben steht sie damit in jeder Kopie."""
+
+    def test_every_source_block_ends_with_language_rule(self):
+        for name, places in source_blocks().items():
+            for rel, body in places:
+                with self.subTest(file=rel, block=name):
+                    self.assertEqual(body.count(LANGUAGE_RULE), 1)
+                    self.assertTrue(body.rstrip("\n").endswith("\n" + LANGUAGE_RULE))
+
+    def test_source_blocks_and_tracker_contract_are_english(self):
+        texts = [("tracker/linear.md", read("tracker/linear.md"))]
+        texts += [("%s:%s" % (rel, name), body) for name, places in source_blocks().items() for rel, body in places]
+        for where, text in texts:
+            with self.subTest(where=where):
+                found = GERMAN.search(prose(text))
+                self.assertIsNone(found, found and prose(text)[max(0, found.start() - 40):found.end() + 40])
+
+    def test_german_guard_is_sharp(self):
+        self.assertIsNotNone(GERMAN.search(prose("The step stops. Er schreibt keine Datei.")))
+        self.assertIsNotNone(GERMAN.search(prose("Größe")))
+        self.assertIsNone(GERMAN.search(prose("Load it via `+linear`.\n```sh\n# Prüfbefehle\n```\n")))
+
+
 if __name__ == "__main__":
     unittest.main()

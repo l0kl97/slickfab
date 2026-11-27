@@ -65,8 +65,8 @@ class TrackerContractTest(unittest.TestCase):
 
     def test_linear_name_of_group_labels(self):
         # Review PR #2, A3: in Linear heißt das Label nur `rework` usw., in der Gruppe `slickfab`.
-        self.assertIn("Beim Suchen und Setzen über die Linear-Werkzeuge heißt das Label `rework`, "
-                      "`ready`, `needs-human` bzw. `replan` in der Gruppe `slickfab`",
+        self.assertIn("When searching and setting via the Linear tools, the label is called `rework`, "
+                      "`ready`, `needs-human` or `replan` in the group `slickfab`",
                       section(self.text, "Labels"))
 
     def test_size_labels(self):
@@ -80,15 +80,15 @@ class TrackerContractTest(unittest.TestCase):
     def test_marker_position_is_unambiguous(self):
         # Review PR #2, A2: STATUS ist immer die letzte Zeile, VERDICT (nur Reviewer) die vorletzte.
         marker = section(self.text, "Marker")
-        self.assertIn("- Letzte Zeile, immer: `SLICKFAB-STATUS: DONE|DONE_WITH_CONCERNS|BLOCKED|NEEDS_CONTEXT`", marker)
-        self.assertIn("- Vorletzte Zeile, nur beim Reviewer: `SLICKFAB-VERDICT: MERGE|REWORK|REPLAN`", marker)
-        self.assertNotIn("genau einer Marker-Zeile", marker)
+        self.assertIn("- Last line, always: `SLICKFAB-STATUS: DONE|DONE_WITH_CONCERNS|BLOCKED|NEEDS_CONTEXT`", marker)
+        self.assertIn("- Second-to-last line, only for the reviewer: `SLICKFAB-VERDICT: MERGE|REWORK|REPLAN`", marker)
+        self.assertNotIn("exactly one marker line", marker)
         # STATUS beschreibt den Review-Lauf; ein vollständiges REWORK-Review ist DONE.
         self.assertRegex(marker, r"SLICKFAB-VERDICT: REWORK\nSLICKFAB-STATUS: DONE\n```",
                          "Reviewer-Beispiel: VERDICT direkt über STATUS, STATUS zuletzt")
 
     def test_ruling_format(self):
-        self.assertIn("Ruling: was — warum — Kosten falls falsch", self.text)
+        self.assertIn("Ruling: what — why — cost if wrong", self.text)
 
     def test_status_sequence(self):
         self.assertRegex(self.text, r"Backlog.*Todo.*In Progress.*In Review.*Done")
@@ -110,8 +110,8 @@ class ProjectConfigTest(unittest.TestCase):
 
     def test_missing_config_writes_no_replacement_file(self):
         missing = section(self.text, "Wenn die Konfiguration fehlt")
-        self.assertIn("keine", missing)
-        self.assertRegex(missing, r"Plan-.*Ledger-.*State-")
+        self.assertIn("no plan", missing)
+        self.assertRegex(missing, r"plan, ledger or state file")
 
 
 class StandaloneStepMixin:
@@ -477,8 +477,9 @@ class TicketsTrackerErrorTest(unittest.TestCase):
                        if TRACKER_CALL.search(subsection(flow, m.group(1) + "."))})
 
     def test_contract_stops_on_any_tracker_error(self):
-        self.assertIn("Fehlerantwort", section(self.text, "Vertrag"))
-        self.assertIn("hört auf", section(self.text, "Vertrag"))
+        # Der Zugang-Block ist englisch: „Fehlerantwort“ = error response, „hört auf“ = stops.
+        self.assertIn("error response", section(self.text, "Vertrag"))
+        self.assertIn("and stops", section(self.text, "Vertrag"))
 
     def test_steps_that_use_the_tracker(self):
         self.assertEqual(self.tracker_steps(), [1, 6, 7])
@@ -575,13 +576,13 @@ class RuleAnchorsTest(unittest.TestCase):
         ("skills/tickets/SKILL.md", "### 7. Anlegen", "Du legst keine Datei als Ersatz an."),
         ("skills/spec/SKILL.md", "### 6. Im Tracker", "Du legst keine Spec-, Plan- oder Ticket-Datei im Repo an."),
         ("skills/challenge/SKILL.md", "### 5. Festhalten", "Keine Datei im Repo als Ersatz."),
-        ("tracker/linear.md", "## Zugang", "Er schreibt **keine** Plan-, Ledger-, State- oder Ticket-Datei ins Repo als Ersatz."),
-        ("docs/projektkonfiguration.md", "## Wenn die Konfiguration fehlt", "Er schreibt keine Plan-, Ledger- oder State-Datei und keine Ticket-Liste ins Repo als Ersatz"),
+        ("tracker/linear.md", "## Access", "It writes **no** plan, ledger, state or ticket file into the repo as a substitute."),
+        ("docs/projektkonfiguration.md", "## Wenn die Konfiguration fehlt", "It writes no plan, ledger or state file and no ticket list into the repo as a substitute"),
         # Anlegen erst nach Bestätigung, Dubletten vorher
         ("skills/tickets/SKILL.md", "### 6. Zerlegung", "Angelegt wird erst nach einem ausdrücklichen Ja zur Liste"),
         ("skills/tickets/SKILL.md", "### 7. Anlegen", "Erst nach dem Ja"),
         ("skills/tickets/SKILL.md", "### 6. Zerlegung", "Prüf auf Dubletten"),
-        ("tracker/linear.md", "## Issues", "Vor jedem Anlegen auf Dubletten prüfen"),
+        ("tracker/linear.md", "## Issues", "Before creating anything, check for duplicates"),
         # Vertagende Formulierungen
         ("skills/tickets/SKILL.md", "### 5. Auf stille", "Ein Ticket mit so einer Formulierung legst du nicht an."),
         # Keine stille Annahme in spec, keine Pfade
@@ -592,13 +593,13 @@ class RuleAnchorsTest(unittest.TestCase):
         ("skills/challenge/SKILL.md", "### 2. Frischen Blick", "Prüf nicht selbst in einer Session, die das Gespräch kennt."),
         # Freigabe bleibt beim Menschen
         ("skills/tickets/SKILL.md", "### 7. Anlegen", "Kein Ticket setzt du auf `Todo`"),
-        ("tracker/linear.md", "## Statusfolge", "Kein Schritt setzt ein Ticket selbst auf `Todo`."),
+        ("tracker/linear.md", "## Status flow", "No step sets a ticket to `Todo` by itself."),
         # Konfiguration nie ausführen
-        ("docs/projektkonfiguration.md", "## Format", "nicht als Shell-Skript ausgeführt (kein `source`)"),
+        ("docs/projektkonfiguration.md", "## Format", "not executed as a shell script (no `source`)"),
         # prototype: fremde Arbeit und Hauptzweig unangetastet
         ("skills/prototype/SKILL.md", "### 1. Voraussetzung", "Sind Änderungen offen, hör auf und sag es. Du verschiebst oder versteckst keine fremden Änderungen."),
         ("skills/prototype/SKILL.md", "### 6. Festhalten", "Vom Prototyp kommt nichts in den Hauptzweig"),
-        ("tracker/linear.md", "## Labels", "ein Schritt legt keine neuen an"),
+        ("tracker/linear.md", "## Labels", "a step does not create new ones"),
     )
 
     def test_anchors(self):

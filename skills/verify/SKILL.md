@@ -88,95 +88,107 @@ Wörtlich aus `tracker/linear.md` und `docs/projektkonfiguration.md` des slickfa
 ### Tracker: Zugang
 
 <!-- vertrag:zugang -->
-- Linear wird über die Linear-Werkzeuge der Session angesprochen (in Claude Code per Werkzeugsuche `+linear` laden).
-- Ist Linear nicht erreichbar (keine Werkzeuge, keine Anmeldung, Fehlerantwort, Team oder Projekt aus der Konfiguration existiert nicht), meldet der Schritt genau das mit der Fehlermeldung und hört auf. Er schreibt **keine** Plan-, Ledger-, State- oder Ticket-Datei ins Repo als Ersatz. Was schon erarbeitet ist, zeigt er im Chat, damit nichts verloren geht.
-- Ausnahme `verify`: Liegt die Spec als Text vor, prüft verify dagegen weiter, statt aufzuhören. Es schreibt nichts in den Tracker, zeigt Ergebnis und Fix-Ticket-Vorschläge nur im Chat, und das Ergebnis endet mit `SLICKFAB-STATUS: DONE_WITH_CONCERNS` und nennt darüber „Tracker nicht geprüft“, auch wenn jede Aussage erfüllt ist; das gilt, sofern geprüft werden konnte, sonst mit `BLOCKED`. Liegt die Spec nicht als Text vor, gilt der Punkt davor.
+- Linear is accessed through the session's Linear tools (in Claude Code, load them via tool search `+linear`).
+- If Linear is unreachable (no tools, not logged in, error response, team or project from the configuration does not exist), the step reports exactly that, with the error message, and stops. It writes **no** plan, ledger, state or ticket file into the repo as a substitute. Whatever has already been worked out, it shows in the chat, so that nothing is lost.
+- Exception `verify`: If the spec is available as text, verify keeps checking against it instead of stopping. It writes nothing to the tracker, shows the result and fix-ticket proposals only in the chat, and the result ends with `SLICKFAB-STATUS: DONE_WITH_CONCERNS` and states “Tracker not checked” above it, even if every statement is met; this applies provided checking was possible, otherwise with `BLOCKED`. If the spec is not available as text, the previous point applies.
+
+Answer in the user's language.
 <!-- /vertrag:zugang -->
 
 ### Projektkonfiguration: Format
 
 <!-- vertrag:config-format -->
-`.slickfab/config` im Repo-Root: eine Zeile je Wert, `SCHLÜSSEL="wert"`. Leerzeilen und Zeilen mit `#` am Anfang zählen nicht.
+`.slickfab/config` in the repo root: one line per value, `KEY="value"`. Blank lines and lines starting with `#` do not count.
 
 ```sh
-# slickfab: Projektkonfiguration
+# slickfab: project configuration
 TRACKER="linear"
 TRACKER_TEAM="Example"
 TRACKER_PROJECT="Example"
-# Prüfbefehle, nur ohne slickrails (sonst gelten die aus .slickrails/config.sh)
+# Check commands, only without slickrails (otherwise the ones from .slickrails/config.sh apply)
 CHECK_TYPECHECK="npm run typecheck"
 CHECK_TEST="npm test"
 CHECK_LINT=""
 ```
 
-| Schlüssel | Pflicht | Bedeutung |
+| Key | Required | Meaning |
 |---|---|---|
-| `TRACKER=` | ja | Welcher Tracker-Vertrag gilt. Heute nur `linear`. |
-| `TRACKER_TEAM=` | ja | Name oder Kürzel des Linear-Teams. |
-| `TRACKER_PROJECT=` | ja | Name des Linear-Projekts, in dem Specs und Tickets liegen. |
-| `CHECK_TYPECHECK=` | nein | Typprüfung; leer = gibt es nicht. |
-| `CHECK_TEST=` | ja, ohne slickrails | Alle Tests; leer = gibt es nicht (dann sagt jeder Schritt, der prüfen soll, dass er es nicht kann). |
-| `CHECK_LINT=` | nein | Lint; leer = gibt es nicht. |
+| `TRACKER=` | yes | Which tracker contract applies. Currently only `linear`. |
+| `TRACKER_TEAM=` | yes | Name or key of the Linear team. |
+| `TRACKER_PROJECT=` | yes | Name of the Linear project that holds specs and tickets. |
+| `CHECK_TYPECHECK=` | no | Type check; empty = does not exist. |
+| `CHECK_TEST=` | yes, without slickrails | All tests; empty = does not exist (then every step that is supposed to check says that it cannot). |
+| `CHECK_LINT=` | no | Lint; empty = does not exist. |
 
-Die Datei wird als Text gelesen, nicht als Shell-Skript ausgeführt (kein `source`), damit eine Konfiguration keinen Code einschleusen kann.
+The file is read as text, not executed as a shell script (no `source`), so that a configuration cannot inject code.
+
+Answer in the user's language.
 <!-- /vertrag:config-format -->
 
 ### Projektkonfiguration: Prüfbefehle mit slickrails
 
 <!-- vertrag:config-slickrails -->
-Liegt im Repo `.slickrails/config.sh`, kommen die Prüfbefehle von dort: alle nicht leeren `CHECK_*`-Werte, so wie sie slickrails auch in seinen Hooks benutzt. `CHECK_*`-Einträge in `.slickfab/config` werden dann nicht benutzt; stehen dort andere Werte, nennt der Schritt den Widerspruch einmal und folgt slickrails. Auch `.slickrails/config.sh` wird nur als Text gelesen.
+If the repo has `.slickrails/config.sh`, the check commands come from there: all non-empty `CHECK_*` values, the same way slickrails uses them in its hooks. `CHECK_*` entries in `.slickfab/config` are then not used; if they hold different values, the step names the contradiction once and follows slickrails. `.slickrails/config.sh` is also read only as text.
+
+Answer in the user's language.
 <!-- /vertrag:config-slickrails -->
 
 ### Projektkonfiguration: wenn sie fehlt
 
 <!-- vertrag:config-fehlt -->
-Fehlt `.slickfab/config`, fehlt ein Pflichtwert oder steht bei `TRACKER=` ein unbekannter Tracker, meldet der Schritt genau das (welche Datei, welcher Schlüssel) und hört an der Stelle auf, an der er den Tracker bräuchte. Er schreibt keine Plan-, Ledger- oder State-Datei und keine Ticket-Liste ins Repo als Ersatz; bereits Erarbeitetes zeigt er im Chat.
+If `.slickfab/config` is missing, a required value is missing, or `TRACKER=` names an unknown tracker, the step reports exactly that (which file, which key) and stops at the point where it would need the tracker. It writes no plan, ledger or state file and no ticket list into the repo as a substitute; whatever it has already worked out, it shows in the chat.
 
-Er bietet an, `.slickfab/config` anzulegen, und zeigt den Inhalt mit den Werten, die er im Repo oder im Tracker gefunden hat. Angelegt wird sie erst, wenn der Mensch Team und Projekt bestätigt hat.
+It offers to create `.slickfab/config` and shows the content with the values it found in the repo or in the tracker. The file is created only once the human has confirmed team and project.
+
+Answer in the user's language.
 <!-- /vertrag:config-fehlt -->
 
 ### Tracker: Issues
 
 <!-- vertrag:issues -->
-| Art | Titel | Ort | Anfangsstatus |
+| Kind | Title | Location | Initial status |
 |---|---|---|---|
-| Spec | `Spec: <Feature>` | Projekt aus der Konfiguration | `Backlog` |
-| Ticket | Verb + Ergebnis, ohne „und“ | Sub-Issue der Spec | `Backlog` |
+| Spec | `Spec: <Feature>` | project from the configuration | `Backlog` |
+| Ticket | verb + outcome, without “and” | sub-issue of the spec | `Backlog` |
 
-- Vor jedem Anlegen auf Dubletten prüfen: offene und erledigte Issues im Projekt mit ähnlichem Titel suchen. Gibt es einen Treffer, nennen und fragen, statt doppelt anzulegen.
-- Abhängigkeiten sind Linear-Relationen „blockiert von“, nicht Text in der Beschreibung.
-- Details für Agents (betroffene Dateien, Fundstellen) stehen in einem einklappbaren Abschnitt „Agent notes“ am Ende der Beschreibung.
+- Before creating anything, check for duplicates: search open and completed issues in the project with a similar title. If there is a match, name it and ask instead of creating a duplicate.
+- Dependencies are Linear relations “blocked by”, not text in the description.
+- Details for agents (affected files, locations) go in a collapsible section “Agent notes” at the end of the description.
+
+Answer in the user's language.
 <!-- /vertrag:issues -->
 
 ### Tracker: Marker
 
 <!-- vertrag:marker -->
-Jeder Kommentar, den ein slickfab-Schritt oder eine Rolle schreibt, und jede Rückmeldung an einen Auftraggeber endet mit dem Marker-Block, ohne Text danach:
+Every comment that a slickfab step or role writes, and every report to a caller, ends with the marker block, with no text after it:
 
-- Letzte Zeile, immer: `SLICKFAB-STATUS: DONE|DONE_WITH_CONCERNS|BLOCKED|NEEDS_CONTEXT`
-- Vorletzte Zeile, nur beim Reviewer: `SLICKFAB-VERDICT: MERGE|REWORK|REPLAN`
+- Last line, always: `SLICKFAB-STATUS: DONE|DONE_WITH_CONCERNS|BLOCKED|NEEDS_CONTEXT`
+- Second-to-last line, only for the reviewer: `SLICKFAB-VERDICT: MERGE|REWORK|REPLAN`
 
-Alle anderen Schritte und Rollen schreiben nur die STATUS-Zeile. Je Zeile steht genau ein Wert.
+All other steps and roles write only the STATUS line. Each line holds exactly one value.
 
-| Wert | Bedeutung |
+| Value | Meaning |
 |---|---|
-| `DONE` | Auftrag erfüllt, nichts offen |
-| `DONE_WITH_CONCERNS` | erfüllt, aber mit genannten Bedenken |
-| `BLOCKED` | kann nicht weiter; der Grund steht darüber |
-| `NEEDS_CONTEXT` | es fehlt Information oder Kontext; was fehlt, steht darüber |
+| `DONE` | task fulfilled, nothing open |
+| `DONE_WITH_CONCERNS` | fulfilled, but with stated concerns |
+| `BLOCKED` | cannot continue; the reason is stated above |
+| `NEEDS_CONTEXT` | information or context is missing; what is missing is stated above |
 
-Beispiel (jeder Schritt):
+Example (every step):
 
 ```
 SLICKFAB-STATUS: BLOCKED
 ```
 
-Beispiel (Reviewer):
+Example (reviewer):
 
 ```
 SLICKFAB-VERDICT: REWORK
 SLICKFAB-STATUS: DONE
 ```
+
+Answer in the user's language.
 <!-- /vertrag:marker -->
 
 ## Ergebnis

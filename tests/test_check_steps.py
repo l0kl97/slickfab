@@ -518,8 +518,8 @@ class NoSelfContradictingContractTest(unittest.TestCase):
         # trägt dann DONE_WITH_CONCERNS mit „Tracker nicht geprüft“. Der Vertrag sagt das selbst.
         source = read("tracker/linear.md")
         access = source[source.index("<!-- vertrag:zugang -->"):source.index("<!-- /vertrag:zugang -->")]
-        for needed in ("Ausnahme `verify`", "Liegt die Spec als Text vor",
-                       "`SLICKFAB-STATUS: DONE_WITH_CONCERNS`", "„Tracker nicht geprüft“"):
+        for needed in ("Exception `verify`", "If the spec is available as text",
+                       "`SLICKFAB-STATUS: DONE_WITH_CONCERNS`", "“Tracker not checked”"):
             self.assertIn(needed, access)
         text = read("skills/verify/SKILL.md")
         self.assertIn("<!-- vertrag:zugang -->", text)
@@ -532,13 +532,18 @@ class NoSelfContradictingContractTest(unittest.TestCase):
         self.assertIn("„Tracker nicht geprüft“", done)
         # Pre-Push-Review: Konnte verify ohne Tracker gar nicht prüfen, bleibt es BLOCKED; die
         # Regel „DONE_WITH_CONCERNS“ gilt nur, wenn geprüft wurde. Vertrag, Schritt 1 und 6 gleich.
-        for where, part in (("Vertrag", access), ("Schritt 1", pre), ("Schritt 6", done)):
+        # Der Vertrag ist englisch, die Schritte (noch) deutsch: dieselbe Regel in beiden Sprachen.
+        for where, part, rule, never in (
+                ("Vertrag", access, "provided checking was possible, otherwise with `BLOCKED`",
+                 "always with `DONE_WITH_CONCERNS`"),
+                ("Schritt 1", pre, "sofern geprüft werden konnte, sonst mit `BLOCKED`", "immer mit `DONE_WITH_CONCERNS`"),
+                ("Schritt 6", done, "sofern geprüft werden konnte, sonst mit `BLOCKED`", "immer mit `DONE_WITH_CONCERNS`")):
             with self.subTest(where=where):
-                self.assertIn("sofern geprüft werden konnte, sonst mit `BLOCKED`", part)
-                self.assertNotIn("immer mit `DONE_WITH_CONCERNS`", part)
+                self.assertIn(rule, part)
+                self.assertNotIn(never, part)
         # Die Hülle des Verifiers nimmt die Spec als Text an, statt mit NEEDS_CONTEXT zu enden.
         hull = read("agents/verifier.md")
-        self.assertIn("das Spec-Issue (ID) oder, ohne Tracker, die Spec als Text", hull)
+        self.assertIn("the spec issue (ID) or, without a tracker, the spec as text", hull)
 
     def test_review_does_not_embed_stop_on_missing_tracker(self):
         # Review PR #6, Befund A2: Der Zugang-Block sagt „hört auf“; review prüft ohne Tracker

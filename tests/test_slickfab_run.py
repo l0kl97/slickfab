@@ -125,7 +125,7 @@ class SlickfabRun(unittest.TestCase):
         self.assertEqual(argv[-4:-1], ["claude", "--model", "opus"])
         prompt = argv[-1]
         self.assertTrue(prompt.endswith("\n\n## Auftrag\nBaue EX-126."), prompt[-80:])
-        self.assertIn("Du bist der Umsetzer.", prompt)
+        self.assertIn("You are the implementer.", prompt)
         self.assertNotIn("model: opus", prompt, "Frontmatter gehört nicht in die erste Nachricht")
 
     def test_without_issue_and_space_only_role_and_dispatch(self):

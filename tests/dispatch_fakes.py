@@ -178,7 +178,7 @@ def iso(ms):
 
 
 def issue(ident, status="Todo", stype="unstarted", assignee=ME, labels=("S",), parent="EX-100",
-          blockers=(), files=(), comments=()):
+          blockers=(), files=(), comments=(), parent_state="started"):
     """Ein Issue so, wie die Linear-Abfrage des Dispatchers es zurückbekommt."""
     desc = "Text.\n\n>>> Agent notes\n\n**Betroffene Dateien**\n\n" + "".join(
         "* `%s` (Hinweis)\n" % f for f in files) + "\n**Fundstellen**\n\n* `docs/x.md`\n\n>>>"
@@ -189,7 +189,7 @@ def issue(ident, status="Todo", stype="unstarted", assignee=ME, labels=("S",), p
         "labels": {"nodes": [{"name": l.split(":", 1)[-1],
                               "parent": {"name": "slickfab"} if l.startswith("slickfab:") else None}
                              for l in labels]},
-        "parent": {"identifier": parent} if parent else None,
+        "parent": {"identifier": parent, "state": {"type": parent_state}} if parent else None,
         "inverseRelations": {"nodes": [{"type": "blocks", "issue": {"identifier": b, "state": {"type": t}}}
                                        for b, t in blockers]},
         "comments": {"nodes": [{"body": c[0], "createdAt": iso(c[1]),

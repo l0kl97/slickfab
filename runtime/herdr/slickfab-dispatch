@@ -47,7 +47,7 @@ CI = {"SUCCESS": "green", "FAILURE": "red", "ERROR": "red", "PENDING": "pending"
 GROUP = "slickfab"
 
 ISSUE_FIELDS = """identifier description state { name type } assignee { email }
-  labels { nodes { name parent { name } } } parent { identifier }
+  labels { nodes { name parent { name } } } parent { identifier state { type } }
   inverseRelations { nodes { type issue { identifier state { type } } } }
   comments(first: 100) { pageInfo { hasNextPage endCursor } nodes { body createdAt user { email } } }"""
 COMMENTS_QUERY = ("query($id: String!, $after: String) { issue(id: $id) { comments(first: 100, after: $after) "
@@ -501,7 +501,10 @@ def read_state(cfg, book):
                 comments[i["identifier"]] = sorted((ms(c["createdAt"]), c["body"]) for c in own)
                 spec = (i.get("parent") or {}).get("identifier")
                 if spec:
-                    state["specs"].setdefault(spec, {"project": name, "verified": spec in b.get("verified", [])})
+                    # Status der Spec in Linear: erledigte oder abgebrochene Specs bekommen keinen
+                    # Verifier, auch wenn sie ohne Dispatcher abgeschlossen wurden.
+                    state["specs"].setdefault(spec, {"project": name, "verified": spec in b.get("verified", []),
+                                                     "state_type": i["parent"]["state"]["type"]})
         except (KeyError, TypeError, AttributeError, ValueError) as e:
             raise ReadError("Linear-Issue im Projekt %s unlesbar: %s" % (name, e))
     for t in raw_terms:

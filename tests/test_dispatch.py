@@ -883,6 +883,17 @@ class AfterMerge(unittest.TestCase):
         only_canceled = [ticket("EX-1", status="Canceled")]
         self.assertEqual(decide(state(only_canceled)), [])
 
+    def test_closed_spec_gets_no_verify(self):
+        # Eine Spec, die in Linear schon Done oder Canceled ist, wurde von Hand oder ohne
+        # Autopilot abgeschlossen: kein Verify-Lauf, auch wenn die Buchführung nichts weiß.
+        done = [ticket("EX-1", status="Done")]
+        for state_type in ("completed", "canceled"):
+            specs = {"EX-100": {"project": "slickfab", "verified": False, "state_type": state_type}}
+            self.assertEqual(decide(state(done, specs=specs)), [], state_type)
+        open_spec = {"EX-100": {"project": "slickfab", "verified": False, "state_type": "started"}}
+        self.assertEqual(decide(state(done, specs=open_spec)),
+                         [{"action": "start_verify", "project": "slickfab", "spec": "EX-100"}])
+
     def test_dead_verify_agent_of_foreign_project_is_not_restarted(self):
         # Re-Review PR #8 R-neu-1: Wächter-Projektfilter
         specs = {"EX-100": {"project": "slickfab", "verified": False},

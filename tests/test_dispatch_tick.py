@@ -313,6 +313,19 @@ class ReadFailures(unittest.TestCase):
         self.assertIn("Zeitgrenze", e.log())
         no_writes(self, e)
 
+    def test_spec_without_state_is_a_read_error_not_an_open_spec(self):
+        # Fehlt der Status der Spec (Schlüssel fehlt oder null), rät der tick nicht "offen" und
+        # startet nichts, auch keinen Verifier; der nächste tick mit Status läuft normal.
+        for broken in ({"identifier": "EX-100"}, {"identifier": "EX-100", "state": None}):
+            def break_it(e, broken=broken):
+                e.linear.issues["Alpha"][0]["parent"] = dict(broken)
+
+            def heal(e):
+                e.linear.issues["Alpha"][0]["parent"] = {"identifier": "EX-100",
+                                                         "state": {"type": "started"}}
+            with self.subTest(parent=broken):
+                self.check(break_it, heal, "Linear-Issue im Projekt alpha unlesbar")
+
     def test_unreadable_second_comment_page_stops_tick(self):
         # Re-Review PR #16 (:317): sonst fehlen still REWORK-Marker, und die Runden-Bremse greift nicht.
         e = Env(self)
@@ -442,6 +455,18 @@ class SingleActionFails(unittest.TestCase):
         runs = [c for c in e.calls("hc") if c[0] == "run"]
         roles = sorted(c[c.index("--label") + 1] for c in runs)
         self.assertEqual(roles, ["studio.role=debugger", "studio.role=retro", "studio.role=verifier"])
+
+    def test_closed_spec_in_linear_starts_no_verify(self):
+        # Eine Spec, die in Linear schon Done oder Canceled ist, bekommt keinen Verifier, auch
+        # wenn die Buchführung sie nicht als verifiziert kennt.
+        for spec_state in ("completed", "canceled"):
+            e = Env(self)
+            e.linear.issues["Alpha"] = [issue("EX-9", "Done", "completed", parent="EX-200",
+                                              parent_state=spec_state)]
+            self.assertEqual(e.run("tick").returncode, 0)
+            runs = [c for c in e.calls("hc") if c[0] == "run"]
+            self.assertNotIn("studio.role=verifier",
+                             [c[c.index("--label") + 1] for c in runs], spec_state)
 
     def test_unexpected_error_in_one_action_does_not_stop_the_others(self):
         # Pre-Push-Review: nicht nur ActionError; die folgende Aktion (EX-7) läuft trotzdem.

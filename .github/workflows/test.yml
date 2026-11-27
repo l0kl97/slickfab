@@ -1,0 +1,32 @@
+# Runs the full test suite (sh tests/run.sh) on every pull request and on pushes to main.
+# One job, two Python versions: 3.9 (the minimum) and the current 3.x.
+name: Tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    # pinned: ubuntu-latest moves to a new major version on its own schedule
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.x"]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Full suite
+        run: sh tests/run.sh

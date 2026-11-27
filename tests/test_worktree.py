@@ -123,7 +123,9 @@ class Project:
         self.git(self.tmp, "init", "-q", "--bare", "-b", "main", self.origin)
         self.git(self.tmp, "clone", "-q", self.origin, self.main)
         self.git(self.main, "checkout", "-q", "-b", "main")
-        self.write(".gitignore", ".env\n.env.*\n!.env.example\ntests/data.txt\n")
+        # __pycache__/: der Referenzlauf schreibt Bytecode in den Worktree; ohne Eintrag hält rm das
+        # für ungesicherte Arbeit. Apples System-Python verdeckt das lokal (sys.pycache_prefix).
+        self.write(".gitignore", ".env\n.env.*\n!.env.example\ntests/data.txt\n__pycache__/\n")
         self.write("tests/test_demo.py", test)
         if check is not None:
             self.write(".slickrails/config.sh", check + "\n")

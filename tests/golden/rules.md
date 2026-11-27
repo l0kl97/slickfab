@@ -2,8 +2,9 @@
 
 Erzeugt mit `python3 tests/rules_golden.py --update` aus den Abschnitten
 `<!-- regel:NAME -->` … `<!-- /regel:NAME -->` in allen `skills/*/SKILL.md`
-(dazu je Schritt Frontmatter und Gliederung) sowie den
-Agent-Rollen in `agents/`. Nicht von Hand bearbeiten.
+(dazu je Schritt Frontmatter und Gliederung), den Agent-Rollen in
+`agents/` und den Vertragsblöcken `<!-- vertrag:NAME -->` der Quellen
+`tracker/linear.md` und `docs/projektkonfiguration.md`. Nicht von Hand bearbeiten.
 
 Ändert sich eine Regel, wird `tests/test_rule_golden.py` rot. Ist die
 Änderung gewollt, Skript mit `--update` laufen lassen und diese Datei
@@ -2454,3 +2455,142 @@ Opus 5.5 (`opus`): the retro reads many pull requests and has to bring causes to
 | “Without Linear the retro is pointless.” | You keep working with Git and pull requests and name what you are missing. |
 | “I won't dig out the evidence, the patterns are obvious.” | Every mistake is listed with PR, commit or file:line, otherwise it is a guess. |
 <!-- /regel:agents/retro/ausreden -->
+
+<!-- regel:tracker/linear.md/vertrag:zugang -->
+- Linear is accessed through the session's Linear tools (in Claude Code, load them via tool search `+linear`).
+- If Linear is unreachable (no tools, not logged in, error response, team or project from the configuration does not exist), the step reports exactly that, with the error message, and stops. It writes **no** plan, ledger, state or ticket file into the repo as a substitute. Whatever has already been worked out, it shows in the chat, so that nothing is lost.
+- Exception `verify`: If the spec is available as text, verify keeps checking against it instead of stopping. It writes nothing to the tracker, shows the result and fix-ticket proposals only in the chat, and the result ends with `SLICKFAB-STATUS: DONE_WITH_CONCERNS` and states “Tracker not checked” above it, even if every statement is met; this applies provided checking was possible, otherwise with `BLOCKED`. If the spec is not available as text, the previous point applies.
+
+Answer in the user's language.
+<!-- /regel:tracker/linear.md/vertrag:zugang -->
+
+<!-- regel:tracker/linear.md/vertrag:issues -->
+| Kind | Title | Location | Initial status |
+|---|---|---|---|
+| Spec | `Spec: <Feature>` | project from the configuration | `Backlog` |
+| Ticket | verb + outcome, without “and” | sub-issue of the spec | `Backlog` |
+
+- Before creating anything, check for duplicates: search open and completed issues in the project with a similar title. If there is a match, name it and ask instead of creating a duplicate.
+- Dependencies are Linear relations “blocked by”, not text in the description.
+- Details for agents (affected files, locations) go in a collapsible section “Agent notes” at the end of the description.
+
+Answer in the user's language.
+<!-- /regel:tracker/linear.md/vertrag:issues -->
+
+<!-- regel:tracker/linear.md/vertrag:status -->
+`Backlog` → `Todo` → `In Progress` → `In Review` → `Done` (abort: `Canceled`, duplicate: `Duplicate`)
+
+| Transition | Who |
+|---|---|
+| create in `Backlog` | `spec`, `tickets` |
+| `Backlog` → `Todo` | only the human (this is the approval to build) |
+| `Todo` → `In Progress` | the implementer at the start |
+| `In Progress` → `In Review` | the implementer, once the pull request is open |
+| `In Review` → `Done` | after the merge |
+
+No step sets a ticket to `Todo` by itself.
+
+Answer in the user's language.
+<!-- /regel:tracker/linear.md/vertrag:status -->
+
+<!-- regel:tracker/linear.md/vertrag:labels -->
+The labels exist in the team; a step does not create new ones. If one is missing, it reports that.
+
+| Label | Meaning |
+|---|---|
+| `slickfab:rework` | reviewer demands rework |
+| `slickfab:ready` | review passed, waiting for a human to merge |
+| `slickfab:needs-human` | loop exhausted or agent blocked: a human decides |
+| `slickfab:replan` | ticket or spec is cut wrong: back to planning |
+| `door:one-way` | hard to reverse (migration, auth, payment, deletion, deploy): always a human gate, never auto-merge |
+| `S`, `M`, `L` | size (effort small, medium, large); exactly one per ticket. `L` is a hint that the ticket should rather be split |
+
+In Linear, `rework`, `ready`, `needs-human` and `replan` are children of the label group `slickfab`; in texts, comments and this contract they are written as `slickfab:<name>`. When searching and setting via the Linear tools, the label is called `rework`, `ready`, `needs-human` or `replan` in the group `slickfab`; a search for `slickfab:rework` finds nothing, and that does not mean the label is missing. The group allows only one at a time.
+
+Answer in the user's language.
+<!-- /regel:tracker/linear.md/vertrag:labels -->
+
+<!-- regel:tracker/linear.md/vertrag:marker -->
+Every comment that a slickfab step or role writes, and every report to a caller, ends with the marker block, with no text after it:
+
+- Last line, always: `SLICKFAB-STATUS: DONE|DONE_WITH_CONCERNS|BLOCKED|NEEDS_CONTEXT`
+- Second-to-last line, only for the reviewer: `SLICKFAB-VERDICT: MERGE|REWORK|REPLAN`
+
+All other steps and roles write only the STATUS line. Each line holds exactly one value.
+
+| Value | Meaning |
+|---|---|
+| `DONE` | task fulfilled, nothing open |
+| `DONE_WITH_CONCERNS` | fulfilled, but with stated concerns |
+| `BLOCKED` | cannot continue; the reason is stated above |
+| `NEEDS_CONTEXT` | information or context is missing; what is missing is stated above |
+
+Example (every step):
+
+```
+SLICKFAB-STATUS: BLOCKED
+```
+
+Example (reviewer):
+
+```
+SLICKFAB-VERDICT: REWORK
+SLICKFAB-STATUS: DONE
+```
+
+Answer in the user's language.
+<!-- /regel:tracker/linear.md/vertrag:marker -->
+
+<!-- regel:tracker/linear.md/vertrag:rulings -->
+If an agent decides something itself that a human could have decided differently, it immediately writes a comment on the affected issue in exactly this form:
+
+`Ruling: what — why — cost if wrong`
+
+Example: `Ruling: date stored as ISO string — that is how the existing API reads it — a migration of the column if time zones become necessary`
+
+Rulings are collected and presented to the human at the end; they do not replace asking back on product questions or hard-to-reverse decisions.
+
+Answer in the user's language.
+<!-- /regel:tracker/linear.md/vertrag:rulings -->
+
+<!-- regel:docs/projektkonfiguration.md/vertrag:config-format -->
+`.slickfab/config` in the repo root: one line per value, `KEY="value"`. Blank lines and lines starting with `#` do not count.
+
+```sh
+# slickfab: project configuration
+TRACKER="linear"
+TRACKER_TEAM="Example"
+TRACKER_PROJECT="Example"
+# Check commands, only without slickrails (otherwise the ones from .slickrails/config.sh apply)
+CHECK_TYPECHECK="npm run typecheck"
+CHECK_TEST="npm test"
+CHECK_LINT=""
+```
+
+| Key | Required | Meaning |
+|---|---|---|
+| `TRACKER=` | yes | Which tracker contract applies. Currently only `linear`. |
+| `TRACKER_TEAM=` | yes | Name or key of the Linear team. |
+| `TRACKER_PROJECT=` | yes | Name of the Linear project that holds specs and tickets. |
+| `CHECK_TYPECHECK=` | no | Type check; empty = does not exist. |
+| `CHECK_TEST=` | yes, without slickrails | All tests; empty = does not exist (then every step that is supposed to check says that it cannot). |
+| `CHECK_LINT=` | no | Lint; empty = does not exist. |
+
+The file is read as text, not executed as a shell script (no `source`), so that a configuration cannot inject code.
+
+Answer in the user's language.
+<!-- /regel:docs/projektkonfiguration.md/vertrag:config-format -->
+
+<!-- regel:docs/projektkonfiguration.md/vertrag:config-slickrails -->
+If the repo has `.slickrails/config.sh`, the check commands come from there: all non-empty `CHECK_*` values, the same way slickrails uses them in its hooks. `CHECK_*` entries in `.slickfab/config` are then not used; if they hold different values, the step names the contradiction once and follows slickrails. `.slickrails/config.sh` is also read only as text.
+
+Answer in the user's language.
+<!-- /regel:docs/projektkonfiguration.md/vertrag:config-slickrails -->
+
+<!-- regel:docs/projektkonfiguration.md/vertrag:config-fehlt -->
+If `.slickfab/config` is missing, a required value is missing, or `TRACKER=` names an unknown tracker, the step reports exactly that (which file, which key) and stops at the point where it would need the tracker. It writes no plan, ledger or state file and no ticket list into the repo as a substitute; whatever it has already worked out, it shows in the chat.
+
+It offers to create `.slickfab/config` and shows the content with the values it found in the repo or in the tracker. The file is created only once the human has confirmed team and project.
+
+Answer in the user's language.
+<!-- /regel:docs/projektkonfiguration.md/vertrag:config-fehlt -->

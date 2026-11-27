@@ -478,8 +478,13 @@ class TicketsTrackerErrorTest(unittest.TestCase):
 
     def test_contract_stops_on_any_tracker_error(self):
         # Der Zugang-Block ist englisch: „Fehlerantwort“ = error response, „hört auf“ = stops.
-        self.assertIn("error response", section(self.text, "Vertrag"))
-        self.assertIn("and stops", section(self.text, "Vertrag"))
+        # Ganzer Satz im Block 'zugang' (Review PR #1): „and stops“ steht auch in config-fehlt,
+        # „and stops.“ → „and continues.“ blieb sonst grün.
+        contract = section(self.text, "Vertrag")
+        access = re.search(r"<!-- vertrag:zugang -->\n(.*?)<!-- /vertrag:zugang -->", contract, re.S)
+        self.assertIsNotNone(access, "tickets bettet den Block 'zugang' nicht ein")
+        self.assertIn("error response", access.group(1))
+        self.assertIn("the step reports exactly that, with the error message, and stops.", access.group(1))
 
     def test_steps_that_use_the_tracker(self):
         self.assertEqual(self.tracker_steps(), [1, 6, 7])

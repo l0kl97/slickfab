@@ -10,12 +10,15 @@ linear.json.calls und schreibt daneben:
 Mit --ablage legt es den Lauf zum Einchecken ab: die drei Dateien, lauf.md (Laufparameter plus
 Kosten) und transkript.md (Transkript ohne Systemzeilen, jeder Block gekürzt). Alles bereinigt:
 Lauf-Ordner, slickfab-Checkout und Home-Ordner werden zu <lauf>, <slickfab> und ~, Temp-Pfade zu
-<tmp>, der lokale Nutzername zu <nutzer>, Mailadressen zu <mail>, bekannte Schlüsselformate zu <geheim>.
+<tmp>, der lokale Nutzername zu <nutzer>, der Rechnername zu <rechner>, Mailadressen zu <mail>, bekannte
+Schlüsselformate zu <geheim>.
 """
+import functools
 import json
 import os
 import re
 import shutil
+import socket
 import subprocess
 import sys
 
@@ -58,6 +61,51 @@ def nutzernamen():
     return sorted(n for n in names if n and len(n) >= 3)
 
 
+def kurze_logins():
+    """Login und Home-Ordner unter 3 Zeichen: nur an Stellen ersetzt, an denen sie sicher der Nutzer sind."""
+    import getpass
+    names = set()
+    try:
+        names.add(getpass.getuser())
+    except (KeyError, OSError):
+        pass
+    names.add(os.path.basename(os.path.expanduser("~")))
+    return sorted(n for n in names if n and len(n) < 3)
+
+
+# Computer- und LocalHostName von macOS; gelesen statt über `scutil`, das unter Last hängen kann.
+SYSTEMKONFIG = "/Library/Preferences/SystemConfiguration/preferences.plist"
+
+
+@functools.lru_cache(maxsize=None)
+def rechnernamen():
+    """Hostname lang und kurz, unter macOS auch ComputerName und LocalHostName; längste zuerst.
+
+    Gibt es die Systemkonfiguration, lässt sie sich aber nicht lesen, bricht der Auszug ab: lieber
+    keine Ablage (die Rohdaten bleiben, der Auszug lässt sich wiederholen) als eine mit Rechnernamen."""
+    import plistlib
+    names = set()
+    try:
+        lang = socket.gethostname()
+        names.update((lang, lang.split(".")[0]))
+    except OSError:
+        pass
+    if os.path.exists(SYSTEMKONFIG):
+        try:
+            with open(SYSTEMKONFIG, "rb") as f:
+                system = plistlib.load(f).get("System") or {}
+            names.add((system.get("System") or {}).get("ComputerName") or "")
+            names.add(((system.get("Network") or {}).get("HostNames") or {}).get("LocalHostName") or "")
+        except (OSError, ValueError, AttributeError, plistlib.InvalidFileException) as e:
+            sys.exit("auszug: Rechnername nicht lesbar aus %s (%s); Abbruch, damit er nicht in die Ablage gerät"
+                     % (SYSTEMKONFIG, e))
+    names = {n for n in names if isinstance(n, str) and len(n) >= 3 and n.lower() != "localhost"}
+    return sorted(names, key=lambda n: (-len(n), n))
+
+
+_LS_ZEILE = re.compile(r"^([-bcdlps][rwxsStT-]{9}[@+.]?\s+\d+\s+)(\S+)(\s+)(\S+)(?=\s)", re.M)
+
+
 def bereinige(text, run, root):
     for path, ersatz in ((os.path.realpath(run), "<lauf>"), (run, "<lauf>"),
                          (os.path.realpath(root), "<slickfab>"), (root, "<slickfab>"),
@@ -67,6 +115,17 @@ def bereinige(text, run, root):
     text = re.sub(r"(?:/private)?/var/folders/[^\s\"'`)]+", "<tmp>", text)
     text = re.sub(r"(?:/private)?/tmp/[^\s\"'`)]+", "<tmp>", text)
     text = re.sub(r"/(?:Users|home)/[^/\s\"'`)]+", "~", text)
+    # Rechnername (Prompt, `hostname`, `scutil`) vor dem Nutzer, egal in welcher Schreibweise.
+    for name in rechnernamen():
+        text = re.sub(r"(?<![\w-])%s(?![\w-])" % re.escape(name), "<rechner>", text, flags=re.I)
+    # Ein kurzer Login träfe als Wort gewöhnliche Wörter; ersetzt nur als Besitzer/Gruppe in `ls -l`
+    # und vor dem @ eines Prompts.
+    kurz_ = kurze_logins()
+    if kurz_:
+        text = _LS_ZEILE.sub(lambda m: m.group(1) + ("<nutzer>" if m.group(2) in kurz_ else m.group(2))
+                             + m.group(3) + ("<nutzer>" if m.group(4) in kurz_ else m.group(4)), text)
+        for name in kurz_:
+            text = re.sub(r"(?<![\w.-])%s(?=@)" % re.escape(name), "<nutzer>", text)
     # Der lokale Nutzer steht ohne Pfad etwa als Besitzer in `ls -l`; als ganzes Wort ersetzen.
     for name in nutzernamen():
         text = re.sub(r"\b%s\b" % re.escape(name), "<nutzer>", text)

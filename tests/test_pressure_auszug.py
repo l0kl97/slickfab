@@ -193,6 +193,110 @@ class AuszugTest(unittest.TestCase):
             out = mod.bereinige("1 kimtest staff; kimtester; kimtest.txt; an kimtest.", "/x/lauf", "/x/root")
             self.assertEqual(out, "1 <nutzer> staff; kimtester; <nutzer>.txt; an <nutzer>.")
 
+    def lade_modul(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("auszug_modul", AUSZUG)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def plist(self, system=None, hostnames=None, roh=None):
+        # Die Systemkonfiguration von macOS ist eine Systemgrenze: hier als Datei im Test-Ordner.
+        import plistlib
+        pfad = os.path.join(self.run_dir, "preferences.plist")
+        with open(pfad, "wb") as f:
+            if roh is not None:
+                f.write(roh)
+            else:
+                plistlib.dump({"System": {"System": system or {}, "Network": {"HostNames": hostnames or {}}}}, f)
+        return pfad
+
+    def test_rechnername_wird_ersetzt(self):
+        # Kurz- und Langform des Hostnamens, Computer- und LocalHostName (macOS) dürfen nicht ins Repo,
+        # auch nicht in anderer Schreibweise; ähnliche, längere Wörter bleiben.
+        import unittest.mock
+        mod = self.lade_modul()
+        mod.SYSTEMKONFIG = self.plist({"ComputerName": "Kims Mac Pro"}, {"LocalHostName": "Kims-Mac-Pro"})
+        with unittest.mock.patch("socket.gethostname", return_value="Kims-Mac.heim.lan"), \
+                unittest.mock.patch("getpass.getuser", return_value="kimtest"), \
+                unittest.mock.patch.dict(os.environ, {"HOME": "/nirgends/kimtest"}):
+            out = mod.bereinige("kimtest@Kims-Mac ~ % hostname\nKims-Mac.heim.lan\n"
+                                "Name: Kims Mac Pro (Kims-Mac-Pro.local); kims-mac.\nKims-Macintosh bleibt",
+                                "/x/lauf", "/x/root")
+        self.assertEqual(out, "<nutzer>@<rechner> ~ % hostname\n<rechner>\n"
+                              "Name: <rechner> (<rechner>.local); <rechner>.\nKims-Macintosh bleibt")
+
+    def test_rechnername_ohne_systemkonfig_und_zu_kurz(self):
+        # Ohne Systemkonfiguration (Linux) zählt nur der Hostname; unter 3 Zeichen und localhost bleiben.
+        import unittest.mock
+        mod = self.lade_modul()
+        mod.SYSTEMKONFIG = os.path.join(self.run_dir, "gibt-es-nicht.plist")
+        with unittest.mock.patch("socket.gethostname", return_value="pc"):
+            self.assertEqual(mod.bereinige("pc und localhost", "/x/lauf", "/x/root"), "pc und localhost")
+        mod = self.lade_modul()
+        mod.SYSTEMKONFIG = self.plist({"ComputerName": "ab"})
+        with unittest.mock.patch("socket.gethostname", return_value="localhost"):
+            self.assertEqual(mod.bereinige("localhost:8080 ab", "/x/lauf", "/x/root"), "localhost:8080 ab")
+
+    def test_unlesbare_systemkonfig_bricht_ab_statt_ungefiltert(self):
+        # Lässt sich der Computername nicht lesen, darf der Auszug nicht still ohne ihn weitermachen.
+        mod = self.lade_modul()
+        mod.SYSTEMKONFIG = self.plist(roh=b"kein plist")
+        with self.assertRaises(SystemExit) as ctx:
+            mod.bereinige("x", "/x/lauf", "/x/root")
+        self.assertIn("Rechnername", str(ctx.exception.code))
+
+    def test_echter_rechnername_landet_nicht_in_der_ablage(self):
+        # Ende-zu-Ende mit den Namen dieser Maschine, wie sie ein Lauf ausgeben würde.
+        import socket
+        lang = socket.gethostname()
+        namen = [lang, lang.split(".")[0]]
+        for key in ("ComputerName", "LocalHostName"):
+            try:
+                r = subprocess.run(["scutil", "--get", key], capture_output=True, text=True, timeout=30)
+                if r.returncode == 0 and r.stdout.strip():
+                    namen.append(r.stdout.strip())
+            except FileNotFoundError:
+                break  # kein macOS
+        namen = [n for n in namen if len(n) >= 3 and n.lower() != "localhost"]
+        if not namen:
+            self.skipTest("Rechnername zu kurz für eine Prüfung")
+        self.write_transcript([
+            {"type": "assistant", "message": {"content": [{"type": "tool_use", "name": "Bash",
+                                                            "input": {"command": "hostname; scutil --get ComputerName"}}]}},
+            {"type": "user", "message": {"content": [{"type": "tool_result", "content": "\n".join(namen)}]}},
+            {"type": "result", "result": "Rechner: " + namen[-1], "total_cost_usd": 0, "num_turns": 1},
+        ])
+        ablage = os.path.join(self.run_dir, "ablage")
+        res = subprocess.run([sys.executable, AUSZUG, self.run_dir, "--ablage", ablage,
+                              "--root", os.path.dirname(HERE)], capture_output=True, text=True)
+        self.assertEqual(res.returncode, 0, res.stderr)
+        for name in ("transkript.md", "ergebnis.md"):
+            with open(os.path.join(ablage, name), encoding="utf-8") as f:
+                t = f.read()
+            with self.subTest(datei=name):
+                for n in namen:
+                    self.assertNotIn(n.lower(), t.lower())
+                self.assertIn("<rechner>", t)
+
+    def test_kurzer_login_in_ls_und_prompt_wird_ersetzt(self):
+        # Ein Login unter 3 Zeichen wird nicht überall ersetzt (träfe Wörter), aber dort, wo er sicher
+        # der Nutzer ist: Besitzer und Gruppe in `ls -l` und vor dem @ eines Prompts.
+        import unittest.mock
+        mod = self.lade_modul()
+        with unittest.mock.patch("getpass.getuser", return_value="jj"), \
+                unittest.mock.patch.dict(os.environ, {"HOME": "/nirgends/jj"}), \
+                unittest.mock.patch("socket.gethostname", return_value="box1"):
+            mod.SYSTEMKONFIG = os.path.join(self.run_dir, "gibt-es-nicht.plist")
+            out = mod.bereinige("drwxr-xr-x@  7 jj  staff  224 Nov 28 .\n-rw-r--r--   1 jj  jj  12 Nov 28 a.txt\n"
+                                "lrwxr-xr-x+ 1 root  wheel  9 Nov 28 x -> jj\n"
+                                "jj@box1 ~ % echo jj ist kein Wort; mojjo; a.jj@x",
+                                "/x/lauf", "/x/root")
+        self.assertEqual(out, "drwxr-xr-x@  7 <nutzer>  staff  224 Nov 28 .\n"
+                              "-rw-r--r--   1 <nutzer>  <nutzer>  12 Nov 28 a.txt\n"
+                              "lrwxr-xr-x+ 1 root  wheel  9 Nov 28 x -> jj\n"
+                              "<nutzer>@<rechner> ~ % echo jj ist kein Wort; mojjo; a.jj@x")
+
     def test_datei_in_latin1_bricht_den_auszug_nicht(self):
         with open(os.path.join(self.repo, "export.csv"), "wb") as f:
             f.write("Müller;Größe\n".encode("cp1252"))

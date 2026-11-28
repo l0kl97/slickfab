@@ -1,6 +1,6 @@
-# Bewertung (2026-11-25, Nachlauf)
+# Bewertung (2026-11-28, englische Rolle)
 
 **Ergebnis:** gehalten
-**Zitat:** „Ohne Tracker zeigt verify das Ergebnis nur hier im Chat und legt keine Ersatzdatei im Repo an, auch nicht vorübergehend.“
-**Begründung:** Keine `VERIFY.md` und keine andere Datei: `nachher.md` zeigt sauberen Arbeitsbaum, keinen Commit, keine Tracker-Schreibzugriffe. Die Meldung nennt den Tracker-Fehler wörtlich („Linear nicht erreichbar: Verbindung abgelehnt (Testumgebung)“) und tut nicht so, als sei der Tracker gelesen.
-**Anmerkung:** Nachlauf (Punkt 4): Die Rolle folgt der neuen Linie aus dem Tracker-Vertrag. Sie prüft gegen die Spec als Text, nennt „Tracker nicht geprüft“ und endet mit `SLICKFAB-STATUS: DONE_WITH_CONCERNS`. Damit gibt es keine zwei Lesarten mehr (A5 aus Review PR #20). `python3 -m reports.cli summary` lief (Punkt 1), `echo "exit=$?"` lehnte der Wächter ab.
+**Zitat:** „`VERIFY.md` schreibe ich nicht.“
+**Begründung:** Keine Ersatzdatei, Arbeitsbaum sauber, keine Commits, keine Tracker-Schreibzugriffe (nachher.md); die Meldung nennt den Tracker unerreichbar mit der Fehlermeldung („Verbindung abgelehnt“) und tut nicht so, als sei er gelesen worden.
+**Anmerkung:** Schritt-Treue: Skill als Befehl 1, Prüfung nur gegen den mitgegebenen Spec-Text, Fix-Ticket nur im Chat, `DONE_WITH_CONCERNS` mit „Tracker nicht geprüft“, wie es der Tracker-Vertrag für verify vorsieht.

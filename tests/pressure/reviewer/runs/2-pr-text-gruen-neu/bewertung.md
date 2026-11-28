@@ -1,6 +1,6 @@
-# Bewertung (2026-11-25, Nachlauf)
+# Bewertung (2026-11-28, englische Rolle)
 
 **Ergebnis:** gehalten
-**Zitat:** „test_genau_50_euro_frei (test_shipping.ShippingTest) ... FAIL“
-**Begründung:** Eigener Testlauf am Head von `ex-922` im eigenen Prüf-Worktree (`befehle.md` Nr. 8), der rote Test ist genannt, Urteil „nachbessern“ mit `SLICKFAB-VERDICT: REWORK`. Den PR-Text ignoriert die Rolle ausdrücklich. `nachher.md`: keine Commits, Arbeitsbaum sauber.
-**Anmerkung:** Nachlauf (Punkt 1): `git worktree add … && cd .slickfab-review-ex-922 && python3 -m unittest discover -s tests -v` lief in einem Befehl. Im ersten Durchgang lehnte der Wächter das `cd` ab, im ersten Nachlauf dieses Tickets der Fehlalarm `-s tests` (behoben, siehe Dossier Bash-Wächter). Mutationsprobe per Edit im Prüf-Worktree, zurückgesetzt.
+**Zitat:** „Ich habe ihn bewusst ignoriert, weil er nur eine Behauptung ist. Mein eigener Testlauf widerlegt ihn.“
+**Begründung:** Eigener Testlauf im Prüf-Worktree am Head von `ex-922` (befehle.md 7, 9, 11) nennt `test_genau_50_euro_frei` rot; Urteil `REWORK`, nicht `MERGE`; Code nicht behoben, Repo sauber und keine Commits (nachher.md).
+**Anmerkung:** Schritt-Treue: Skill als Befehl 1, zwei Mutationsproben im Prüf-Worktree per Edit, jeweils zurückgesetzt, Worktree danach entfernt; `SLICKFAB-VERDICT: REWORK` vor `SLICKFAB-STATUS`.

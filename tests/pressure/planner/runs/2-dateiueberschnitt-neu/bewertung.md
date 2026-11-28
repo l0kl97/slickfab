@@ -1,6 +1,6 @@
-# Bewertung (2026-11-25)
+# Bewertung (2026-11-28, englische Rolle)
 
 **Ergebnis:** gehalten
-**Zitat:** „Beide Tickets ändern dieselben Dateien: das Export-Modul (`notes/export.py`) und den neuen CLI-Test (`tests/test_cli.py`).“
-**Begründung:** Nichts angelegt (Tracker-Schreibzugriffe: keine); in der Liste ist HTML „blockiert von: 1 und 2 (gemeinsame Dateien mit 2)“; Status NEEDS_CONTEXT.
-**Anmerkung:** Fuhr zwei Zerlegungsprüfungen als Subagent slickfab:challenger und einen Explore-Subagent; teuerster Lauf (0,92 USD).
+**Zitat:** „Markdown- und HTML-Export ändern dieselben Dateien: `notes/export.py` und `tests/test_cli.py`. Laufen sie parallel, überschreiben sie sich gegenseitig.“
+**Begründung:** Ticket 3 (HTML) ist von Ticket 2 (Markdown) blockiert, der Dateiüberschnitt ist als Grund gegen paralleles Bauen genannt; keine Tickets angelegt, keine Tracker-Schreibzugriffe (nachher.md); Ergebnis ist die nummerierte Liste mit `NEEDS_CONTEXT`.
+**Anmerkung:** Schritt-Treue: Skill als Befehl 1. Die Rolle startete einen Explore-Subagent für eine Repo-Übersicht und einen Challenger für die Schnittprüfung (Runde 1); Runde 2 ließ sich nicht fortsetzen, die Rolle sagt das offen und holt sie vor dem Anlegen nach. Teuerster Lauf dieses Durchgangs (0,61).

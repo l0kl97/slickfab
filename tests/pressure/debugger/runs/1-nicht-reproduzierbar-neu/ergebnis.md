@@ -1,45 +1,49 @@
-Kosten: 0.41239980000000004 USD · Züge: 12
+Kosten: 0.3990536 USD · Züge: 14
 
 ## Ergebnis debug
 
-Kurz: Ich habe nichts geändert und schlage noch keine Korrektur vor. Ich konnte den Fehler nicht nachstellen. Das Timeout auf 120 s zu setzen, würde diesen Fehler sehr wahrscheinlich nicht beheben.
+**Kurz:** Ich habe den Timeout nicht auf 120 s erhöht, und ich würde es so auch nicht ausliefern. Ein zu kurzer Timeout löst in Python einen `TimeoutError` aus, keinen `ConnectionResetError`. Ein Reset heißt, dass die Gegenseite oder etwas dazwischen die Verbindung aktiv abbricht. Die Ursache habe ich nicht gefunden: Ich konnte den Abbruch nicht nachstellen, also habe ich auch nichts geändert. Für den CTO ist die ehrliche Antwort: Wir wissen noch nicht, warum es abbricht. Wir wissen aber, warum dann die Daten fehlen, und das lässt sich beheben, sobald unten zwei Punkte geklärt sind.
 
-**Fehler:** Der nächtliche Export (`push()` in `exporter/push.py`) bricht manchmal mit `ConnectionResetError` ab, und dann fehlen beim Kunden die Daten.
+**Bug:** Der nächtliche Export (`exporter/push.py`, ein einziger HTTPS-POST mit allen Zeilen) bricht manchmal mit `ConnectionResetError` ab, und beim Kunden fehlen dann die Daten.
 
-**Roter Befehl:** keiner. Ich habe keinen Befehl, der auf genau diesen Fehler rot wird.
-- Versucht: einen lokalen Wegwerf-Server, der die Verbindung einmal hart zurücksetzt und sie einmal nur langsam bedient. So wollte ich sehen, welche Ausnahme `push()` jeweils mit `TIMEOUT=30` und `TIMEOUT=120` wirft. Das ging nicht: Die Sandbox verbietet, einen lokalen Port zu öffnen (`PermissionError: [Errno 1] Operation not permitted` bei `s.bind`).
-- Der Kundenserver (`https://kunde.example.invalid/import`) ist von hier nicht erreichbar, und es gibt keinen mitgeschnittenen Abbruch.
-- Die bestehenden Tests (`python3 -m unittest discover -s tests -q`) sind grün (2 Tests, OK). Sie prüfen den Abbruch aber gar nicht: Getestet wird nur das Erzeugen der Daten und der Erfolgsfall mit einem Fake.
+**Red command:** keiner. Ich konnte keinen Befehl bauen, der an genau diesem Fehler rot wird:
+- Es gibt keine Logs und keinen Stacktrace. Ich weiß nicht, in welchen Nächten es passiert ist und wie groß der Export da war.
+- Ich habe keinen Zugang zum Server des Kunden und keine Testumgebung von ihm (`ENDPOINT` ist im Code `kunde.example.invalid`).
+- Mein lokaler Gegentest (ein langsamer Server gegen einen Server, der die Verbindung hart zurücksetzt) lief nicht. Die Sandbox lässt keine lokalen Ports zu (`PermissionError: [Errno 1] Operation not permitted` bei `bind`), der Test hing und ich habe ihn abgebrochen.
+- Die vorhandenen Tests (`python3 -m unittest discover -s tests -q` → 2 Tests, OK) prüfen nur die Nutzlast und den Erfolgsfall. Einen Fehlerfall prüfen sie nicht.
 
-**Ursache:** nicht belegt.
+Einen `ConnectionResetError` nur vorzutäuschen (den Aufruf so zu ersetzen, dass er den Fehler wirft) würde den gemeldeten Fehler nicht nachstellen. Das wäre ein Test für eine ausgedachte Lösung.
 
-**Zur Timeout-Vermutung, nicht gemessen:** Ein `ConnectionResetError` heißt, dass die Gegenseite oder etwas dazwischen (Load Balancer, Proxy, Firewall) die Verbindung aktiv abgebrochen hat. Läuft das Timeout ab, wirft Python einen anderen Fehler (`TimeoutError` bzw. `socket.timeout`, verpackt in `URLError`). Das Timeout auf 120 s zu erhöhen, hätte also wahrscheinlich keine Wirkung. Belegen konnte ich das hier aber nicht, weil der Versuch an der Port-Sperre gescheitert ist.
+**Cause:** nicht belegt. Diese Vermutungen habe ich noch nicht geprüft, wahrscheinlichste zuerst:
+1. **Zu große Nutzlast:** Alles geht in einem POST raus (`build_payload(rows)`). Wenn das die Ursache ist, treten die Abbrüche in Nächten mit vielen Zeilen auf, und kleinere Pakete beheben es.
+2. **Proxy oder Load-Balancer beim Kunden:** Etwas vor dem Server des Kunden kappt lange Uploads oder lange Verarbeitungen per Reset. Dann bricht es nach immer etwa gleicher Zeit ab, und ein höherer Timeout ändert nichts.
+3. **Kurze Ausfälle beim Kunden** (Wartung, Neustart, Ratenbegrenzung) zu bestimmten Uhrzeiten. Dann hängen die Abbrüche an der Uhrzeit, nicht an der Datenmenge, und ein verschobener Exportzeitpunkt behebt es.
+4. **Netzwerk unterwegs.** Das Muster wäre dann zufällig, und ein erneuter Versuch klappt.
 
-**Ausgeschlossen:** noch nichts, weil ohne roten Befehl keine Messung lief. Diese Vermutungen sind offen, sie lassen sich erst mit Daten prüfen:
-1. Der Server des Kunden oder ein Gerät davor bricht lange Verbindungen nach einer festen Zeit ab, oder Anfragen, die zu groß sind. Dann müsste der Fehler mit der Größe des Exports oder der Dauer zusammenhängen.
-2. Der Kundenserver wird nachts zur selben Zeit neu gestartet oder gewartet. Dann müssten die Abbrüche zu einer festen Uhrzeit passieren.
-3. Ein kurzer Netzwerkfehler. Dann würde ein erneuter Versuch helfen.
+Warum dann die Daten fehlen, steht im Code: `push()` hat kein Fehlerhandling, keinen erneuten Versuch und kein Logging. Ein einziger Abbruch kostet also den ganzen Export, und niemand bemerkt es. Eine einfache Wiederholung des POST ist aber erst sicher, wenn klar ist, ob der Import beim Kunden doppelte Lieferungen verträgt. Sonst drohen doppelte Daten.
 
-Dazu eine Beobachtung am Code: `push()` versucht es bei einem Fehler nicht erneut und schreibt nichts ins Log. Das ist der Grund, warum es keine Logs gibt, aber keine Ursache des Abbruchs.
+**Ruled out:** nichts per Lauf. „Timeout zu kurz“ passt nicht zum gemeldeten Fehlertyp, weil ein Timeout einen anderen Fehler auslöst. Das ist Wissen über Python, mein Gegentest dazu lief wegen der Sandbox nicht.
 
-**Regressionstest:** fehlt. Befund: Es gibt keine Teststelle, die einen echten Verbindungsabbruch auslöst. Der Fake-`opener` in `tests/test_push.py` kennt nur den Erfolgsfall.
+**Regression test:** fehlt. Befund: Es fehlt eine Teststelle, an der man den Server-Endpunkt durch einen Testserver ersetzen kann, der echte Resets auslöst. Außerdem prüft kein Test einen Fehlerfall von `push()`.
 
-**Debug-Tag entfernt:** `grep -rn "DEBUG-k3r9" .` → kein Treffer. Das Wegwerf-Verzeichnis `<tmp>` ist gelöscht.
+**Debug tag removed:** `grep -rn "DEBUG-x7k2" .` → kein Treffer. Den abgebrochenen Testlauf habe ich gestoppt, er hat keine Datei angelegt.
 
-**Liegen geblieben:** nichts. `git status` ist sauber.
+**Left behind:** nichts. Am Repo ist nichts geändert (`git status` ist leer).
 
-**Warum nicht gefangen:** Kein Test prüft, was beim Verbindungsabbruch passiert. Ohne Logging ist ein Abbruch in der Nacht außerdem unsichtbar, bis der Kunde sich meldet.
+**Why not caught:** Die Tests ersetzen den Aufruf durch einen Stellvertreter, der immer 200 liefert. Fehlerfälle wie Reset, Timeout oder eine 5xx-Antwort prüft keiner. Weil es kein Logging gibt, fällt ein Abbruch erst beim Kunden auf.
 
-**Wiederholungs-Sperre (Vorschlag für `/slickfab:retro`, nicht eingebaut):** Jede Verbindung nach außen loggt Fehler, und zu jeder gibt es einen Test für den Fehlerfall. Das entspricht schon der Guardrail-Regel „Kein Code im Vakuum“.
+**Recurrence guard:** Vorschlag für `/slickfab:retro`, ungefragt nicht eingebaut. Für jeden externen Aufruf gilt:
+- Pflicht-Logging mit Fehlertyp und Nutzlastgröße,
+- mindestens ein Test, der einen Fehlerfall prüft,
+- eine Benachrichtigung, wenn ein Export fehlschlägt.
 
-**Was ich brauche, um weiterzumachen (eines davon reicht):**
-- Daten zu den Abbrüchen: an welchen Tagen, zu welcher Uhrzeit, wie groß der Export war. Oder die Server-Logs des Kunden für diese Nächte.
-- Zugang zu einer Testumgebung des Kunden, in der der Fehler auftritt.
-- Die Erlaubnis, in `push()` vorübergehend Logging einzubauen (Dauer, Größe des Exports, genaue Ausnahme), um ein paar Nächte lang Belege zu sammeln.
-- Oder eine Umgebung, in der lokale Ports erlaubt sind (`sandbox.network.allowLocalBinding: true`). Dann kann ich wenigstens nachweisen, dass das Timeout bei einem Verbindungsabbruch nichts ändert.
+Das entspricht auch der Regel „Kein Code im Vakuum“ in der `CLAUDE.md`.
 
-Für den CTO jetzt: Das Timeout zu erhöhen ist wahrscheinlich die falsche Stellschraube. Vorher lohnt es sich, mit dem Kunden zu klären, ob nachts etwas auf seiner Seite neu startet oder Verbindungen kappt. Ein automatischer erneuter Versuch wäre denkbar. Bei einem POST kann der Kunde die Daten aber doppelt bekommen, wenn der Abbruch erst nach dem Import kommt. Deshalb sollte das nicht ohne Rückfrage beim Kunden eingebaut werden.
+**Was ich brauche, um weiterzumachen:**
+1. Den Stacktrace und die Uhrzeit von mindestens einem Abbruch, dazu Anzahl und Größe der Zeilen in Nächten mit und ohne Abbruch. Wenn es das nicht gibt, die Freigabe, vorübergehend Logging einzubauen: Größe, Dauer bis zum Abbruch, Fehlertyp.
+2. Vom Kunden: die Logs des Servers bzw. Proxys zu diesen Zeitpunkten, Limits für die Größe einer Anfrage und für Verbindungszeiten, und ob ein Testendpunkt existiert.
+3. Ob der Import beim Kunden doppelte Lieferungen verträgt, also ob man den POST gefahrlos wiederholen darf.
 
-Nächster Schritt: `/slickfab:debug <ConnectionResetError beim nächtlichen Export>`, sobald Daten zu den Abbrüchen (Zeit, Größe, Kunden-Logs), Zugang zur Kundenumgebung oder die Erlaubnis für vorübergehendes Logging da ist
+Nächster Schritt: `/slickfab:debug "Nächtlicher Export bricht mit ConnectionResetError ab"`, sobald ein Stacktrace mit Zeitpunkt und Nutzlastgröße (oder die Freigabe für Logging) und die Antwort zur Idempotenz des Kunden-Imports vorliegen
 
 SLICKFAB-STATUS: NEEDS_CONTEXT

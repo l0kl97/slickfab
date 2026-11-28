@@ -7,7 +7,7 @@ sauber
 ## Geänderte Dateien seit dem Start
 Arbeitsbaum gegen Start:
 keine
-Branch main gegen Start:
+Branch main gegen seinen Stand beim Start:
 keine
 
 ## Tracker-Schreibzugriffe

@@ -1,123 +1,123 @@
 ---
 name: grill
-description: Verwenden, wenn ein Plan, eine Idee oder ein Feature-Wunsch vor der Spec auf offene Entscheidungen abgeklopft werden soll, oder wenn jemand „grill mich“, „frag mich aus“ oder „stress-test“ sagt.
-argument-hint: "[Thema oder Plan]"
+description: Use when a plan, an idea or a feature request should be probed for open decisions before the spec, or when someone says “grill me”, “interview me” or “stress-test”.
+argument-hint: "[topic or plan]"
 ---
 
 <!-- regel:einleitung -->
-# grill: Befragung in Runden
+# grill: interview in rounds
 
-Ziel: Am Ende ist keine Entscheidung mehr stillschweigend angenommen. Der Mensch trifft die Entscheidungen, die nur er treffen kann; alles andere klärst du selbst und legst es offen.
+Goal: At the end, no decision is silently assumed anymore. The human makes the decisions only they can make; everything else you settle yourself and disclose.
 
-Antworte in der Sprache des Menschen.
+Answer in the user's language.
 <!-- /regel:einleitung -->
 
 ## Wann
 
 <!-- regel:wann -->
-- Vor einer Spec, wenn ein Wunsch noch Lücken hat: für wen, wozu, woran man Erfolg erkennt, welche Grenze bindet.
-- Wenn jemand einen Plan prüfen lassen will, bevor gebaut wird.
-- Nicht für eindeutige Kleinaufgaben (Umbenennen, Tippfehler) und nicht ohne Menschen, der antwortet. Läufst du ohne Menschen (Autopilot, CI), melde die offenen Entscheidungen als Blocker, statt sie zu raten.
+- Before a spec, when a request still has gaps: for whom, what for, how success is recognized, which constraint binds.
+- When someone wants a plan checked before it is built.
+- Not for unambiguous small tasks (renaming, typos) and not without a human who answers. If you run without a human (autopilot, CI), report the open decisions as blockers instead of guessing them.
 <!-- /regel:wann -->
 
 ## Ablauf
 
 <!-- regel:lage-erkunden-bevor-du-fragst -->
-### 1. Lage erkunden, bevor du fragst
+### 1. Explore the situation before you ask
 
-Fakten holst du selbst, nie der Mensch. Alles, was im Repo oder in der Umgebung steht (Sprache, Frameworks, Ordnerstruktur, vorhandene Tests, bestehende Specs, `GLOSSARY.md`, `docs/adr/`, `CLAUDE.md`), schlägst du nach. Für mehr als ein paar Dateien schickst du einen Sub-Agent mit frischem Kontext los und lässt dir das Ergebnis kurz zusammenfassen. Fragen, die von einer laufenden Erkundung abhängen, warten; die übrigen stellst du schon.
+You fetch facts yourself, never the human. Everything that is in the repo or the environment (language, frameworks, folder structure, existing tests, existing specs, `GLOSSARY.md`, `docs/adr/`, `CLAUDE.md`), you look up. For more than a few files you send off a subagent with a fresh context and have it summarize the result briefly. Questions that depend on a running exploration wait; the others you already ask.
 
-Eine Frage, deren Antwort im Repo steht, ist ein Fehler. Steht die Antwort dort, nenne sie als Feststellung („Das Projekt nutzt Python 3.12, also …“) und frage nur, was daraus zu entscheiden bleibt.
+A question whose answer is in the repo is a mistake. If the answer is there, state it as a finding (“The project uses Python 3.12, so …”) and ask only what remains to be decided from it.
 <!-- /regel:lage-erkunden-bevor-du-fragst -->
 
 <!-- regel:entscheidungsbaum-aufbauen -->
-### 2. Entscheidungsbaum aufbauen
+### 2. Build the decision tree
 
-Jede Entscheidung kann weitere nach sich ziehen. Die **Front** sind alle Entscheidungen, deren Voraussetzungen geklärt sind. Hängt eine Frage von einer anderen ab, die in dieser Runde noch offen ist, gehört sie in eine spätere Runde.
+Every decision can lead to further ones. The **front** is all decisions whose prerequisites are settled. If a question depends on another one that is still open in this round, it belongs in a later round.
 <!-- /regel:entscheidungsbaum-aufbauen -->
 
 <!-- regel:jede-frage-einordnen -->
-### 3. Jede Frage einordnen
+### 3. Classify every question
 
-| Art | Beispiel | Wer entscheidet |
+| Kind | Example | Who decides |
 |---|---|---|
-| **Produktfrage** (Nutzen, Zielgruppe, Umfang, Verhalten, Geschmack) | Wer darf exportieren? | Mensch |
-| **Schwer umkehrbar** (Datenformat auf Platte/Leitung, öffentliche API, Datenbankschema, das andere lesen, Bindung an einen externen Dienst, Löschen von Daten) | Welches Format hat die Exportdatei, die Kunden archivieren? | Mensch |
-| **Umkehrbar, technisch** (eine Datei, eine Funktion, austauschbar hinter stabiler Schnittstelle) | Welche interne Hilfsfunktion, welcher Variablenname? | du, mit Eintrag unter „Autonom entschieden“ |
+| **Product question** (value, audience, scope, behavior, taste) | Who may export? | human |
+| **Hard to reverse** (data format on disk/on the wire, public API, database schema that others read, binding to an external service, deletion of data) | What format does the export file have that customers archive? | human |
+| **Reversible, technical** (one file, one function, swappable behind a stable interface) | Which internal helper function, which variable name? | you, with an entry under “Decided autonomously” |
 
-Bist du unsicher, ob etwas schwer umkehrbar ist, und kannst keine konkrete Migration oder keinen konkreten gebrochenen Vertrag nennen, gilt es als umkehrbar. Wer alles zur Tür macht, erzeugt Fragenmüdigkeit.
+If you are unsure whether something is hard to reverse and cannot name a concrete migration or a concrete broken contract, it counts as reversible. Whoever turns everything into a one-way door creates question fatigue.
 <!-- /regel:jede-frage-einordnen -->
 
 <!-- regel:eine-runde-stellen -->
-### 4. Eine Runde stellen
+### 4. Ask one round
 
-Stelle die ganze Front auf einmal, nummeriert F1, F2, … Jede Frage hat eine Empfehlung und ist so formuliert, dass „ja“ die Empfehlung annimmt. Bei schwer umkehrbaren Fragen nennst du in einem Satz, was ein Rückweg kosten würde.
+Ask the whole front at once, numbered Q1, Q2, … Every question has a recommendation and is phrased so that “yes” accepts the recommendation. For hard-to-reverse questions you state in one sentence what a way back would cost.
 
 ```
-**F1 – <Titel>** <Frage, ggf. mit Optionen A/B/C>
-→ Empfehlung: <deine Antwort, ein Satz warum>
+**Q1 – <title>** <question, with options A/B/C if any>
+→ Recommendation: <your answer, one sentence why>
 
-**F2 – <Titel>** (schwer umkehrbar: <was ein Rückweg kostet>) <Frage>
-→ Empfehlung: <…>
+**Q2 – <title>** (hard to reverse: <what a way back costs>) <question>
+→ Recommendation: <…>
 ```
 
-Danach wartest du auf die Antworten. Keine Obergrenze an Runden; die Runde ist so groß wie die Front.
+Then you wait for the answers. No upper limit on rounds; the round is as large as the front.
 <!-- /regel:eine-runde-stellen -->
 
 <!-- regel:antworten-auswerten -->
-### 5. Antworten auswerten
+### 5. Evaluate the answers
 
-- „ja“, „passt“, „F1 ja“ nimmt die Empfehlung an.
-- Eine eigene Antwort ersetzt die Empfehlung.
-- **„egal“, „mach du“, „wie du meinst“, Schweigen zu einer Frage:**
-  - Bei umkehrbaren technischen Fragen: entscheide selbst und trage es unter „Autonom entschieden“ ein.
-  - Bei Produktfragen und schwer umkehrbaren Fragen ist das **keine Zustimmung**. Frage dieselbe Entscheidung in der nächsten Runde noch einmal, zugespitzt auf zwei konkrete Optionen mit je einer Folge, und warte. Geh nicht weiter, als hätte der Mensch zugestimmt.
-- Jede Antwort verschiebt die Front: Neue Fragen werden frei, andere fallen weg. Berechne die Front neu und stelle die nächste Runde.
+- “yes”, “fine”, “Q1 yes” accepts the recommendation.
+- An answer of their own replaces the recommendation.
+- **“don't care”, “you decide”, “as you like”, silence on a question:**
+  - For reversible technical questions: decide yourself and enter it under “Decided autonomously”.
+  - For product questions and hard-to-reverse questions this is **not consent**. Ask the same decision again in the next round, narrowed to two concrete options with one consequence each, and wait. Do not move on as if the human had agreed.
+- Every answer shifts the front: new questions become free, others drop away. Recompute the front and ask the next round.
 <!-- /regel:antworten-auswerten -->
 
 <!-- regel:nebenbei-mitschreiben -->
-### 6. Nebenbei mitschreiben
+### 6. Take notes along the way
 
-- **Glossar:** Taucht ein projektspezifischer Begriff auf oder werden zwei Wörter für dieselbe Sache benutzt, trage ihn sofort in `GLOSSARY.md` im Repo-Root ein (anlegen, falls nicht da): Begriff fett, ein bis zwei Sätze, was er ist, darunter `_Nicht:_` mit den verworfenen Synonymen. Allgemeine Programmierbegriffe gehören nicht hinein.
-- **ADR:** Ein ADR ist fällig, wenn beides zutrifft: (1) Die Entscheidung ist schwer umkehrbar. (2) Ohne Begründung würde ein späterer Leser sie überraschend finden oder wieder aufrollen. Trifft beides zu, legst du den ADR an; trifft eins nicht zu, legst du keinen an. Das prüfst du für jede Entscheidung dieser Runde und für jede als Text übergebene frühere, die noch keinen ADR hat, nicht nach Gefühl. Der ADR liegt unter `docs/adr/NNNN-slug.md` (nächste freie Nummer, Ordner erst beim ersten ADR anlegen), ein Titel und ein bis drei Sätze: Lage, Entscheidung, Grund.
+- **Glossary:** If a project-specific term comes up or two words are used for the same thing, enter it immediately in `GLOSSARY.md` in the repo root (create it if it does not exist): term in bold, one or two sentences on what it is, below it `_Not:_` with the rejected synonyms. General programming terms do not belong in it.
+- **ADR:** An ADR is due if both apply: (1) The decision is hard to reverse. (2) Without a reason, a later reader would find it surprising or reopen it. If both apply, you create the ADR; if one does not apply, you create none. You check this for every decision of this round and for every earlier one passed in as text that has no ADR yet, not by gut feeling. The ADR lives under `docs/adr/NNNN-slug.md` (next free number, create the folder only with the first ADR), a title and one to three sentences: situation, decision, reason.
 
-Beides ist umkehrbar und braucht keine Rückfrage.
+Both are reversible and need no question back.
 <!-- /regel:nebenbei-mitschreiben -->
 
 <!-- regel:abschluss -->
-### 7. Abschluss
+### 7. Wrap-up
 
-Fertig bist du, wenn die Front leer ist: jeder Ast besucht, nichts still angenommen, und du die nächsten Antworten des Menschen vorhersagen könntest. Dann fasst du zusammen (siehe Ergebnis) und fragst, ob das gemeinsame Verständnis stimmt. Erst nach einem klaren Ja ist der Schritt fertig. Du baust in diesem Schritt nichts.
+You are done when the front is empty: every branch visited, nothing silently assumed, and you could predict the human's next answers. Then you summarize (see Ergebnis) and ask whether the shared understanding is right. Only after a clear yes is the step done. You build nothing in this step.
 <!-- /regel:abschluss -->
 
 ## Ergebnis
 
 <!-- regel:ergebnis -->
-Eine Zusammenfassung im Chat, in dieser Form:
+A summary in the chat, in this form:
 
 ```
 ## Ergebnis grill
 
-**Entschieden vom Menschen**
-- <Entscheidung> (F<n>)
+**Decided by the human**
+- <decision> (Q<n>)
 
-**Autonom entschieden**
-- <Entscheidung> — <warum> — umkehrbar, weil <…>
-(oder: „keine“)
+**Decided autonomously**
+- <decision> — <why> — reversible because <…>
+(or: “none”)
 
-**Nicht im Umfang**
-- <was ausdrücklich nicht gebaut wird>
+**Out of scope**
+- <what is explicitly not built>
 
-**Geänderte Dateien:** GLOSSARY.md, docs/adr/… (oder „keine“)
+**Changed files:** GLOSSARY.md, docs/adr/… (or “none”)
 
 Nächster Schritt: `/slickfab:spec`
 ```
 
-Die Liste „Autonom entschieden“ steht immer da, auch wenn sie leer ist, damit der Mensch nichts Verborgenes übersieht.
+The list “Decided autonomously” is always there, even when it is empty, so that the human does not overlook anything hidden.
 <!-- /regel:ergebnis -->
 
 ## Nächster Schritt
 
 <!-- regel:naechster-schritt -->
-`/slickfab:spec` — schreibt aus diesem Gespräch die Spec, ohne neu zu befragen. Sind Fragen offen geblieben, die man nicht erfragen kann (Aussehen, Bedienung), vorher `/slickfab:prototype`.
+`/slickfab:spec`: writes the spec from this conversation without interviewing again. If questions remained open that cannot be settled by asking (look, handling), `/slickfab:prototype` first.
 <!-- /regel:naechster-schritt -->

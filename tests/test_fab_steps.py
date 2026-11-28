@@ -60,17 +60,17 @@ class RetroHasEndTest(unittest.TestCase):
         retro = [n for n, (_, then) in self.rows.items() if "/slickfab:retro" in then]
         self.assertEqual(retro, [13])
         when, then = self.rows[13]
-        self.assertIn("Spec-Issue noch offen", when)
-        self.assertIn("danach setzt der Mensch die Spec auf `Done`", then)
+        self.assertIn("Spec issue still open", when)
+        self.assertIn("after that the human sets the spec to `Done`", then)
 
     def test_done_spec_counts_as_finished(self):
         # Nach retro und Spec auf Done darf keine Zeile wieder retro oder verify nennen.
         # Review PR #19, A1: `Canceled` endet ebenso.
-        self.assertIn("Eine Spec auf `Done` oder `Canceled` ist abgeschlossen: Sie zählt nicht als "
-                      "offene Spec, auch wenn sie als Argument genannt ist.", self.text)
+        self.assertIn("A spec in `Done` or `Canceled` is finished: it does not count as an "
+                      "open spec, even if it is given as argument.", self.text)
         for n in (12, 14, 15):
             with self.subTest(row=n):
-                self.assertIn("Spec-Issue noch offen", self.rows[n][0])
+                self.assertIn("Spec issue still open", self.rows[n][0])
 
 
     def test_usual_path_in_docs_ends_with_spec_done(self):
@@ -99,11 +99,11 @@ class NotBuildVerdictTest(unittest.TestCase):
         return None
 
     def test_not_build_verdict_has_own_row_without_tickets(self):
-        n = self.first_row(["Spec ohne Tickets", "`nicht bauen`", "kein Kommentar"])
+        n = self.first_row(["Spec without tickets", "`nicht bauen`", "no comment"])
         self.assertIsNotNone(n, "keine Zeile für das Urteil `nicht bauen`")
         when, then = self.rows[n]
         self.assertNotIn("/slickfab:tickets", then)
-        self.assertTrue(then.startswith("kein Schritt: der Mensch entscheidet"), then)
+        self.assertTrue(then.startswith("no step: the human decides"), then)
         # Sie steht vor der Zeile, die tickets empfiehlt, sonst gälte die zuerst.
         tickets = [k for k, (_, t) in self.rows.items() if t.startswith("`/slickfab:tickets")
                    and "challenge" in self.rows[k][0]]
@@ -111,23 +111,23 @@ class NotBuildVerdictTest(unittest.TestCase):
 
     def test_tickets_row_names_the_verdicts_it_takes(self):
         rows = [w for w, t in self.rows.values() if t.startswith("`/slickfab:tickets")
-                and "`challenge`-Kommentar da" in w]
-        self.assertEqual(rows, ["Spec ohne Tickets, `challenge`-Kommentar da, "
-                                "letztes Urteil `bauen` oder `kleiner bauen`"])
+                and "`challenge` comment present" in w]
+        self.assertEqual(rows, ["Spec without tickets, `challenge` comment present, "
+                                "last verdict `bauen` or `kleiner bauen`"])
 
     def test_canceled_spec_counts_as_finished(self):
         # Review PR #19, A1a: Nach Zeile 19 setzt der Mensch die Spec auf `Canceled`; als
         # Argument genannt, galt sie weiter als offen, und Zeile 19 kam wieder.
-        self.assertIn("Eine Spec auf `Done` oder `Canceled` ist abgeschlossen: Sie zählt nicht als "
-                      "offene Spec, auch wenn sie als Argument genannt ist.", self.text)
+        self.assertIn("A spec in `Done` or `Canceled` is finished: it does not count as an "
+                      "open spec, even if it is given as argument.", self.text)
 
     def test_changed_spec_after_not_build_goes_back_to_challenge(self):
         # Review PR #19, A1b: Nach „ändern“ (spec) blieb das letzte Urteil `nicht bauen`, und
         # fab empfahl wieder „ändern oder `Canceled`“ statt einer neuen Prüfung.
-        n = self.first_row(["`nicht bauen`", "danach ein Kommentar"])
+        n = self.first_row(["`nicht bauen`", "after it a comment"])
         self.assertIsNotNone(n)
-        self.assertTrue(self.rows[n][1].startswith("`/slickfab:challenge <Spec-Issue>`"), self.rows[n])
-        human = self.first_row(["Spec ohne Tickets", "`nicht bauen`", "kein Kommentar"])
+        self.assertTrue(self.rows[n][1].startswith("`/slickfab:challenge <spec issue>`"), self.rows[n])
+        human = self.first_row(["Spec without tickets", "`nicht bauen`", "no comment"])
         self.assertIsNotNone(human)
         self.assertLess(n, human)
 
@@ -136,27 +136,27 @@ class NotBuildVerdictTest(unittest.TestCase):
         # jedem Kommentar. Erkennbar ist nur der Änderungskommentar, den spec beim Überarbeiten
         # schreibt; seine erste Zeile kommt aus spec, nicht aus diesem Test.
         spec = read(os.path.join(ROOT, "skills", "spec", "SKILL.md"))
-        head = re.search(r"einen Kommentar, dessen erste Zeile genau `([^`]+)` lautet", spec)
+        head = re.search(r"a comment whose first line is exactly `([^`]+)`", spec)
         self.assertIsNotNone(head, "spec schreibt den Änderungskommentar nicht erkennbar")
-        mark = "Kommentar `%s`" % head.group(1)
-        changed = self.first_row(["`nicht bauen`", "danach ein " + mark])
-        unchanged = self.first_row(["`nicht bauen`", "kein " + mark + " danach"])
+        mark = "comment `%s`" % head.group(1)
+        changed = self.first_row(["`nicht bauen`", "after it a " + mark])
+        unchanged = self.first_row(["`nicht bauen`", "no " + mark + " after it"])
         self.assertIsNotNone(changed)
         self.assertIsNotNone(unchanged)
-        self.assertIn("nach dem letzten `challenge`-Kommentar", self.rows[changed][0])
+        self.assertIn("later than the last `challenge` comment", self.rows[changed][0])
         self.assertLess(changed, unchanged)
-        self.assertNotIn("Verlauf des Issues", self.text)
+        self.assertNotIn("issue history", self.text)
         # fab liest diese Kommentare auch (Schritt 2), sonst sähe es sie nicht.
         tracker = self.text.split("<!-- regel:tracker-lesen -->")[1].split("<!-- /regel:tracker-lesen -->")[0]
         self.assertIn("`%s`" % head.group(1), tracker)
 
     def test_result_counts_the_row_as_human_decision(self):
-        n = self.first_row(["Spec ohne Tickets", "`nicht bauen`", "kein Kommentar"])
+        n = self.first_row(["Spec without tickets", "`nicht bauen`", "no comment"])
         result = self.text.split("<!-- regel:ergebnis -->")[1]
-        decisions = re.search(r"Entscheidung des Menschen \(Zeilen ([0-9, ]+)\)", result).group(1)
+        decisions = re.search(r"decision by the human \(rows ([0-9, ]+)\)", result).group(1)
         self.assertIn(str(n), [d.strip() for d in decisions.split(",")])
         # Wie Zeile 17 (Mensch entscheidet, ob die Spec endet): Status NEEDS_CONTEXT.
-        needs = re.search(r"`NEEDS_CONTEXT`, wenn [^;]*?oder Zeile ([0-9, ]+?) oder (\d+) gilt", result)
+        needs = re.search(r"`NEEDS_CONTEXT` if [^;]*?or row ([0-9, ]+?) or (\d+) applies", result)
         self.assertIn(str(n), [d.strip() for d in needs.group(1).split(",")] + [needs.group(2)])
 
 
@@ -178,24 +178,24 @@ class RowReferencesTest(unittest.TestCase):
         return sorted(n for n, (when, then) in self.rows.items() if test(when, then))
 
     def test_pr_rows_without_tracker(self):
-        first, last = self.numbers(r"für die Zeilen (\d+) bis (\d+), wenn sein Titel")
-        self.assertEqual(list(range(first, last + 1)), self.where(lambda w, t: w.startswith("Offener PR")))
+        first, last = self.numbers(r"for rows (\d+) to (\d+) if its title")
+        self.assertEqual(list(range(first, last + 1)), self.where(lambda w, t: w.startswith("Open PR")))
 
     def test_grill_row_without_tracker(self):
-        self.assertEqual(self.numbers(r"Kommst du ohne Tracker bei Zeile (\d+) an"),
+        self.assertEqual(self.numbers(r"If you reach row (\d+) without the tracker"),
                          self.where(lambda w, t: t.startswith("`/slickfab:grill")))
 
     def test_unclassified_row(self):
-        self.assertEqual(self.numbers(r"bei Zeile (\d+) steht dort, was du nicht einordnen kannst"),
-                         self.where(lambda w, t: "keine Zeile passt" in w))
+        self.assertEqual(self.numbers(r"for row (\d+), that line states what you cannot place"),
+                         self.where(lambda w, t: "no row fits" in w))
 
     def test_needs_context_rows(self):
-        self.assertEqual(self.numbers(r"oder Zeile ([\d, ]+?) oder (\d+) gilt\."),
-                         self.where(lambda w, t: "Status `NEEDS_CONTEXT`" in t))
+        self.assertEqual(self.numbers(r"or row ([\d, ]+?) or (\d+) applies\."),
+                         self.where(lambda w, t: "status `NEEDS_CONTEXT`" in t))
 
     def test_human_decision_rows(self):
-        self.assertEqual(self.numbers(r"Entscheidung des Menschen \(Zeilen ([\d, ]+)\)"),
-                         self.where(lambda w, t: t.startswith("kein Schritt")))
+        self.assertEqual(self.numbers(r"decision by the human \(rows ([\d, ]+)\)"),
+                         self.where(lambda w, t: t.startswith("no step")))
 
 
 # README.md ist englisch, README.de.md deutsch. Je README die Überschrift der

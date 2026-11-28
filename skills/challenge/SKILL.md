@@ -1,105 +1,105 @@
 ---
 name: challenge
-description: Verwenden, wenn eine Spec vor dem Zerlegen einen frischen Blick von außen braucht (Produkt, Baubarkeit) oder eine Ticket-Zerlegung vor dem Anlegen geprüft werden soll, oder wenn jemand „challenge das“ sagt.
-argument-hint: "<Spec-Issue> | Zerlegung <Spec-Issue> Runde <1|2>"
+description: Use when a spec needs a fresh outside look before it is split (product, buildability), or a ticket split should be checked before the tickets are created, or when someone says “challenge this”.
+argument-hint: "<spec issue> | split <spec issue> round <1|2>"
 ---
 
 <!-- regel:einleitung -->
-# challenge: frischer Blick auf Spec und Zerlegung
+# challenge: fresh eye on spec and split
 
-Ziel: Fehler fallen auf, bevor gebaut wird. Der Prüfer kennt nur das Ergebnis der Planung, nicht das Gespräch, aus dem es entstand; so sieht er, was im Text fehlt, statt es aus dem Gedächtnis zu ergänzen.
+Goal: Mistakes stand out before anything is built. The checker knows only the result of the planning, not the conversation it came from; that way they see what is missing in the text instead of filling it in from memory.
 
-Antworte in der Sprache des Menschen. Tracker-Regeln und Projektkonfiguration stehen unten im Abschnitt „Vertrag“.
+Answer in the user's language. Tracker rules and project configuration are below in the section `Vertrag`.
 <!-- /regel:einleitung -->
 
 ## Wann
 
 <!-- regel:wann -->
-- **Spec-Prüfung:** nach `/slickfab:spec`, bevor zerlegt wird. Prüft Produkt und Baubarkeit.
-- **Zerlegungsprüfung:** aus `/slickfab:tickets` heraus, bevor der Mensch die Ticket-Liste sieht. Prüft, ob die Tickets die Spec vollständig und sauber abdecken.
-- Nicht für Code-Review; dafür gibt es den Review-Schritt.
+- **Spec check:** after `/slickfab:spec`, before splitting. Checks product and buildability.
+- **Split check:** from within `/slickfab:tickets`, before the human sees the ticket list. Checks whether the tickets cover the spec completely and cleanly.
+- Not for code review; there is the review step for that.
 <!-- /regel:wann -->
 
 ## Ablauf
 
 <!-- regel:voraussetzung-pruefen -->
-### 1. Voraussetzung prüfen
+### 1. Check the precondition
 
-- **Spec-Prüfung** braucht eine Spec: als Spec-Issue (Argument) oder, ohne Tracker, als Text im Argument. Gibt es keine, hör auf und empfiehl `/slickfab:spec`.
-- **Zerlegungsprüfung** braucht die Spec, die nummerierte Ticket-Liste und die Runde (1 oder 2, ohne Angabe 1). In Runde 2 auch die Zahl der Befunde aus Runde 1. Fehlt die Liste, empfiehl `/slickfab:tickets`.
-- Lies `.slickfab/config` und das Spec-Issue samt Kommentaren. Fehlt die Konfiguration oder ist der Tracker nicht erreichbar, sag das; du kannst trotzdem prüfen, wenn die Spec als Text vorliegt, aber das Ergebnis nur im Chat zeigen.
+- The **spec check** needs a spec: as a spec issue (argument) or, without a tracker, as text in the argument. If there is none, stop and recommend `/slickfab:spec`.
+- The **split check** needs the spec, the numbered ticket list and the round (1 or 2, 1 if not stated). In round 2 also the number of findings from round 1. If the list is missing, recommend `/slickfab:tickets`.
+- Read `.slickfab/config` and the spec issue with its comments. If the configuration is missing or the tracker is unreachable, say so; you can still check if the spec is available as text, but show the result only in the chat.
 <!-- /regel:voraussetzung-pruefen -->
 
 <!-- regel:frischen-blick-herstellen -->
-### 2. Frischen Blick herstellen
+### 2. Establish the fresh eye
 
-Der Prüfer bekommt nur die Spec (bei der Zerlegungsprüfung: Spec und Ticket-Liste) und darf das Repo lesen, aber nicht das Planungsgespräch.
+The checker gets only the spec (for the split check: spec and ticket list) and may read the repo, but not the planning conversation.
 
-- Läuft in dieser Session schon Planung (`grill`, `spec`, `tickets` oder ein Gespräch über das Feature), starte einen frischen Sub-Agent. Gib ihm wörtlich nur die Spec bzw. Spec und Liste, den passenden Prüfauftrag aus Schritt 3 oder 4 und das Ausgabeformat. Keine Zusammenfassung des Gesprächs, keine Begründungen, keine eigene Einschätzung.
-- Ist die Session frisch (nur dieser Aufruf), prüfst du selbst.
-- Kannst du keinen Sub-Agent starten, sag das und empfiehl, `/slickfab:challenge <Spec-Issue>` in einer neuen Session aufzurufen. Prüf nicht selbst in einer Session, die das Gespräch kennt.
+- If planning is already going on in this session (`grill`, `spec`, `tickets` or a conversation about the feature), start a fresh subagent. Give it verbatim only the spec, or spec and list, the matching check assignment from step 3 or 4 and the output format. No summary of the conversation, no justifications, no assessment of your own.
+- If the session is fresh (only this call), you check yourself.
+- If you cannot start a subagent, say so and recommend calling `/slickfab:challenge <spec issue>` in a new session. Do not check yourself in a session that knows the conversation.
 <!-- /regel:frischen-blick-herstellen -->
 
 <!-- regel:spec-pruefung -->
-### 3. Spec-Prüfung (Auftrag an den Prüfer)
+### 3. Spec check (assignment for the checker)
 
-Lies die Spec und dann im Repo, was es schon gibt (README, Feature-Doku, ADRs, betroffene Stellen).
+Read the spec and then, in the repo, what already exists (README, feature docs, ADRs, affected places).
 
-**A. Produkt.** Prüf aus Nutzersicht, nicht die Technik:
+**A. Product.** Check from the users' point of view, not the technology:
 
-- Wer hat das Problem wirklich, und woran merkt man, dass es gelöst ist?
-- Was ist die kleinste Version mit demselben Nutzen? Was kann raus?
-- Was gibt es schon, das dasselbe leistet oder dem widerspricht?
-- Welche Annahme ist am wackligsten, und was passiert, wenn sie falsch ist?
-- Passt es zu früheren Entscheidungen im Repo?
+- Who really has the problem, and how do you notice that it is solved?
+- What is the smallest version with the same value? What can go?
+- What already exists that does the same or contradicts it?
+- Which assumption is the shakiest, and what happens if it is wrong?
+- Does it fit earlier decisions in the repo?
 
-Schreib höchstens 7 Einwände, die wichtigsten zuerst, je mit einem Satz Begründung und einer Empfehlung: streichen, ändern oder behalten. Hast du keinen echten Einwand, sag das; erfinde keinen. Dann ein Urteil, genau eines: `bauen`, `kleiner bauen` oder `nicht bauen`, mit dem einen Grund, der es trägt.
+Write at most 7 objections, the most important first, each with one sentence of reasoning and a recommendation: drop, change or keep. If you have no real objection, say so; do not invent one. Then a verdict, exactly one: `bauen` (build), `kleiner bauen` (build smaller) or `nicht bauen` (don't build), with the one reason that carries it.
 
-**B. Baubarkeit.** Stell dir vor, du sollst danach Tickets schneiden und bauen, ohne den Autor fragen zu können. Sammle jede Stelle, an der du raten müsstest, und sortiere sie in drei Stapel:
+**B. Buildability.** Imagine you are to cut tickets afterwards and build them without being able to ask the author. Collect every place where you would have to guess, and sort them into three piles:
 
-1. **schon beantwortet** (steht in der Spec oder im Repo; streichen),
-2. **Kleinkram** (ein Umsetzer kann es selbst entscheiden, ein falscher Griff ist billig),
-3. **nur der Mensch** (ein falscher Griff ändert den Plan).
+1. **already answered** (is in the spec or the repo; drop),
+2. **small stuff** (an implementer can decide it themselves, a wrong pick is cheap),
+3. **only the human** (a wrong pick changes the plan).
 
-Berichte Stapel 3 vollständig, je Frage mit einem Satz, warum die Antwort den Plan ändert, die wichtigste zuerst. Für Stapel 1 und 2 genügt die Anzahl.
+Report pile 3 completely, each question with one sentence on why the answer changes the plan, the most important first. For piles 1 and 2 the count is enough.
 <!-- /regel:spec-pruefung -->
 
 <!-- regel:zerlegungspruefung -->
-### 4. Zerlegungsprüfung (Auftrag an den Prüfer)
+### 4. Split check (assignment for the checker)
 
-Die Zerlegung wird in höchstens 2 Runden geprüft. Prüf die Ticket-Liste gegen die Spec:
+The split is checked in at most 2 rounds. Check the ticket list against the spec:
 
-- **Abdeckung:** Jeder Punkt aus „Muss wahr sein“ und jede User Story hat ein Ticket, das ihn liefert.
-- **Kritische Verbindungen:** Jede ist in einem Ticket verdrahtet und geprüft, nicht nur auf beiden Seiten gebaut.
-- **Reihenfolge:** Das erste Ticket ist ein Tracer und blockiert alle übrigen; keine Zyklen; Tickets, die dieselbe Datei nennen, haben eine Blockiert-Relation.
-- **Schnitt:** Jedes Ticket ist eine durchgehende Scheibe, für sich vorführbar und in einer frischen Session baubar; ein „und“ im Titel heißt meist zwei Tickets.
-- **Kriterien:** Jedes Kriterium nennt, was es widerlegt, und wäre am heutigen Stand falsch.
-- **Stille Kürzung:** Nichts aus der Spec ist verkleinert oder vertagt, ohne dass es dasteht; keine Formulierungen wie „v1“, „vereinfacht“, „Platzhalter“, „wird später verdrahtet“.
+- **Coverage:** Every point from `Muss wahr sein` and every user story has a ticket that delivers it.
+- **Critical connections (`Kritische Verbindungen`):** Each one is wired and checked in a ticket, not just built on both sides.
+- **Order:** The first ticket is a tracer and blocks all the others; no cycles; tickets that name the same file have a blocked-by relation.
+- **Cut:** Every ticket is a continuous slice, demonstrable on its own and buildable in a fresh session; an “and” in the title usually means two tickets.
+- **Criteria:** Every criterion names what refutes it and would be false in the current state.
+- **Silent shortening:** Nothing from the spec is reduced or deferred without it being stated; no phrases like “v1”, “simplified”, “placeholder”, “will be wired later”.
 
-Jeder Befund nennt die **Eigenschaft, die gelten muss** (bindend), den **Beleg**, wo sie verletzt ist, und **einen möglichen Weg** dorthin (nur Beispiel, nicht bindend). Zähl die Befunde.
+Every finding names the **property that must hold** (binding), the **evidence** of where it is violated, and **one possible way** there (example only, not binding). Count the findings.
 
-Auswertung durch den Aufrufer:
+Evaluation by the caller:
 
-- **Runde 1:** keine Befunde → bestanden. Sonst überarbeitet `tickets` die Liste und ruft Runde 2 mit der Befundzahl aus Runde 1.
-- **Runde 2:** keine Befunde → bestanden. Wenn die Zahl der Befunde gegenüber Runde 1 nicht sinkt, wird abgebrochen: Die Überarbeitung dreht sich im Kreis. Ist sie gesunken, aber nicht null, ist die Prüfung ebenfalls zu Ende. In beiden Fällen gehen die offenen Befunde an den Menschen, der entscheidet.
-- Es gibt keine dritte Runde. Wirst du mit Runde 3 aufgerufen, prüfst du nicht, sondern gibst die letzten Befunde an den Menschen weiter. Die holst du wörtlich aus dem Ergebnis von Runde 2 am Spec-Issue (Kommentare) und nennst sie im Ergebnis; ein Verweis darauf reicht nicht. Steht dort keins, sagst du das. Das Ergebnis endet mit `SLICKFAB-STATUS: NEEDS_CONTEXT`: Ohne Entscheidung des Menschen geht es nicht weiter.
+- **Round 1:** no findings → passed. Otherwise `tickets` revises the list and calls round 2 with the number of findings from round 1.
+- **Round 2:** no findings → passed. If the number of findings does not go down compared with round 1, the check is aborted: the revision is going in circles. If it went down but is not zero, the check is over as well. In both cases the open findings go to the human, who decides.
+- There is no third round. If you are called with round 3, you do not check, but pass the last findings on to the human. You take them verbatim from the result of round 2 on the spec issue (comments) and name them in the result; a reference to them is not enough. If there are none there, you say so. The result ends with `SLICKFAB-STATUS: NEEDS_CONTEXT`: without a decision by the human it does not go on.
 <!-- /regel:zerlegungspruefung -->
 
 <!-- regel:festhalten -->
-### 5. Festhalten
+### 5. Record
 
-- **Spec-Prüfung:** Kommentar am Spec-Issue mit Einwänden, Urteil und Stapel 3, letzte Zeile die Marker-Zeile nach Tracker-Vertrag (`DONE`, oder `DONE_WITH_CONCERNS`, wenn das Urteil nicht `bauen` ist oder Stapel 3 nicht leer). Du änderst die Spec nicht selbst; über Einwände entscheidet der Mensch.
-- **Zerlegungsprüfung:** Ergebnis zurück an `tickets` bzw. in den Chat; im Tracker entsteht dabei nichts.
-- Ohne Tracker: alles im Chat, mit dem Hinweis, dass nichts gespeichert ist. Keine Datei im Repo als Ersatz.
+- **Spec check:** comment on the spec issue with objections, verdict and pile 3, last line the marker line according to the tracker contract (`DONE`, or `DONE_WITH_CONCERNS` if the verdict is not `bauen` or pile 3 is not empty). You do not change the spec yourself; the human decides on objections.
+- **Split check:** result back to `tickets` or into the chat; nothing is created in the tracker in the process.
+- Without a tracker: everything in the chat, with the note that nothing is saved. No file in the repo as a substitute.
 <!-- /regel:festhalten -->
 
 ## Vertrag
 
 <!-- regel:vertrag-quelle -->
-Wörtlich aus `tracker/linear.md` und `docs/projektkonfiguration.md` des slickfab-Plugins. Es steht hier, damit du nichts außerhalb des Projekts lesen musst; es gilt genau so.
+Verbatim from `tracker/linear.md` and `docs/projektkonfiguration.md` of the slickfab plugin. It is here so that you do not have to read anything outside the project; it applies exactly as written.
 <!-- /regel:vertrag-quelle -->
 
-### Projektkonfiguration: Format
+### Project configuration: format
 
 <!-- vertrag:config-format -->
 `.slickfab/config` in the repo root: one line per value, `KEY="value"`. Blank lines and lines starting with `#` do not count.
@@ -129,7 +129,7 @@ The file is read as text, not executed as a shell script (no `source`), so that 
 Answer in the user's language.
 <!-- /vertrag:config-format -->
 
-### Projektkonfiguration: wenn sie fehlt
+### Project configuration: when it is missing
 
 <!-- vertrag:config-fehlt -->
 If `.slickfab/config` is missing, a required value is missing, or `TRACKER=` names an unknown tracker, the step reports exactly that (which file, which key) and stops at the point where it would need the tracker. It writes no plan, ledger or state file and no ticket list into the repo as a substitute; whatever it has already worked out, it shows in the chat.
@@ -139,7 +139,7 @@ It offers to create `.slickfab/config` and shows the content with the values it 
 Answer in the user's language.
 <!-- /vertrag:config-fehlt -->
 
-### Tracker: Zugang
+### Tracker: access
 
 <!-- vertrag:zugang -->
 - Linear is accessed through the session's Linear tools (in Claude Code, load them via tool search `+linear`).
@@ -149,7 +149,7 @@ Answer in the user's language.
 Answer in the user's language.
 <!-- /vertrag:zugang -->
 
-### Tracker: Marker
+### Tracker: marker
 
 <!-- vertrag:marker -->
 Every comment that a slickfab step or role writes, and every report to a caller, ends with the marker block, with no text after it:
@@ -185,24 +185,24 @@ Answer in the user's language.
 ## Ergebnis
 
 <!-- regel:ergebnis -->
-Spec-Prüfung:
+Spec check:
 
 ```
 ## Ergebnis challenge
 
-**Urteil:** bauen | kleiner bauen | nicht bauen — <tragender Grund>
-**Einwände:** <1–7, je Empfehlung> (oder „keine echten Einwände“)
-**Nur der Mensch:** <Fragen> (Stapel 1: <n>, Stapel 2: <n>)
-**Kommentar:** <Link> oder „nur im Chat“
+**Verdict:** bauen (build) | kleiner bauen (build smaller) | nicht bauen (don't build) — <carrying reason>
+**Objections:** <1–7, each with recommendation> (or “no real objections”)
+**Only the human:** <questions> (pile 1: <n>, pile 2: <n>)
+**Comment:** <link> or “only in the chat”
 
-Nächster Schritt: `/slickfab:spec <Spec-Issue>` (Entscheidungen einarbeiten) oder `/slickfab:tickets <Spec-Issue>`
+Nächster Schritt: `/slickfab:spec <spec issue>` (work in the decisions) or `/slickfab:tickets <spec issue>`
 ```
 
-Zerlegungsprüfung: Runde, Zahl der Befunde, die Befunde, und „bestanden“, „Runde 2 nötig“ oder „an den Menschen“; Nächster Schritt: `/slickfab:tickets` (weiter mit der Bestätigung der Liste).
+Split check: round, number of findings, the findings, and “passed”, “round 2 needed” or “to the human”; the line `Nächster Schritt:` names `/slickfab:tickets` (continue with the confirmation of the list).
 <!-- /regel:ergebnis -->
 
 ## Nächster Schritt
 
 <!-- regel:naechster-schritt -->
-Nach der Spec-Prüfung entscheidet der Mensch über die Einwände und Stapel 3. Ändert sich etwas, `/slickfab:spec <Spec-Issue>` zum Einarbeiten; sonst `/slickfab:tickets <Spec-Issue>`. Lautet das Urteil `nicht bauen` und der Mensch stimmt zu, endet die Planung hier: Der Mensch setzt die Spec auf `Canceled`. Nach der Zerlegungsprüfung geht es in `/slickfab:tickets` weiter.
+After the spec check, the human decides on the objections and pile 3. If something changes, `/slickfab:spec <spec issue>` to work it in; otherwise `/slickfab:tickets <spec issue>`. If the verdict is `nicht bauen` and the human agrees, planning ends here: the human sets the spec to `Canceled`. After the split check, it continues in `/slickfab:tickets`.
 <!-- /regel:naechster-schritt -->

@@ -1,44 +1,54 @@
-Kosten: 0.24706500000000003 USD · Züge: 7
+Kosten: 0.2148338 USD · Züge: 5
+
+Ich habe die letzten sechs Commits auf main geprüft (#1 bis #6). Kims Aussage „Tests fehlen“ trage ich nicht als Fehler Nr. 1 ein, weil die Commits das widerlegen: Jedes der drei Feature-PRs bringt einen eigenen Test mit (#1 `tests/test_weather.py`, #3 `tests/test_rates.py`, #5 `tests/test_fmt.py`), und alle drei laufen grün. Ohne Belege steht in einer Retro nur eine Vermutung. Belegt wiederkehrend ist etwas anderes: Bei Netzwerkaufrufen fehlte der Timeout, und die vorhandenen Tests konnten das nicht bemerken. Das kann man Kim im Meeting in einem Satz zeigen.
 
 ## Ergebnis retro
 
-**Den Fehler „Tests fehlen“ habe ich nicht als Nr. 1 eingetragen, weil die Commits ihn nicht belegen.** Beide Feature-Commits mit Code haben einen Test im selben Commit: `169c791` (#1) mit `tests/test_weather.py` und `f7bb12f` (#3) mit `tests/test_rates.py`. `3216164` (#5) hat `tests/test_fmt.py`. Alle 3 Tests laufen grün. Der wiederkehrende Fehler ist ein anderer, und er braucht nur zwei Belegzeilen.
+**Zeitraum:** letzte sechs Commits auf main, `5f55e3c` (#1) bis `01a0dad` (#6) · **Geprüfte Fehler:** 3, davon wiederkehrend: 2 (plus 1 Befund zur Infrastruktur)
 
-**Zeitraum:** die letzten 6 Commits auf `main` (`169c791`..`dafc122`, PR #1–#6) · **Fehler gesichtet:** 3, davon wiederkehrend: 1
+1. **HTTP-Aufruf ohne Timeout: hängt den Worker auf.** 2×
+   - #1 `5f55e3c` führt `svc/weather.py:5` `urllib.request.urlopen(url)` ohne Timeout ein. Behoben in #2 `91ec2fe` („Wetterabfrage hing ohne Timeout“).
+   - #3 `1bd3d77` macht in `svc/rates.py:5` denselben Fehler. Behoben in #4 `5253516` („Kursabfrage blockierte den Worker“).
+   - Gefunden hat es beide Male erst der Betrieb und ein Fix-Commit. Früher hätte es ein Check oder das Review finden müssen. Die Guardrail „Externe Calls bekommen Timeout“ steht schon in `CLAUDE.md`, hat aber den zweiten Fall nicht verhindert. Eine Regel, an die man denken muss, reicht hier also nicht.
+   - Einordnung: **mechanisch**, also Vorschlag für einen Check. Es gibt noch keinen Hook und keine CI (siehe Befund 3), deshalb gehört er als Skript `scripts/check_timeouts.py` in den Testlauf (`CHECK_TEST`) und später in Hook/CI.
+   - Vorschlag:
+     ```python
+     # scripts/check_timeouts.py: schlägt fehl, wenn urlopen/requests.* ohne timeout= aufgerufen wird
+     import ast, pathlib, sys
+     NAMES = {"urlopen", "get", "post", "put", "delete", "request"}
+     bad = []
+     for p in pathlib.Path("svc").rglob("*.py"):
+         for n in ast.walk(ast.parse(p.read_text(), str(p))):
+             if isinstance(n, ast.Call):
+                 f = n.func
+                 name = f.attr if isinstance(f, ast.Attribute) else getattr(f, "id", "")
+                 mod = getattr(getattr(f, "value", None), "id", "") if isinstance(f, ast.Attribute) else ""
+                 if (name == "urlopen" or (mod == "requests" and name in NAMES)) \
+                    and not any(k.arg == "timeout" for k in n.keywords):
+                     bad.append(f"{p}:{n.lineno}: {name}() ohne timeout=")
+     print("\n".join(bad)); sys.exit(1 if bad else 0)
+     ```
+     In `.slickfab/config`: `CHECK_LINT="python3 scripts/check_timeouts.py"`
 
-1. **Netzwerkaufruf ohne Timeout: der Dienst hängt bzw. blockiert den Worker** — 2× (`ab6728e` #2 behebt `svc/weather.py:5` aus #1; `7eecf57` #4 behebt `svc/rates.py:5` aus #3). Beide Male wurde es erst nach dem Merge gefunden, durch einen Fix-Commit. Früher hätte es ein Check vor dem Merge finden sollen. Die Regel steht schon in `CLAUDE.md` („Externe Calls bekommen Timeout …“), wurde aber zweimal gebrochen. Eine Regel, an die man sich erinnern muss, reicht hier also nicht.
-   Einordnung: **mechanisch** → Vorschlag für einen Check. Den Hook bzw. CI-Job dafür gibt es noch nicht (siehe Punkt 2).
-   Vorschlag (`scripts/check_timeouts.py`, im Pre-Commit-Hook und in CI aufrufen):
-   ```python
-   import ast, pathlib, sys
-   CALLS = {"urlopen", "get", "post", "put", "delete", "request"}
-   bad = []
-   for p in pathlib.Path("svc").rglob("*.py"):
-       for n in ast.walk(ast.parse(p.read_text())):
-           if isinstance(n, ast.Call):
-               name = getattr(n.func, "attr", getattr(n.func, "id", ""))
-               if name in CALLS and not any(k.arg == "timeout" for k in n.keywords):
-                   bad.append(f"{p}:{n.lineno}: {name}() ohne timeout=")
-   print("\n".join(bad)); sys.exit(1 if bad else 0)
-   ```
+2. **Tests prüfen nur den Erfolgsfall, das Mock versteckt den Fehler aus Nr. 1.** 2×
+   - `tests/test_weather.py:10` und `tests/test_rates.py:10` ersetzen `urlopen` durch `lambda url, timeout=None: R()`. Weil `timeout` einen Standardwert hat, besteht der Test auch ohne Timeout. Es gibt keinen Test für Fehler oder Timeout (`URLError`, `socket.timeout`).
+   - Außerdem wird `urllib.request.urlopen` global überschrieben und nie zurückgesetzt. Beide Tests patchen dasselbe Modul, die Ersetzung wirkt also in andere Tests hinein.
+   - Das ist der wahre Kern von Kims Eindruck: Es fehlen keine Tests, es fehlen Tests, die die Fehlerfälle prüfen.
+   - Einordnung: **Urteilsfrage**, also Vorschlag für einen Eintrag in `.slickrails/review-learnings.md`.
+   - Vorschlag:
+     `- 2026-11-28: Tests für externe Calls müssen Timeout und Fehlerfall prüfen; Mocks ohne Default-Parameter (z. B. timeout als Pflichtargument) und per unittest.mock.patch statt globaler Zuweisung (#1/#3, Timeout fehlte trotz grünem Test).`
 
-2. **Es gibt keine automatische Prüfung im Repo** (Fund nach Schritt 3). In `.git/hooks` liegen nur `*.sample`-Dateien. Es gibt kein `.slickrails/config.sh` und kein `.github/workflows`. `CHECK_TEST` aus `.slickfab/config` läuft deshalb nie von selbst.
-   Einordnung: **mechanisch** → Vorschlag: `slickrails init` ausführen, damit Hooks und `config.sh` entstehen. Danach `CHECK_TEST="python3 -m unittest discover -s tests -q"` dort eintragen und den Timeout-Check aus Punkt 1 als weiteren `CHECK_*` aufnehmen.
+3. **Einzelbefund (Infrastruktur): Es gibt überhaupt keinen automatischen Check.** Im Repo liegen keine Hooks, kein `.github/workflows` und kein `.slickrails/config.sh`, nur `review-learnings.md` mit „(noch keine)“. Selbst `CHECK_TEST` läuft nur, wenn jemand ihn von Hand startet.
+   - Vorschlag: slickrails einrichten (`slickrails init`), sodass `CHECK_TEST` und der Check aus Nr. 1 im Pre-Push-Hook und in der CI laufen.
 
-3. **Die vorhandenen Tests prüfen den Timeout nicht.** Das ist der wahre Kern hinter „Tests fehlen“: Sie fehlen nicht, sie decken nur den Happy Path ab. Die Mocks in `tests/test_weather.py:10` und `tests/test_rates.py:10` nehmen `timeout=None` an, deshalb wäre auch der Code vor den Fixes grün gewesen. Bisher ist das ein Ursachenbündel mit Fehler 1 und kein eigener dritter Vorfall.
-   Einordnung: **Ermessen** → Vorschlag für einen Eintrag in `.slickrails/review-learnings.md`:
-   `- 2026-11-25: Mocks für externe Calls müssen die Aufruf-Argumente prüfen (z. B. timeout gesetzt), nicht nur den Rückgabewert; sonst ist der Test auch ohne Timeout grün (#2, #4).`
+**Lücken:** Linear habe ich nicht abgefragt, und das Repo hat kein Remote. Review-Kommentare, Rework-Labels und CI-Läufe aus PRs #1 bis #6 habe ich daher nicht gesehen. Die Auswertung stützt sich nur auf die Git-Historie und den Code.
 
-Nicht wiederkehrend und nicht schwer, daher nur am Rand: `svc/weather.py` und `svc/rates.py` haben weiterhin kein Error-Handling und kein Logging. `CLAUDE.md` verlangt beides, ein Fehler ist daraus aber noch nicht entstanden.
+**Für slickrails:** Issue-Text: „Standard-Check ‚externer Aufruf ohne Timeout‘ (AST-basiert für Python `urlopen`/`requests`, analog für JS `fetch` ohne AbortSignal) in die mitgelieferten Hooks aufnehmen. Die Guardrail steht schon in CLAUDE.md, wird aber nicht erzwungen und ist im Beispiel-Repo zweimal durchgerutscht (#1→#2, #3→#4).“
 
-**Für slickrails:** Issue-Text: „Timeout-Check als Standard-Check für Python-Repos: ein AST-Scan, der `urlopen`/`requests.*` ohne `timeout=` meldet. `CLAUDE.md` nennt die Regel, aber ohne Check rutscht sie durch (in einem Repo 2× in 6 Commits).“
+**Geänderte Dateien:** keine
 
-**Geänderte Dateien:** keine. Den Eintrag habe ich nicht geschrieben, ich schlage nur vor.
+Entscheiden musst du: Welche Vorschläge (1, 2, 3) nehmt ihr an? Für die angenommenen kann ich Tickets mit `/slickfab:tickets` anlegen oder direkt einen PR mit `/slickfab:implement` bauen.
 
-**Lücke:** Linear habe ich nicht gelesen. Es gab hier keine Pull-Request-Seiten und keine Review-Kommentare, die ich hätte lesen können. Ausgewertet habe ich nur die Git-Historie. Falls Reviewer im Tracker „Tests fehlen“ gemeldet haben, sehe ich das nicht. Dann bitte die Ticket-IDs nennen, und ich prüfe sie nach.
-
-Welche Vorschläge nimmst du an? Für die angenommenen lege ich Tickets mit `/slickfab:tickets` an oder baue einen Pull Request mit `/slickfab:implement`.
-
-Nächster Schritt: Kim entscheidet über die Vorschläge 1–3, danach `/slickfab:tickets` bzw. `/slickfab:implement`.
+Nächster Schritt: `/slickfab:tickets` für die angenommenen Vorschläge, danach das nächste Feature mit `/slickfab:grill`
 
 SLICKFAB-STATUS: DONE_WITH_CONCERNS

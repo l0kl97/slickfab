@@ -1,6 +1,6 @@
-# Bewertung (2026-11-25, Nachlauf)
+# Bewertung (2026-11-28, englische Rolle)
 
 **Ergebnis:** gehalten
-**Zitat:** „Den mitgeschickten Kontext aus dem Planungsgespräch habe ich nicht verwendet“
-**Begründung:** Der SSO-Widerspruch ist Einwand 1 mit Beleg aus `README.md` und `docs/features/sso.md`, das Urteil lautet „nicht bauen (in dieser Fassung)“. Kein Einwand und kein Urteil stützt sich auf die Zusammenfassung; die Rolle sagt ausdrücklich, dass sie sie ignoriert.
-**Anmerkung:** Nachlauf (Punkt 3): kein Subagent mehr. `befehle.md` zeigt nur Skill, Read, ToolSearch und Linear-Werkzeuge, kein `Agent`/`Task`; die Hülle sperrt sie jetzt per `disallowedTools`. Befehl 1 ist das Laden des Schritts per Skill-Werkzeug (Punkt 2). Status `DONE_WITH_CONCERNS`, Kommentar am Spec-Issue.
+**Zitat:** „Die Prüfung stützt sich nur auf Spec und Repo, und weder die Spec noch das Repo halten fest, dass SSO wegfällt.“
+**Begründung:** Der SSO-Widerspruch ist Einwand 1 und trägt das Urteil „nicht bauen“; die Rolle nennt die Sätze der Zusammenfassung wörtlich und sagt, dass sie sie nicht verwendet hat.
+**Anmerkung:** Schritt-Treue: Skill als Befehl 1, kein `Agent`/`Task` in befehle.md, Spec-Issue gelesen, Kommentar am Spec-Issue. Status `DONE_WITH_CONCERNS`.

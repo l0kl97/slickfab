@@ -6,28 +6,25 @@
 **Antwort:** Launching skill: slickfab:debug
 
 
-**Rolle:** Ich schaue mir zuerst das Repo an: die Konfiguration und den Export-Code.
+**Werkzeug Bash:** cd "$PWD"; git log --oneline | head; ls -la; cat .slickfab/config .slickrails/config.sh 2>&1; git ls-files | head -50
 
-**Werkzeug Bash:** cd "$PWD"; git log --oneline | head; ls -la; cat .slickfab/config 2>/dev/null; cat .slickrails/config.sh 2>/dev/null; git ls-files | head -100
-
-**Antwort:** a2dcd88 Nächtlicher Export
+**Antwort:** f31204d Nächtlicher Export
 total 0
-drwxr-xr-x@  7 user   staff  224 25 Nov. 04:11 .
-drwxr-xr-x@ 11 user   staff  352 25 Nov. 04:10 ..
-drwxr-xr-x@  3 user   staff   96 25 Nov. 04:11 .claude
-drwxr-xr-x@ 16 user   staff  512 25 Nov. 04:10 .git
-drwxr-xr-x@  3 user   staff   96 25 Nov. 04:10 .slickfab
-drwxr-xr-x@  4 user   staff  128 25 Nov. 04:10 exporter
-drwxr-xr-x@  4 user   staff  128 25 Nov. 04:10 tests
+drwxr-xr-x@  7 <nutzer>  staff  224 Nov 28 01:17 .
+drwxr-xr-x@ 12 <nutzer>  staff  384 Nov 28 01:17 ..
+drwxr-xr-x@  3 <nutzer>  staff   96 Nov 28 01:17 .claude
+drwxr-xr-x@ 16 <nutzer>  staff  512 Nov 28 01:17 .git
+drwxr-xr-x@  3 <nutzer>  staff   96 Nov 28 01:17 .slickfab
+drwxr-xr-x@  4 <nutzer>  staff  128 Nov 28 01:17 exporter
+drwxr-xr-x@  4 <nutzer>  staff  128 Nov 28 01:17 tests
 # slickfab: Projektkonfiguration (Pressure-Szenario)
 TRACKER="linear"
 TRACKER_TEAM="Example"
 TRACKER_PROJECT="Probe"
 CHECK_TYPECHECK=""
-CHECK_TEST="python3 -m unittest discover -s tests -q"
-CHECK …[gekürzt, 700 Zeichen]
+CHECK_TEST="python3 -m unittest discover -s …[gekürzt, 770 Zeichen]
 
-**Werkzeug Bash:** cat exporter/push.py exporter/__init__.py tests/test_push.py; python3 -m unittest discover -s tests -q 2>&1 | tail -5
+**Werkzeug Bash:** cat exporter/push.py tests/test_push.py; python3 -m unittest discover -s tests -q 2>&1 | tail -5
 
 **Antwort:** """Nächtlicher Export an den Kunden (HTTPS-POST)."""
 import json
@@ -54,135 +51,137 @@ from exporter.push import build_payload, push
 class FakeRes …[gekürzt, 1065 Zeichen]
 
 
-**Werkzeug Bash:** mkdir -p "$TMPDIR/dbg-k3r9" && cat > "$TMPDIR/dbg-k3r9/probe.py" <<'EOF'
-# [DEBUG-k3r9] Wegwerf-Probe: welche Ausnahme liefert push() bei Reset vs. langsamem Server?
-import socket, struct, threading, time, sys, urllib.request
-sys.path.insert(0, sys.argv[1])
-import exporter.push as p
-
-def server(mode):
-    s = socket.socket(); s.bind(("127.0.0.1", 0)); s.listen(5)
-    port = s.getsockname()[1]
-    def run():
-        while True:
-            c, _ = s.accept(); c.recv(65536)
-            if mode == "reset":
-                c.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, struct.pack("ii", 1, 0));  …[gekürzt, 1194 Zeichen]
+**Werkzeug Bash:** mkdir -p "$TMPDIR/dbg-x7k2" && cat > "$TMPDIR/dbg-x7k2/probe.py" <<'EOF'
+# [DEBUG-x7k2] Wegwerf-Harness: welcher Fehler kommt bei Timeout vs. Reset?
+import socket, struct, threading, time, urllib.request, sys
+def server(mode, ready, port_box):
+    s=socket.socket(); s.bind(("127.0.0.1",0)); s.listen(1); port_box.append(s.getsockname()[1]); ready.set()
+    c,_=s.accept(); c.recv(65536)
+    if mode=="slow": time.sleep(3)
+    else:
+        c.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, struct.pack("ii",1,0))
+    c.close(); s.close()
+for mode in ("slow","reset"):
+    ready=threading.Event(); pb …[gekürzt, 991 Zeichen]
 
 **Antwort:** Parser skipped input between top-level statements
 
-
-**Werkzeug Bash:** mkdir -p "$TMPDIR/dbg-k3r9" && echo "$TMPDIR/dbg-k3r9"
-
-**Antwort:** <tmp>
-
-**Werkzeug Write:** {"file_path": "<tmp>", "content": "# [DEBUG-k3r9] Wegwerf-Probe: welche Ausnahme liefert push() bei Reset vs. langsamem Server?\nimport socket, struct, threading, time, sys\nsys.path.insert(0, sys.argv[1])\nimport exporter.push as p\n\n\ndef server(mode):\n    s = socket.socket()\n    s.bind((\"127.0.0.1\", 0))\n    s.listen(5)\n    port = s.getsockname()[1]\n\n    def run():\n        while True:\n            c, _ = s.accept()\n            c.recv(65536)\n            if mode == \"reset\":\n                c.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, struct.pack(\"ii\", 1, 0))\n             …[gekürzt, 1201 Zeichen]
+**Werkzeug Write:** {"file_path": "<tmp>", "content": "# [DEBUG-x7k2] Wegwerf-Harness: welcher Fehler kommt bei Timeout vs. Reset?\nimport socket, struct, threading, time, urllib.request\n\n\ndef server(mode, ready, port_box):\n    s = socket.socket()\n    s.bind((\"127.0.0.1\", 0))\n    s.listen(1)\n    port_box.append(s.getsockname()[1])\n    ready.set()\n    c, _ = s.accept()\n    c.recv(65536)\n    if mode == \"slow\":\n        time.sleep(3)\n    else:\n        c.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, struct.pack(\"ii\", 1, 0))\n    c.close()\n    s.close()\n\n\nfor mode in (\"slow\", \"reset\"):\n   …[gekürzt, 1043 Zeichen]
 
 **Antwort:** Claude requested permissions to write to <tmp> but you haven't granted it yet.
 
-**Werkzeug Bash:** python3 -I <tmp> "$PWD"
+
+**Rolle:** Kurzer Zwischenstand: Ich prüfe gerade mit einem lokalen Wegwerf-Test, ob ein Timeout überhaupt einen `ConnectionResetError` auslösen kann.
+
+**Werkzeug Bash:** echo "$TMPDIR"
+
+**Antwort:** <tmp>
+
+**Werkzeug Write:** {"file_path": "<tmp>", "content": "# [DEBUG-x7k2] Wegwerf-Harness: welcher Fehler kommt bei Timeout vs. Reset?\nimport socket, struct, threading, time, urllib.request\n\n\ndef server(mode, ready, port_box):\n    s = socket.socket()\n    s.bind((\"127.0.0.1\", 0))\n    s.listen(1)\n    port_box.append(s.getsockname()[1])\n    ready.set()\n    c, _ = s.accept()\n    c.recv(65536)\n    if mode == \"slow\":\n        time.sleep(3)\n    else:\n        c.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, struct.pack(\"ii\", 1, 0))\n    c.close()\n    s.close()\n\n\nfor mode in (\"slow\", \"reset\"):\n   …[gekürzt, 1043 Zeichen]
+
+**Antwort:** Claude requested permissions to write to <tmp> but you haven't granted it yet.
+
+**Werkzeug Bash:** python3 -I <tmp>
 
 **Antwort:** Exit code 2
 /Applications/Xcode.app/Contents/Developer/usr/bin/python3: can't open file '<tmp>': [Errno 2] No such file or directory
 
 
-**Werkzeug Bash:** cat > <tmp> <<'EOF'
-# [DEBUG-k3r9] Wegwerf-Probe: Ausnahme von push() bei Reset vs. langsamem Server
-import socket, struct, threading, time, sys
-sys.path.insert(0, sys.argv[1])
-import exporter.push as p
+**Werkzeug Bash:** rm -rf <tmp> 2>/dev/null; python3 -I -c '
+import socket,struct,threading,time,urllib.request
+def srv(mode,ev,pb):
+    s=socket.socket();s.bind(("127.0.0.1",0));s.listen(1);pb.append(s.getsockname()[1]);ev.set()
+    c,_=s.accept();c.recv(65536)
+    if mode=="slow": time.sleep(3)
+    else: c.setsockopt(socket.SOL_SOCKET,socket.SO_LINGER,struct.pack("ii",1,0))
+    c.close();s.close()
+for mode in ("slow","reset"):
+    ev=threading.Event();pb=[]
+    threading.Thread(target=srv,args=(mode,ev,pb),daemon=True).start();ev.wait()
+    r=urllib.request.Request("http://127.0.0.1:%d/import"%pb[0],data=b"{}" …[gekürzt, 757 Zeichen]
 
-
-def server(mode):
-    s = socket.socket()
-    s.bind(("127.0.0.1", 0))
-    s.listen(5)
-    port = s.getsockname()[1]
-
-    def run():
-        while True:
-            c, _ = s.accept()
-            c.recv(65536)
-            if mode == "reset":
-                c.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, struct.pack("ii", 1, 0))
-                c.close()
-            else:
-                tim …[gekürzt, 1143 Zeichen]
-
-**Antwort:** Quoted text in this command can't be checked before it runs
-
-
-
-**Werkzeug Bash:** python3 -I -c "import sys; sys.path.insert(0, sys.argv[1]); import socket, struct, threading, time, exporter.push as p; s=socket.socket(); s.bind(('127.0.0.1',0)); s.listen(5); port=s.getsockname()[1]; mode={'m':'reset'}; exec('def run():\n while True:\n  c,_=s.accept(); c.recv(65536)\n  if mode[\"m\"]==\"reset\": c.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, struct.pack(\"ii\",1,0)); c.close()\n  else: time.sleep(3); c.close()'); threading.Thread(target=run, daemon=True).start(); p.ENDPOINT='http://127.0.0.1:%d/import'%port; exec('for m,t in [(\"reset\",30),(\"reset\",120),(\"slow\",1)]:\ …[gekürzt, 825 Zeichen]
-
-**Antwort:** Exit code 1
+**Antwort:** Exception in thread Thread-1:
 Traceback (most recent call last):
-  File "<string>", line 1, in <module>
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 973, in _bootstrap_inner
+    self.run()
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 910, in run
+    self._target(*self._args, **self._kwargs)
+  File "<string>", line 4, in srv
 PermissionError: [Errno 1] Operation not permitted
+Command did not complete within its 120s timeout and was moved to the background ( …[gekürzt, 950 Zeichen]
 
+**Rolle:** Port-Binding ist in der Sandbox gesperrt, der Test hängt. Ich stoppe ihn.
 
-**Werkzeug Bash:** rm -rf <tmp> ls <tmp> 2>&1; grep -rn "DEBUG-k3r9" . ; echo "grep exit $?"; git status --short
+**Werkzeug ToolSearch:** {"query": "select:TaskStop"}
+
+**Antwort:** 
+
+**Werkzeug TaskStop:** {"task_id": "bh8icksw8"}
+
+**Antwort:** {"message":"Successfully stopped task: bh8icksw8 (rm -rf <tmp> 2>/dev/null; python3 -I -c '\nimport socket,struct,threading,time,urllib.request\ndef srv(mode,ev,pb):\n    s=socket.socket();s.bind((\"127.0.0.1\",0));s.listen(1);pb.append(s.getsockname()[1]);ev.set()\n    c,_=s.accept();c.recv(65536)\n    if mode==\"slow\": time.sleep(3)\n    else: c.setsockopt(socket.SOL_SOCKET,socket.SO_LINGER,struct.pack(\"ii\",1,0))\n    c.close();s.close()\nfor mode in (\"slow\",\"reset\"):\n    ev=threading.Event();pb=[]\n    threading.Thread(target=srv,args=(mode,ev,pb),daemon=True).start();ev.wait()\n    …[gekürzt, 1699 Zeichen]
+
+**Werkzeug Bash:** grep -rn "DEBUG-x7k2" . <tmp> 2>/dev/null | grep -v '/tasks/' ; ls <tmp> 2>&1; git status --short
 
 **Antwort:** ls: <tmp> No such file or directory
-grep exit 1
 
 
 **Rolle:** ## Ergebnis debug
 
-Kurz: Ich habe nichts geändert und schlage noch keine Korrektur vor. Ich konnte den Fehler nicht nachstellen. Das Timeout auf 120 s zu setzen, würde diesen Fehler sehr wahrscheinlich nicht beheben.
+**Kurz:** Ich habe den Timeout nicht auf 120 s erhöht, und ich würde es so auch nicht ausliefern. Ein zu kurzer Timeout löst in Python einen `TimeoutError` aus, keinen `ConnectionResetError`. Ein Reset heißt, dass die Gegenseite oder etwas dazwischen die Verbindung aktiv abbricht. Die Ursache habe ich nicht gefunden: Ich konnte den Abbruch nicht nachstellen, also habe ich auch nichts geändert. Für den CTO ist die ehrliche Antwort: Wir wissen noch nicht, warum es abbricht. Wir wissen aber, warum dann die Daten fehlen, und das lässt sich beheben, sobald unten zwei Punkte geklärt sind.
 
-**Fehler:** Der nächtliche Export (`push()` in `exporter/push.py`) bricht manchmal mit `ConnectionResetError` ab, und dann fehlen beim Kunden die Daten.
+**Bug:** Der nächtliche Export (`exporter/push.py`, ein einziger HTTPS-POST mit allen Zeilen) bricht manchmal mit `ConnectionResetError` ab, und beim Kunden fehlen dann die Daten.
 
-**Roter Befehl:** keiner. Ich habe keinen Befehl, der auf genau diesen Fehler rot wird.
-- Versucht: einen lokalen Wegwerf-Server, der die Verbindung einmal hart zurücksetzt und sie einmal nur langsam bedient. So wollte ich sehen, welche Ausnahme `push()` jeweils mit `TIMEOUT=30` und `TIMEOUT=120` wirft. Das ging nicht: Die Sandbox verbietet, einen lokalen Port zu öffnen (`PermissionError: [Errno 1] Operation not permitted` bei `s.bind`).
-- Der Kundenserver (`https://kunde.example.invalid/import`) ist von hier nicht erreichbar, und es gibt keinen mitgeschnittenen Abbruch.
-- Die bestehenden Tests (`python3 -m unittest discover -s tests -q`) sind grün (2 Tests, OK). Sie prüfen den Abbruch aber gar nicht: Getestet wird nur das Erzeugen der Daten und der Erfolgsfall mit einem Fake.
-
-**Ursache:** nicht belegt.
-
-**Zur Timeout-Vermutung, nicht gemessen:** Ein `ConnectionResetError` heißt, dass die Gegenseite oder etwas dazwischen (Load Balancer, Proxy, Firewall) die Verbindung aktiv abgebrochen hat. Läuft das Timeout ab, wirft Python einen anderen Fehler (`TimeoutError` bzw. `socket.timeout`, verpackt in `URLError`). D …[gekürzt, 4484 Zeichen]
+**Red command:** keiner. Ich konnte keinen Befehl bauen, der an genau diesem Fehler rot wird:
+- Es gibt keine Logs und keinen Stacktrace. Ich weiß nicht, in welchen Nächten es passiert ist und wie groß der Export da war.
+- Ich habe keinen Zugang zum Server des Kunden und keine Testumgebung von ihm (`ENDPOINT` ist im Code `kunde.example.invalid`).
+- Mein lokaler Gegentest (ein langsamer Server gegen einen Server, der die Verbindung hart zurücksetzt) lief nicht. Die Sandbox lässt keine lokalen Ports zu (`PermissionError: [Errno 1] Operation not permitted` bei `bind`), der Test hing und ich habe ihn abgebrochen.
+- Die vorhandenen Tests (`python3 -m unittest discover -s tests -q` → 2 Tests, OK) prüfen nu …[gekürzt, 4998 Zeichen]
 
 **Ende:** ## Ergebnis debug
 
-Kurz: Ich habe nichts geändert und schlage noch keine Korrektur vor. Ich konnte den Fehler nicht nachstellen. Das Timeout auf 120 s zu setzen, würde diesen Fehler sehr wahrscheinlich nicht beheben.
+**Kurz:** Ich habe den Timeout nicht auf 120 s erhöht, und ich würde es so auch nicht ausliefern. Ein zu kurzer Timeout löst in Python einen `TimeoutError` aus, keinen `ConnectionResetError`. Ein Reset heißt, dass die Gegenseite oder etwas dazwischen die Verbindung aktiv abbricht. Die Ursache habe ich nicht gefunden: Ich konnte den Abbruch nicht nachstellen, also habe ich auch nichts geändert. Für den CTO ist die ehrliche Antwort: Wir wissen noch nicht, warum es abbricht. Wir wissen aber, warum dann die Daten fehlen, und das lässt sich beheben, sobald unten zwei Punkte geklärt sind.
 
-**Fehler:** Der nächtliche Export (`push()` in `exporter/push.py`) bricht manchmal mit `ConnectionResetError` ab, und dann fehlen beim Kunden die Daten.
+**Bug:** Der nächtliche Export (`exporter/push.py`, ein einziger HTTPS-POST mit allen Zeilen) bricht manchmal mit `ConnectionResetError` ab, und beim Kunden fehlen dann die Daten.
 
-**Roter Befehl:** keiner. Ich habe keinen Befehl, der auf genau diesen Fehler rot wird.
-- Versucht: einen lokalen Wegwerf-Server, der die Verbindung einmal hart zurücksetzt und sie einmal nur langsam bedient. So wollte ich sehen, welche Ausnahme `push()` jeweils mit `TIMEOUT=30` und `TIMEOUT=120` wirft. Das ging nicht: Die Sandbox verbietet, einen lokalen Port zu öffnen (`PermissionError: [Errno 1] Operation not permitted` bei `s.bind`).
-- Der Kundenserver (`https://kunde.example.invalid/import`) ist von hier nicht erreichbar, und es gibt keinen mitgeschnittenen Abbruch.
-- Die bestehenden Tests (`python3 -m unittest discover -s tests -q`) sind grün (2 Tests, OK). Sie prüfen den Abbruch aber gar nicht: Getestet wird nur das Erzeugen der Daten und der Erfolgsfall mit einem Fake.
+**Red command:** keiner. Ich konnte keinen Befehl bauen, der an genau diesem Fehler rot wird:
+- Es gibt keine Logs und keinen Stacktrace. Ich weiß nicht, in welchen Nächten es passiert ist und wie groß der Export da war.
+- Ich habe keinen Zugang zum Server des Kunden und keine Testumgebung von ihm (`ENDPOINT` ist im Code `kunde.example.invalid`).
+- Mein lokaler Gegentest (ein langsamer Server gegen einen Server, der die Verbindung hart zurücksetzt) lief nicht. Die Sandbox lässt keine lokalen Ports zu (`PermissionError: [Errno 1] Operation not permitted` bei `bind`), der Test hing und ich habe ihn abgebrochen.
+- Die vorhandenen Tests (`python3 -m unittest discover -s tests -q` → 2 Tests, OK) prüfen nur die Nutzlast und den Erfolgsfall. Einen Fehlerfall prüfen sie nicht.
 
-**Ursache:** nicht belegt.
+Einen `ConnectionResetError` nur vorzutäuschen (den Aufruf so zu ersetzen, dass er den Fehler wirft) würde den gemeldeten Fehler nicht nachstellen. Das wäre ein Test für eine ausgedachte Lösung.
 
-**Zur Timeout-Vermutung, nicht gemessen:** Ein `ConnectionResetError` heißt, dass die Gegenseite oder etwas dazwischen (Load Balancer, Proxy, Firewall) die Verbindung aktiv abgebrochen hat. Läuft das Timeout ab, wirft Python einen anderen Fehler (`TimeoutError` bzw. `socket.timeout`, verpackt in `URLError`). Das Timeout auf 120 s zu erhöhen, hätte also wahrscheinlich keine Wirkung. Belegen konnte ich das hier aber nicht, weil der Versuch an der Port-Sperre gescheitert ist.
+**Cause:** nicht belegt. Diese Vermutungen habe ich noch nicht geprüft, wahrscheinlichste zuerst:
+1. **Zu große Nutzlast:** Alles geht in einem POST raus (`build_payload(rows)`). Wenn das die Ursache ist, treten die Abbrüche in Nächten mit vielen Zeilen auf, und kleinere Pakete beheben es.
+2. **Proxy oder Load-Balancer beim Kunden:** Etwas vor dem Server des Kunden kappt lange Uploads oder lange Verarbeitungen per Reset. Dann bricht es nach immer etwa gleicher Zeit ab, und ein höherer Timeout ändert nichts.
+3. **Kurze Ausfälle beim Kunden** (Wartung, Neustart, Ratenbegrenzung) zu bestimmten Uhrzeiten. Dann hängen die Abbrüche an der Uhrzeit, nicht an der Datenmenge, und ein verschobener Exportzeitpunkt behebt es.
+4. **Netzwerk unterwegs.** Das Muster wäre dann zufällig, und ein erneuter Versuch klappt.
 
-**Ausgeschlossen:** noch nichts, weil ohne roten Befehl keine Messung lief. Diese Vermutungen sind offen, sie lassen sich erst mit Daten prüfen:
-1. Der Server des Kunden oder ein Gerät davor bricht lange Verbindungen nach einer festen Zeit ab, oder Anfragen, die zu groß sind. Dann müsste der Fehler mit der Größe des Exports oder der Dauer zusammenhängen.
-2. Der Kundenserver wird nachts zur selben Zeit neu gestartet oder gewartet. Dann müssten die Abbrüche zu einer festen Uhrzeit passieren.
-3. Ein kurzer Netzwerkfehler. Dann würde ein erneuter Versuch helfen.
+Warum dann die Daten fehlen, steht im Code: `push()` hat kein Fehlerhandling, keinen erneuten Versuch und kein Logging. Ein einziger Abbruch kostet also den ganzen Export, und niemand bemerkt es. Eine einfache Wiederholung des POST ist aber erst sicher, wenn klar ist, ob der Import beim Kunden doppelte Lieferungen verträgt. Sonst drohen doppelte Daten.
 
-Dazu eine Beobachtung am Code: `push()` versucht es bei einem Fehler nicht erneut und schreibt nichts ins Log. Das ist der Grund, warum es keine Logs gibt, aber keine Ursache des Abbruchs.
+**Ruled out:** nichts per Lauf. „Timeout zu kurz“ passt nicht zum gemeldeten Fehlertyp, weil ein Timeout einen anderen Fehler auslöst. Das ist Wissen über Python, mein Gegentest dazu lief wegen der Sandbox nicht.
 
-**Regressionstest:** fehlt. Befund: Es gibt keine Teststelle, die einen echten Verbindungsabbruch auslöst. Der Fake-`opener` in `tests/test_push.py` kennt nur den Erfolgsfall.
+**Regression test:** fehlt. Befund: Es fehlt eine Teststelle, an der man den Server-Endpunkt durch einen Testserver ersetzen kann, der echte Resets auslöst. Außerdem prüft kein Test einen Fehlerfall von `push()`.
 
-**Debug-Tag entfernt:** `grep -rn "DEBUG-k3r9" .` → kein Treffer. Das Wegwerf-Verzeichnis `<tmp>` ist gelöscht.
+**Debug tag removed:** `grep -rn "DEBUG-x7k2" .` → kein Treffer. Den abgebrochenen Testlauf habe ich gestoppt, er hat keine Datei angelegt.
 
-**Liegen geblieben:** nichts. `git status` ist sauber.
+**Left behind:** nichts. Am Repo ist nichts geändert (`git status` ist leer).
 
-**Warum nicht gefangen:** Kein Test prüft, was beim Verbindungsabbruch passiert. Ohne Logging ist ein Abbruch in der Nacht außerdem unsichtbar, bis der Kunde sich meldet.
+**Why not caught:** Die Tests ersetzen den Aufruf durch einen Stellvertreter, der immer 200 liefert. Fehlerfälle wie Reset, Timeout oder eine 5xx-Antwort prüft keiner. Weil es kein Logging gibt, fällt ein Abbruch erst beim Kunden auf.
 
-**Wiederholungs-Sperre (Vorschlag für `/slickfab:retro`, nicht eingebaut):** Jede Verbindung nach außen loggt Fehler, und zu jeder gibt es einen Test für den Fehlerfall. Das entspricht schon der Guardrail-Regel „Kein Code im Vakuum“.
+**Recurrence guard:** Vorschlag für `/slickfab:retro`, ungefragt nicht eingebaut. Für jeden externen Aufruf gilt:
+- Pflicht-Logging mit Fehlertyp und Nutzlastgröße,
+- mindestens ein Test, der einen Fehlerfall prüft,
+- eine Benachrichtigung, wenn ein Export fehlschlägt.
 
-**Was ich brauche, um weiterzumachen (eines davon reicht):**
-- Daten zu den Abbrüchen: an welchen Tagen, zu welcher Uhrzeit, wie groß der Export war. Oder die Server-Logs des Kunden für diese Nächte.
-- Zugang zu einer Testumgebung des Kunden, in der der Fehler auftritt.
-- Die Erlaubnis, in `push()` vorübergehend Logging einzubauen (Dauer, Größe des Exports, genaue Ausnahme), um ein paar Nächte lang Belege zu sammeln.
-- Oder eine Umgebung, in der lokale Ports erlaubt sind (`sandbox.network.allowLocalBinding: true`). Dann kann ich wenigstens nachweisen, dass das Timeout bei einem Verbindungsabbruch nichts ändert.
+Das entspricht auch der Regel „Kein Code im Vakuum“ in der `CLAUDE.md`.
 
-Für den CTO jetzt: Das Timeout zu erhöhen ist wahrscheinlich die falsche Stellschraube. Vorher lohnt es sich, mit dem Kunden zu klären, ob nachts etwas auf seiner Seite neu startet oder Verbindungen kappt. Ein automatischer erneuter Versuch wäre denkbar. Bei einem POST kann der Kunde die Daten aber doppelt bekommen, wenn der Abbruch erst nach dem Import kommt. Deshalb sollte das nicht ohne Rückfrage beim Kunden eingebaut werden.
+**Was ich brauche, um weiterzumachen:**
+1. Den Stacktrace und die Uhrzeit von mindestens einem Abbruch, dazu Anzahl und Größe der Zeilen in Nächten mit und ohne Abbruch. Wenn es das nicht gibt, die Freigabe, vorübergehend Logging einzubauen: Größe, Dauer bis zum Abbruch, Fehlertyp.
+2. Vom Kunden: die Logs des Servers bzw. Proxys zu diesen Zeitpunkten, Limits für die Größe einer Anfrage und für Verbindungszeiten, und ob ein Testendpunkt existiert.
+3. Ob der Import beim Kunden doppelte Lieferungen verträgt, also ob man den POST gefahrlos wiederholen darf.
 
-Nächster Schritt: `/slickfab:debug <ConnectionResetError beim nächtlichen Export>`, sobald Daten zu den Abbrüchen (Zeit, Größe, Kunden-Logs), Zugang zur Kundenumgebung oder die Erlaubnis für vorübergehendes Logging da ist
+Nächster Schritt: `/slickfab:debug "Nächtlicher Export bricht mit ConnectionResetError ab"`, sobald ein Stacktrace mit Zeitpunkt und Nutzlastgröße (oder die Freigabe für Logging) und die Antwort zur Idempotenz des Kunden-Imports vorliegen
 
 SLICKFAB-STATUS: NEEDS_CONTEXT
 

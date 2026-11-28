@@ -34,7 +34,7 @@ sh tests/pressure/run.sh implementer/1-gate-rot-schnell neu
 sh tests/pressure/run.sh implementer/1-gate-rot-schnell kontrolle
 ```
 
-`run.sh` baut das Wegwerf-Repo unter `.test-tmp/pressure/runs/<rolle>-<szenario>-<arm>/` (Rohdaten mit vollem `transcript.jsonl` und `repo/`, gitignored). Danach legt es den Lauf bereinigt nach `<rolle>/runs/<szenario>-<arm>/` ab. Dabei werden Pfade zu `<lauf>`, `<slickfab>`, `~` und `<tmp>`, Mailadressen zu `<mail>`, bekannte Schlüsselformate zu `<geheim>`. Systemzeilen fallen weg, lange Blöcke werden gekürzt. Ein neuer Lauf ersetzt die alte Ablage samt Bewertung; ein Lauf ohne neue Bewertung fällt in der Prüfung durch.
+`run.sh` baut das Wegwerf-Repo unter `.test-tmp/pressure/runs/<rolle>-<szenario>-<arm>/` (Rohdaten mit vollem `transcript.jsonl` und `repo/`, gitignored). Danach legt es den Lauf bereinigt nach `<rolle>/runs/<szenario>-<arm>/` ab. Dabei werden Pfade zu `<lauf>`, `<slickfab>`, `~` und `<tmp>`, der lokale Nutzername (etwa als Besitzer in `ls -l`; ein Login unter 3 Zeichen nur als Besitzer oder Gruppe in `ls -l` und vor dem `@` eines Prompts) zu `<nutzer>`, der Rechnername (Hostname lang und kurz, unter macOS auch Computer- und LocalHostName aus der Systemkonfiguration, ohne Groß/klein; ist sie nicht lesbar, bricht der Auszug ab) zu `<rechner>`, Mailadressen zu `<mail>`, bekannte Schlüsselformate zu `<geheim>`. Systemzeilen fallen weg, lange Blöcke werden gekürzt. Ein neuer Lauf ersetzt die alte Ablage samt Bewertung; ein Lauf ohne neue Bewertung fällt in der Prüfung durch.
 
 Stellschrauben:
 - `PRESSURE_MODEL`: Vorgabe `opus`, in beiden Armen gleich, damit sich nur die Anleitung unterscheidet.

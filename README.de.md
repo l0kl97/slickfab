@@ -4,7 +4,7 @@
 
 **Ein Prozess für AI-gebaute Software, von der Idee bis zum gemergten Pull Request.** slickfab ist ein Claude-Code-Plugin für einen Entwickler mit Coding-Agents. Es zerlegt die Arbeit in feste Schritte, lässt prüfende Schritte von frischen Agents machen und holt dich nur dort dazu, wo die Entscheidung bei dir liegt.
 
-Die Schritte, Rollen und die Doku unter `docs/` sind derzeit auf Deutsch.
+Die Schritte und Rollen sind englisch geschrieben. Die Doku unter `docs/` ist derzeit noch deutsch.
 
 ## Das Problem
 
@@ -125,7 +125,7 @@ Nur der Autopilot braucht [Herdr](https://herdr.dev/); Hand und Assistiert laufe
 - **Wie belastbar die Rollen sind:** Jede Rolle hat Pressure-Szenarien, Lagen, die zu einer Abkürzung drängen (Gate rot und Zeitdruck, Test im Weg, „egal, mach du“). Die Rollen hielten in 14 von 14 Szenarien, die Kontrolle mit älteren Vorlagen bzw. ohne Anleitung in 2 von 14. Bewertet ist von Hand, nicht maschinell; Szenarien, Läufe und Grenzen in `docs/features/pressure-szenarien.md`.
 - **Nur Linear.** Den Tracker-Vertrag gibt es heute nur für Linear (`tracker/linear.md`).
 - **Nur Claude Code.** Die Schritte sind Claude-Code-Skills, die Rollen Claude-Code-Agents.
-- **Auf Deutsch.** Schritte, Rollen und Doku sind derzeit deutsch geschrieben.
+- **Doku auf Deutsch.** Die Doku unter `docs/` (Feature-Dossiers, Betriebsarten, Recherche) ist derzeit noch deutsch.
 
 ## Herkunft
 

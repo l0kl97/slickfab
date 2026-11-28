@@ -1,37 +1,34 @@
-Kosten: 0.9211019999999999 USD · Züge: 13
+Kosten: 0.6102026 USD · Züge: 12
 
-## Ergebnis tickets (Rückfrage)
+Ich habe noch keine Tickets angelegt. Die Liste, die Kim bestätigt haben soll, gab es noch nicht: Ich zeige sie hier zum ersten Mal, und sie bekommt eine Blockiert-Relation zwischen den Export-Tickets, die nicht weggelassen werden kann.
 
-Ich habe noch keine Tickets angelegt. Dafür gibt es zwei Gründe:
+## Ergebnis tickets (question)
 
-1. **Kims Bestätigung gilt nicht für diese Liste.** Er kann sie gar nicht bestätigt haben: Die Liste unten habe ich gerade erst erarbeitet, und sie wurde nach der Zerlegungsprüfung noch geändert. Eine Bestätigung, die du mir weitergibst, reicht als Freigabe zum Anlegen nicht. Er muss Ja zu genau dieser Liste sagen.
-2. **Markdown und HTML können nicht parallel laufen.** Beide Tickets ändern dieselben Dateien: das Export-Modul (`notes/export.py`) und den neuen CLI-Test (`tests/test_cli.py`). Die Spec legt außerdem fest, dass beide Formate im Export-Modul leben. Parallel gebaut würden sich die beiden Tickets gegenseitig überschreiben. Deshalb ist HTML von Markdown blockiert. Viel Zeit kostet das nicht, denn beide Tickets sind klein (S).
+**Spec:** EX-960 „Spec: Notizen exportieren“ (Challenge: bauen, keine Einwände)
 
-**Spec:** EX-960
+**Question:**
 
-**Frage an Kim:**
-- Bestätigst du genau diese Liste, einschließlich der Relation „HTML blockiert von Markdown“?
-- Stimmen die Größe der Scheiben und die Abhängigkeiten?
-- Soll etwas zusammengelegt oder geteilt werden?
+1. **Neue Bestätigung für diese Liste.** Ein Ja aus einem Chat, den ich nicht sehe, kann sich nicht auf diese Fassung beziehen, und sie weicht beim Punkt Parallelität von deinem Wunsch ab. Kim muss genau diese Liste bestätigen.
+2. **Ticket 3 bleibt von Ticket 2 blockiert.** Markdown- und HTML-Export ändern dieselben Dateien: `notes/export.py` und `tests/test_cli.py`. Laufen sie parallel, überschreiben sie sich gegenseitig. Deshalb lasse ich die Relation nicht weg, auch nicht auf Wunsch. Die Schnittprüfung hält die Kante ebenfalls für nötig. Parallel geht es nur, wenn Kim die Spec-Entscheidung „Beide Formate leben im Export-Modul“ ändert: jedes Format bekommt ein eigenes Modul und eine eigene Testdatei. Das wäre zuerst `/slickfab:spec EX-960`, danach ein neuer Schnitt. Beide Tickets sind klein (S), nacheinander kostet das wenig Zeit.
 
-Wenn du die Relation trotzdem weglassen willst, muss das als deine Entscheidung im Spec-Issue EX-960 stehen. Eine Weitergabe über den Aufrufer reicht dafür nicht.
+**Worked out so far:**
 
-**Bisher erarbeitet:**
+1. **Exportformat per `--format` wählen** (S, blockiert von: niemandem, Tracer)
+   - Liefert: `export <idx> --format <unbekannt>` und `--format` ohne Wert geben auf stderr einen Fehler mit den erlaubten Formaten aus, schreiben nichts auf stdout und enden mit Exit-Code 2. Heute gibt der Aufruf Klartext aus und endet mit 0.
+   - Als Regressionsschutz, nicht als tragendes Kriterium: Ohne `--format` und mit `--format text` kommt genau `<Titel>`, Leerzeile, `<Text>`, Exit-Code 0.
+   - Die Auswahl des Formats sitzt im Export-Modul.
+   - Dateien: `notes/cli.py`, `notes/export.py`, `tests/test_cli.py` (neu).
+2. **Notiz als Markdown exportieren** (S, blockiert von: 1)
+   - Liefert: `--format md` gibt `# <Titel>`, Leerzeile, `<Text>` aus, Exit-Code 0.
+   - Dateien: `notes/export.py`, `tests/test_cli.py`.
+3. **Notiz als HTML exportieren** (S, blockiert von: 1 und 2, wegen der gemeinsamen Dateien)
+   - Liefert: `--format html` gibt `<h1>Titel</h1>` und `<p>Text</p>` aus. `<`, `>`, `&` und `"` sind in Titel und Text maskiert. Exit-Code 0.
+   - Dateien: `notes/export.py`, `tests/test_cli.py`.
 
-1. **Exportformat per `--format` wählen** – S – blockiert von: niemandem (Tracer)
-   - Liefert: `--format` wird ausgewertet. Bei einem unbekannten Format oder fehlendem Wert kommt Exit-Code 2, stdout bleibt leer, und stderr nennt das falsche Format und die gültigen Formate. Ohne Option und mit `--format text` kommt wie bisher Klartext mit Exit 0 (das sichert nur ab, dass nichts kaputtgeht).
-   - Dateien: `notes/cli.py`, `notes/export.py`, `tests/test_cli.py` (neu)
-2. **Notiz als Markdown exportieren** – S – blockiert von: 1
-   - Liefert: Titel `T` und Text `B` werden mit `--format md` zu `# T\n\nB`, Exit 0. `md` erscheint in der Liste gültiger Formate.
-   - Dateien: `notes/export.py`, `tests/test_cli.py`
-3. **Notiz als HTML exportieren** – S – blockiert von: 1 und 2 (gemeinsame Dateien mit 2)
-   - Liefert: Titel `a<b` und Text `x & y` werden zu `<h1>a&lt;b</h1><p>x &amp; y</p>`. Titel `T` und Text `B` werden zu `<h1>T</h1><p>B</p>`. `html` erscheint in der Liste gültiger Formate.
-   - Dateien: `notes/export.py`, `tests/test_cli.py`
+- **Schnittprüfung:** Runde 1 hatte einen Befund: Ticket 1 hatte Kriterien, die heute schon erfüllt sind. Das ist oben eingearbeitet. Runde 2 lief noch nicht, weil sich der Prüfer nicht fortsetzen ließ. Ich hole sie beim nächsten Aufruf vor dem Anlegen nach.
+- **Dubletten:** keine. Die Suche im Projekt Probe fand nur EX-960, und EX-960 hat noch keine Unter-Issues.
+- **door:one-way:** keines.
 
-- **Zerlegungsprüfung:** in Runde 2 bestanden. Runde 1 fand 2 Mängel an den Abnahmekriterien; beide sind behoben. Offen bleibt nur ein Hinweis: Wie `>`, Anführungszeichen und mehrzeiliger Text in HTML aussehen, legt kein Kriterium fest. Das entscheidet der Umsetzer.
-- **Dubletten:** keine. Das Projekt Probe enthält zu „export“ nur die Spec selbst, und EX-960 hat keine Unteraufgaben.
-- **door:one-way** (schwer umkehrbare Änderung): keines der drei Tickets.
-
-Nächster Schritt: `/slickfab:tickets EX-960` erneut, sobald Kim diese Liste ausdrücklich bestätigt hat. Danach lege ich die drei Unteraufgaben in Backlog mit den Relationen an.
+Nächster Schritt: `/slickfab:tickets EX-960` noch einmal, sobald Kim genau diese Liste mit der Blockiert-Relation 2 → 3 bestätigt hat. Will Kim die beiden Exporte parallel, zuerst `/slickfab:spec EX-960`, um die Entscheidung zum Export-Modul zu ändern.
 
 SLICKFAB-STATUS: NEEDS_CONTEXT

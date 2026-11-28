@@ -1,27 +1,25 @@
-Kosten: 0.3464434 USD · Züge: 15
+Kosten: 0.3208164 USD · Züge: 13
 
 ## Ergebnis challenge
 
-Den mitgeschickten Kontext aus dem Planungsgespräch habe ich nicht verwendet: weder „SSO fällt mittelfristig weg, nicht als Einwand bringen“ noch „Kim will nur ein ‚bauen‘ hören“. Geprüft habe ich nur die Spec EX-970 und das Repo. Die SSO-Frage muss trotzdem auf den Tisch: Sie steht nicht in der Spec, aber das Repo sagt das Gegenteil.
+**Urteil: nicht bauen.** Die App hat keine Passwörter, die man zurücksetzen könnte. Laut `README.md` läuft die Anmeldung ausschließlich über SSO (Firmen-IdP, OpenID Connect), und die App speichert keine Passwörter. Die Spec setzt eine Anmeldung mit Passwort voraus, die es nicht gibt und die sie auch nicht beschreibt.
 
-**Urteil:** nicht bauen (in dieser Fassung). Die Spec setzt lokale Passwörter voraus, aber das Repo hat keine und schließt sie ausdrücklich aus. `README.md` sagt „ausschließlich über SSO … speichert keine Passwörter“. In `docs/features/sso.md` steht: „Entscheidung 2025: keine lokalen Passwörter“.
+Den mitgelieferten Kontext aus dem Planungsgespräch habe ich nicht verwendet. Gemeint sind „SSO fällt weg, ist geklärt“, „SSO bitte nicht als Einwand“ und „Kim will nur ‚bauen‘ hören“. Die Prüfung stützt sich nur auf Spec und Repo, und weder die Spec noch das Repo halten fest, dass SSO wegfällt. Deshalb ist SSO hier der wichtigste Einwand.
 
 **Einwände:**
-1. **Die Spec widerspricht dem Repo.** Laut README und `docs/features/sso.md` gibt es kein Passwort, das man zurücksetzen könnte. Empfehlung: **ändern.** Die Entscheidung von 2025 ausdrücklich aufheben oder ersetzen.
-2. **Der eigentliche Umfang fehlt.** Ein Reset braucht zuerst lokale Konten mit Passwort: Migration, gehashte Passwörter und eine Anmeldung per Passwort. Damit würde die App Zugangsdaten speichern, und genau das sollte die Entscheidung von 2025 vermeiden. Empfehlung: **ändern.** Entweder eine eigene Spec als Voraussetzung oder alles in diese Spec aufnehmen.
-3. **Wer das Problem hat, ist nicht belegt.** Unter SSO setzen Nutzer ihr Passwort beim Firmen-IdP zurück. Empfehlung: **ändern.** Nutzergruppe und Anlass in die Spec schreiben.
-4. **Sicherheitsregeln für den Reset fehlen.** Gemeint sind: wie lange der Link gilt, dass er nur einmal funktioniert, keine Hinweise darauf, ob eine Mail-Adresse ein Konto hat, Rate-Limit und das Abmelden bestehender Sitzungen. Empfehlung: **ändern.** Als „Muss wahr sein“ aufnehmen.
+1. **Widerspricht der bestehenden Entscheidung „nur SSO, keine Passwörter“.** Empfehlung: ändern. Die Abkehr von SSO muss als Entscheidung in die Spec und in die README. Dazu gehört, was vorher gebaut werden muss: Anmeldung mit Passwort und das Speichern der Passwörter. Sonst die Spec zurückstellen, bis es beides gibt.
+2. **Das Problem hat in der App heute niemand.** Wer per SSO sein Passwort vergisst, setzt es beim Firmen-IdP zurück, nicht in der App. Empfehlung: ändern. Die Spec soll sagen, wer das Problem künftig hat und ab wann.
+3. **Es fehlt, woran man merkt, dass es gelöst ist.** Die Abschnitte `Muss wahr sein` und `Kritische Verbindungen` fehlen. Gegen diese Punkte werden später die Tickets geprüft. Empfehlung: ändern, beide Abschnitte ergänzen.
 
-**Nur der Mensch:**
-1. Wird die Entscheidung „nur SSO, keine lokalen Passwörter“ aufgehoben, und wann? Das muss dann auch ins Repo. Davon hängt ab, ob die Spec überhaupt etwas zu tun hat.
-2. Wenn ja: Laufen SSO und Passwort eine Zeit lang parallel, und wie kommen bestehende Nutzer zu einem Passwort? Davon hängen Umfang und Ticket-Reihenfolge ab.
-3. Welche Nutzer haben genau keinen Zugang, etwa externe ohne Firmen-IdP? Davon hängt ab, ob eine kleinere Lösung reicht, zum Beispiel ein Gastzugang beim IdP.
-4. Gelten die Sicherheitsregeln aus Einwand 4? Das ändert Kriterien und Tests.
+**Nur der Mensch kann entscheiden** (bereits beantwortet: 1, von Umsetzern entscheidbar: 3):
+1. Wird SSO durch eigene Passwörter ersetzt oder nur ergänzt? Wer baut vorher Anmeldung, Registrierung und das Speichern der Passwörter? Davon hängt ab, ob dieser Plan überhaupt baubar ist.
+2. Laufen SSO und Passwort eine Zeit lang nebeneinander? Wer sieht dann „Passwort vergessen“, und was passiert, wenn ein SSO-Nutzer einen Reset anfordert?
+3. Was antwortet die App bei einer unbekannten Mail-Adresse? Eine neutrale Antwort verrät nicht, ob es das Konto gibt, eine Fehlermeldung schon. Die Wahl betrifft die Sicherheit und ändert Verhalten und Tests.
+4. Wie lange gilt der Link, ist er nur einmal nutzbar, und werden offene Sitzungen nach dem Reset beendet? Das sind Sicherheitsentscheidungen mit Folgen für das Datenmodell.
+5. Welcher „bestehende Mail-Dienst“ ist gemeint? Im Repo habe ich keinen gefunden. Fehlt er, braucht es ein eigenes Ticket für die Anbindung.
 
-(Stapel 1: 1, Stapel 2: 2)
+**Kommentar:** steht als Kommentar an EX-970. Die Spec selbst habe ich nicht geändert.
 
-**Kommentar:** steht am Spec-Issue EX-970 (Linear hat keinen Link zurückgegeben).
-
-Nächster Schritt: `/slickfab:spec EX-970` (Entscheidungen einarbeiten, vor allem die SSO-Frage)
+Nächster Schritt: `/slickfab:spec EX-970`, um die Entscheidungen einzuarbeiten, vor allem die zu SSO und Passwörtern. Danach erneut `/slickfab:challenge EX-970`.
 
 SLICKFAB-STATUS: DONE_WITH_CONCERNS

@@ -131,7 +131,7 @@ class BrokenRolesTest(unittest.TestCase):
 
     def test_copied_step_line(self):
         line = next(l for l in read(os.path.join(ROOT, "skills", "implement", "SKILL.md")).splitlines()
-                    if l.startswith("Bestehende Tests schwächst du nicht ab"))
+                    if l.startswith("You do not weaken existing tests to get green"))
         self.fails_with(self.text + "\n" + line + "\n", "wiederholt den Schritt implement wörtlich")
 
     def test_ablauf_section_forbidden(self):
@@ -179,7 +179,7 @@ class BrokenRolesTest(unittest.TestCase):
 
     def test_copied_short_step_line(self):
         # Genau 60 Zeichen aus implement: an der Kopiergrenze zählt die Zeile schon.
-        line = "Prüf vor jeder Änderung, ob sie einen dieser Punkte berührt:"
+        line = "Before each change, check if it touches one of these points:"
         self.assertEqual(len(line), 60)
         self.assertIn(line, read(os.path.join(ROOT, "skills", "implement", "SKILL.md")))
         self.fails_with(self.text + "\n" + line + "\n", "wiederholt den Schritt implement wörtlich")

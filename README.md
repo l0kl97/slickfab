@@ -102,11 +102,13 @@ The usual path: `grill` → `spec` → `challenge` → `tickets` → you set tic
 | `handoff` | Handover when the context changes |
 | `docs-lookup` | Current library docs for the exact version, without filling the context |
 
-Which step runs in which session (same conversation or fresh): `docs/betriebsarten.md`, section "Die Schritte".
+Which step runs in which session (same conversation or fresh): `docs/betriebsarten.md`, section "The steps".
 
 ## Operating modes
 
 It is always the same 13 steps; the mode only decides who starts them. In detail, with setup: `docs/betriebsarten.md`.
+
+Only the autopilot needs [Herdr](https://herdr.dev/); manual and assisted mode run without it.
 
 - **Manual:** You call `/slickfab:<step>` yourself, in your session. Works in any Claude Code, without further tools.
 - **Assisted:** One session, the steps run as fresh subagents in the seven roles. You give each role only its input (ticket, PR, spec issue) and decide in the main session when it reports `NEEDS_CONTEXT` or `BLOCKED`. Guard hooks limit the Bash commands of the checking roles and the docs reader; context-guard warns roles in Herdr terminals when the context fills up.

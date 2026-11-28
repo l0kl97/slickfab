@@ -118,34 +118,9 @@ runtime/herdr/slickfab-dispatch watch [--dry-run] [--interval <sek>] [--config <
 - **Exit:** 0 ok · 1 Lesefehler, nichts ausgeführt · 2 Aufruf oder Konfiguration falsch, nichts getan · 3 einzelne Aktionen gescheitert (ihr Ticket hat `needs-human`) · 75 ein anderer tick hält die Lockdatei.
 - **Ablage** (`state_dir`, nie im Repo): `dispatch.lock`, `dispatch.log`, `bookkeeping.json` (Buchführung je Projekt: `checked_sha`, `debugged_sha`, `retro_at`, `verified`).
 
-### Factory-Konfiguration (Beispiel ohne echte Werte)
+### Factory-Konfiguration
 
-Liegt privat in `~/.config/slickfab/factory.json` (anderer Pfad: `--config` oder `SLICKFAB_FACTORY`). Der Linear-Schlüssel steht nie darin, nur der Pfad zur Schlüsseldatei.
-
-```json
-{
-  "assignee": "dispatch-user@example.com",
-  "linear_key_file": "~/.config/studio-board/linear-key",
-  "state_dir": "~/.local/state/slickfab",
-  "worktree_root": "~/.herdr/worktrees",
-  "timeout": 30,
-  "pr_comment_authors": ["github-login"],
-  "projects": {
-    "beispiel": {
-      "enabled": false,
-      "auto_merge": false,
-      "max_parallel": 3,
-      "linear_project": "Beispiel",
-      "repo": "~/code/beispiel",
-      "github": "owner/beispiel",
-      "github_ci": "use",
-      "space": "-"
-    }
-  }
-}
-```
-
-Pflicht: `assignee`, `linear_key_file`, `state_dir`, `projects`, je Projekt `enabled` (`true` oder `false`, kein Standardwert). Für freigeschaltete Projekte zusätzlich `linear_project`, `repo` (vorhandener Ordner, Haupt-Checkout) und `github` (`owner/name`). Optional: `auto_merge` (Standard `false`), `max_parallel` (Standard 3), `space` (Herdr-Space-ID oder `-` für keinen Space, Standard `-`), `github_ci` (`use` oder `ignore`, Standard `use`; bei `ignore` gelten GitHub-Checks als nicht vorhanden: für main zählt nur die lokale Post-Merge-Prüfung, für PRs nur das Review. Für Repos, deren Actions nicht laufen, etwa wegen aufgebrauchtem Free-Tier-Kontingent.  Achtung: `ignore` schaltet damit auch die serverseitigen Checks als Bremse ab, etwa Secret-Scan (gitleaks) und Abhängigkeits-Audit aus `.github/workflows/security.yml`. Ein roter Befund dort hält dann weder main noch einen PR auf; einzige Bremse bleibt der lokale Pre-Push (slickrails).), `worktree_root` (Standard `~/.herdr/worktrees`; geht immer als `--root` an `slickfab-worktree`, Worktrees liegen unter `<worktree_root>/<Ordnername des Repos>/<name>`), `timeout` (Sekunden je Aufruf, Standard 30), `pr_comment_authors` (GitHub-Logins, deren Kommentare am PR der Dispatcher beachtet, Standard `[]` = keine), `linear_api` (nur `https://`, für Tests `http://127.0.0.1`). Fehlt etwas oder ist es falsch, tut der tick nichts, nennt jedes falsche Feld und endet mit 2.
+Einrichtung, Beispiel und alle Felder stehen in der englischen Nutzer-Doku `docs/autopilot.md`. Kurz: privat in `~/.config/slickfab/factory.json` (anderer Pfad: `--config` oder `SLICKFAB_FACTORY`), nie im Repo; der Linear-Schlüssel steht nie darin, nur der Pfad zur Schlüsseldatei. Geprüft wird sie in `load_config` (`runtime/herdr/slickfab-dispatch`); fehlt etwas oder ist es falsch, tut der tick nichts, nennt jedes falsche Feld und endet mit 2. `tests/test_user_docs.py` hält die Felder der Doku gleich denen, die `load_config` liest.
 
 ### Vom echten Zustand zu `state`
 
@@ -322,3 +297,4 @@ Sensible Pfade (Groß/klein egal): enthält `auth` oder `migrat`; Segment beginn
 - 2026-11-25: `Watch`-Tests wurden unter Last rot (fester Schlaf von 4,5 s, dann ticks gezählt). Jetzt wartet der Test, bis die erwartete Zahl ticks im Log steht (Obergrenze 30 s, unter `--interval` 60 des Ereignis-Tests), und beendet `watch` erst dann. Damit der Ereignis-Test weiter zu viele ticks erkennt, beobachtet er nach dem zweiten tick ein Ruhefenster von 3 s (länger als `EVENT_SETTLE`); das fragt nur nach dem Ausbleiben eines ticks und kann unter Last nicht fälschlich rot werden (Befund Pre-Push-Review). Mutationsprobe: Ersatz-tick entfernt, Ereignis ignoriert und zwei ticks je Aufwachen werden rot.
 - 2026-11-25 (Review PR #24 Runde 1): A1: Mit pauschal 30 s Obergrenze blieb ein um das 5-Fache verspäteter Ersatz-tick grün. Jetzt hält `run_watch` den Zeitpunkt jedes ticks fest, und die Ersatz-tick-Tests prüfen den Abstand gegen `--interval 2` mit Toleranz 4 × Intervall (8 s). Getrennt davon schützt die großzügige Obergrenze nur gegen Hängen. A3: `test_watch_survives_a_failing_tick` wartet auf die zweite Buchführungs-Meldung statt 3,5 s zu schlafen. Mutationsprobe: `interval * 5` und „kaputter tick beendet watch“ werden rot.
 - 2026-11-27: Standardpfad der Factory-Konfiguration zeigte in einen privaten Ordner des Maintainers → vor dem öffentlichen Repo neutral: `~/.config/slickfab/factory.json`; `--config` und `SLICKFAB_FACTORY` gehen weiter vor. Wer den alten Ort nutzt, setzt `SLICKFAB_FACTORY` oder legt einen Link. Tests: `Config.test_default_config_path_is_neutral_under_home`, `Config.test_environment_overrides_default_config_path`.
+- 2026-11-28: Abschnitt „Factory-Konfiguration“ (Beispiel und Felder) als englische Nutzer-Doku nach `docs/autopilot.md` verschoben; hier steht nur noch der Verweis. Grund: Wer den Autopiloten einrichtet, landete im deutschen Entwicklungsprotokoll.

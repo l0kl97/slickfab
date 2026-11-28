@@ -115,7 +115,7 @@ Rows that need the tracker you do not check without the tracker; they then count
 ## Vertrag
 
 <!-- regel:vertrag-quelle -->
-Verbatim from `tracker/linear.md` and `docs/projektkonfiguration.md` of the slickfab plugin. It is here so that you do not have to read anything outside the project; it applies exactly as written. fab only reads: you do not offer to create the configuration, you show its content.
+Verbatim from `tracker/linear.md` and `docs/project-config.md` of the slickfab plugin. It is here so that you do not have to read anything outside the project; it applies exactly as written. fab only reads: you do not offer to create the configuration, you show its content.
 <!-- /regel:vertrag-quelle -->
 
 ### Project configuration: format

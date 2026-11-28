@@ -4,7 +4,7 @@
 
 **Ein Prozess für AI-gebaute Software, von der Idee bis zum gemergten Pull Request.** slickfab ist ein Claude-Code-Plugin für einen Entwickler mit Coding-Agents. Es zerlegt die Arbeit in feste Schritte, lässt prüfende Schritte von frischen Agents machen und holt dich nur dort dazu, wo die Entscheidung bei dir liegt.
 
-Die Schritte und Rollen sind englisch geschrieben. Die Doku unter `docs/` ist derzeit noch deutsch.
+Die Schritte, Rollen und die Nutzer-Doku sind englisch geschrieben. Nur noch das Entwicklungsprotokoll (Feature-Dossiers unter `docs/features/`, Recherche unter `docs/research/`) ist deutsch.
 
 ## Das Problem
 
@@ -71,7 +71,7 @@ Zum Ausprobieren ohne Installation: `claude --plugin-dir <pfad-zu-slickfab>`.
 
 Das Projekt, in dem du arbeitest, darf nicht im Plugin-Ordner liegen. Claude Code schützt Dateien dort als „sensitive file“, und dann darf kein Schritt schreiben. Wer an slickfab selbst arbeitet, tut das deshalb in einem Worktree außerhalb des Plugin-Ordners (`git worktree add` oder `runtime/herdr/slickfab-worktree add`).
 
-Ab `spec` brauchen die Schritte im Projekt eine `.slickfab/config` mit Tracker, Team und Projekt (`docs/projektkonfiguration.md`), angemeldete Linear-Werkzeuge in Claude Code und für Pull Requests ein angemeldetes `gh`. Die Regeln für Linear stehen in `tracker/linear.md`.
+Ab `spec` brauchen die Schritte im Projekt eine `.slickfab/config` mit Tracker, Team und Projekt (`docs/project-config.md`, englisch), angemeldete Linear-Werkzeuge in Claude Code und für Pull Requests ein angemeldetes `gh`. Die Regeln für Linear stehen in `tracker/linear.md`.
 
 ## Schnellstart
 
@@ -102,11 +102,11 @@ Der übliche Weg: `grill` → `spec` → `challenge` → `tickets` → du setzt 
 | `handoff` | Übergabe bei Kontextwechsel |
 | `docs-lookup` | Aktuelle Library-Doku, versionsgenau, ohne den Kontext zu füllen |
 
-Welcher Schritt in welcher Session läuft (gleiches Gespräch oder frisch): `docs/betriebsarten.md`, Abschnitt „The steps“ (englisch).
+Welcher Schritt in welcher Session läuft (gleiches Gespräch oder frisch): `docs/operating-modes.md`, Abschnitt „The steps“ (englisch).
 
 ## Betriebsarten
 
-Es sind immer dieselben 13 Schritte; die Betriebsart legt nur fest, wer sie startet. Ausführlich mit Einrichtung: `docs/betriebsarten.md`.
+Es sind immer dieselben 13 Schritte; die Betriebsart legt nur fest, wer sie startet. Ausführlich mit Einrichtung (englisch): `docs/operating-modes.md`.
 
 Nur der Autopilot braucht [Herdr](https://herdr.dev/); Hand und Assistiert laufen ohne.
 
@@ -121,11 +121,11 @@ Nur der Autopilot braucht [Herdr](https://herdr.dev/); Hand und Assistiert laufe
 ## Stand und Grenzen
 
 - **Hand und Assistiert sind in Gebrauch.** Alle 13 Schritte und die sieben Rollen sind gebaut; slickfab wird mit sich selbst weiterentwickelt.
-- **Autopilot:** gebaut und im Dry-Run getestet, noch nicht im Produktiveinsatz. Ob er im echten Betrieb trägt, zeigt erst ein Pilot. Die Factory-Konfiguration je Projekt (`auto_merge`, `github_ci` und andere) liegt außerhalb des Repos; die Felder beschreibt `docs/features/slickfab-dispatch.md`.
+- **Autopilot:** gebaut und im Dry-Run getestet, noch nicht im Produktiveinsatz. Ob er im echten Betrieb trägt, zeigt erst ein Pilot. Die Factory-Konfiguration je Projekt (`auto_merge`, `github_ci` und andere) liegt außerhalb des Repos; Einrichtung und alle Felder beschreibt `docs/autopilot.md` (englisch).
 - **Wie belastbar die Rollen sind:** Jede Rolle hat Pressure-Szenarien, Lagen, die zu einer Abkürzung drängen (Gate rot und Zeitdruck, Test im Weg, „egal, mach du“). Die Rollen hielten in 14 von 14 Szenarien, die Kontrolle mit älteren Vorlagen bzw. ohne Anleitung in 2 von 14. Bewertet ist von Hand, nicht maschinell; Szenarien, Läufe und Grenzen in `docs/features/pressure-szenarien.md`.
 - **Nur Linear.** Den Tracker-Vertrag gibt es heute nur für Linear (`tracker/linear.md`).
 - **Nur Claude Code.** Die Schritte sind Claude-Code-Skills, die Rollen Claude-Code-Agents.
-- **Doku auf Deutsch.** Die Doku unter `docs/` (Feature-Dossiers, Betriebsarten, Recherche) ist derzeit noch deutsch.
+- **Nutzer-Doku englisch.** Die Doku unter `docs/` ist englisch. Deutsch bleiben die Feature-Dossiers unter `docs/features/` und die Recherche unter `docs/research/`: Sie halten fest, wie slickfab gebaut wurde, nicht wie man es benutzt.
 
 ## Herkunft
 

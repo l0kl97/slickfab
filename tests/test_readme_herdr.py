@@ -45,10 +45,10 @@ class ReadmeHerdrTest(unittest.TestCase):
                 self.assertEqual(set(links), {"https://herdr.dev/"})
 
     def test_readmes_point_to_an_existing_section_of_the_modes_doc(self):
-        doc = read(os.path.join("docs", "betriebsarten.md"))
+        doc = read(os.path.join("docs", "operating-modes.md"))
         headings = set(re.findall(r"^## (.+)$", doc, re.M))
-        for rel, pattern in (("README.md", r'`docs/betriebsarten\.md`, section "([^"]+)"'),
-                             ("README.de.md", r"`docs/betriebsarten\.md`, Abschnitt „([^“]+)“")):
+        for rel, pattern in (("README.md", r'`docs/operating-modes\.md`, section "([^"]+)"'),
+                             ("README.de.md", r"`docs/operating-modes\.md`, Abschnitt „([^“]+)“")):
             with self.subTest(file=rel):
                 names = re.findall(pattern, read(rel))
                 self.assertEqual(len(names), 1, names)

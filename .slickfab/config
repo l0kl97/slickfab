@@ -1,5 +1,5 @@
 # slickfab: Projektkonfiguration des Repos slickfab
-# Format und Regeln: docs/projektkonfiguration.md. Keine Zugangsdaten.
+# Format und Regeln: docs/project-config.md. Keine Zugangsdaten.
 TRACKER="linear"
 TRACKER_TEAM="SLI"
 TRACKER_PROJECT="Slickfab"

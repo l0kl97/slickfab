@@ -1,6 +1,6 @@
 # Tracker contract: Linear
 
-This contract applies to every slickfab step that reads or writes the tracker. Team and project come from the project configuration (`docs/projektkonfiguration.md`). Linear is the single source of truth about plan and state: whatever is not written there does not count as decided.
+This contract applies to every slickfab step that reads or writes the tracker. Team and project come from the project configuration (`docs/project-config.md`). Linear is the single source of truth about plan and state: whatever is not written there does not count as decided.
 
 This file is the source. The steps carry the parts they need verbatim in their `SKILL.md` (between `<!-- vertrag:NAME -->` and `<!-- /vertrag:NAME -->`), because a step cannot read files in the plugin folder without read permission. Whoever changes something here changes the copies too; `tests/test_contract_blocks.py` checks that they are identical.
 

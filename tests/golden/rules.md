@@ -4,7 +4,7 @@ Erzeugt mit `python3 tests/rules_golden.py --update` aus den Abschnitten
 `<!-- regel:NAME -->` … `<!-- /regel:NAME -->` in allen `skills/*/SKILL.md`
 (dazu je Schritt Frontmatter und Gliederung), den Agent-Rollen in
 `agents/` und den Vertragsblöcken `<!-- vertrag:NAME -->` der Quellen
-`tracker/linear.md` und `docs/projektkonfiguration.md`. Nicht von Hand bearbeiten.
+`tracker/linear.md` und `docs/project-config.md`. Nicht von Hand bearbeiten.
 
 Ändert sich eine Regel, wird `tests/test_rule_golden.py` rot. Ist die
 Änderung gewollt, Skript mit `--update` laufen lassen und diese Datei
@@ -129,7 +129,7 @@ Evaluation by the caller:
 <!-- /regel:challenge/festhalten -->
 
 <!-- regel:challenge/vertrag-quelle -->
-Verbatim from `tracker/linear.md` and `docs/projektkonfiguration.md` of the slickfab plugin. It is here so that you do not have to read anything outside the project; it applies exactly as written.
+Verbatim from `tracker/linear.md` and `docs/project-config.md` of the slickfab plugin. It is here so that you do not have to read anything outside the project; it applies exactly as written.
 <!-- /regel:challenge/vertrag-quelle -->
 
 <!-- regel:challenge/ergebnis -->
@@ -293,7 +293,7 @@ Then you commit (the message names the confirmed hypothesis, so that the next pe
 <!-- /regel:debug/warum-nicht-gefangen -->
 
 <!-- regel:debug/vertrag-quelle -->
-Verbatim from `tracker/linear.md` and `docs/projektkonfiguration.md` of the slickfab plugin. It is here so that you do not have to read anything outside the project; it applies exactly as written.
+Verbatim from `tracker/linear.md` and `docs/project-config.md` of the slickfab plugin. It is here so that you do not have to read anything outside the project; it applies exactly as written.
 <!-- /regel:debug/vertrag-quelle -->
 
 <!-- regel:debug/ergebnis -->
@@ -553,7 +553,7 @@ Rows that need the tracker you do not check without the tracker; they then count
 <!-- /regel:fab/schritte -->
 
 <!-- regel:fab/vertrag-quelle -->
-Verbatim from `tracker/linear.md` and `docs/projektkonfiguration.md` of the slickfab plugin. It is here so that you do not have to read anything outside the project; it applies exactly as written. fab only reads: you do not offer to create the configuration, you show its content.
+Verbatim from `tracker/linear.md` and `docs/project-config.md` of the slickfab plugin. It is here so that you do not have to read anything outside the project; it applies exactly as written. fab only reads: you do not offer to create the configuration, you show its content.
 <!-- /regel:fab/vertrag-quelle -->
 
 <!-- regel:fab/ergebnis -->
@@ -820,7 +820,7 @@ Post the handoff as a comment on the ticket, with the marker line according to t
 <!-- /regel:handoff/ablegen -->
 
 <!-- regel:handoff/vertrag-quelle -->
-Verbatim from `tracker/linear.md` and `docs/projektkonfiguration.md` of the slickfab plugin. It is here so that you do not have to read anything outside the project; it applies exactly as written.
+Verbatim from `tracker/linear.md` and `docs/project-config.md` of the slickfab plugin. It is here so that you do not have to read anything outside the project; it applies exactly as written.
 <!-- /regel:handoff/vertrag-quelle -->
 
 <!-- regel:handoff/ergebnis -->
@@ -1038,7 +1038,7 @@ Set the ticket to `In Review` as soon as the pull request is open, and write a c
 <!-- /regel:implement/abschluss -->
 
 <!-- regel:implement/vertrag-quelle -->
-Verbatim from `tracker/linear.md` and `docs/projektkonfiguration.md` of the slickfab plugin. It is here so that you do not have to read anything outside the project; it applies exactly as written.
+Verbatim from `tracker/linear.md` and `docs/project-config.md` of the slickfab plugin. It is here so that you do not have to read anything outside the project; it applies exactly as written.
 <!-- /regel:implement/vertrag-quelle -->
 
 <!-- regel:implement/ergebnis -->
@@ -1165,7 +1165,7 @@ Close the demonstration with the template “awaiting verdict” (below, `NEEDS_
 <!-- /regel:prototype/festhalten-und-zurueck -->
 
 <!-- regel:prototype/vertrag-quelle -->
-Verbatim from `tracker/linear.md` and `docs/projektkonfiguration.md` of the slickfab plugin. It is here so that you do not have to read anything outside the project; it applies exactly as written.
+Verbatim from `tracker/linear.md` and `docs/project-config.md` of the slickfab plugin. It is here so that you do not have to read anything outside the project; it applies exactly as written.
 <!-- /regel:prototype/vertrag-quelle -->
 
 <!-- regel:prototype/ergebnis -->
@@ -1318,7 +1318,7 @@ Show the proposals, the most severe mistake first. Per proposal: the mistake wit
 <!-- /regel:retro/ablauf -->
 
 <!-- regel:retro/vertrag-quelle -->
-Verbatim from `tracker/linear.md` and `docs/projektkonfiguration.md` of the slickfab plugin. It is here so that you do not have to read anything outside the project; it applies exactly as written.
+Verbatim from `tracker/linear.md` and `docs/project-config.md` of the slickfab plugin. It is here so that you do not have to read anything outside the project; it applies exactly as written.
 <!-- /regel:retro/vertrag-quelle -->
 
 <!-- regel:retro/ergebnis -->
@@ -1499,7 +1499,7 @@ If there already is a review with findings (comment on the PR or the ticket) and
 <!-- /regel:review/ablauf -->
 
 <!-- regel:review/vertrag-quelle -->
-Verbatim from `tracker/linear.md` and `docs/projektkonfiguration.md` of the slickfab plugin. It is here so that you do not have to read anything outside the project; it applies exactly as written.
+Verbatim from `tracker/linear.md` and `docs/project-config.md` of the slickfab plugin. It is here so that you do not have to read anything outside the project; it applies exactly as written.
 <!-- /regel:review/vertrag-quelle -->
 
 <!-- regel:review/ergebnis -->
@@ -1748,7 +1748,7 @@ If the tracker is unreachable or the configuration is missing, you report that w
 <!-- /regel:spec/im-tracker-anlegen -->
 
 <!-- regel:spec/vertrag-quelle -->
-Verbatim from `tracker/linear.md` and `docs/projektkonfiguration.md` of the slickfab plugin. It is here so that you do not have to read anything outside the project; it applies exactly as written.
+Verbatim from `tracker/linear.md` and `docs/project-config.md` of the slickfab plugin. It is here so that you do not have to read anything outside the project; it applies exactly as written.
 <!-- /regel:spec/vertrag-quelle -->
 
 <!-- regel:spec/ergebnis -->
@@ -1932,7 +1932,7 @@ You set no ticket to `Todo`; that is the human's approval. You do not change the
 <!-- /regel:tickets/anlegen -->
 
 <!-- regel:tickets/vertrag-quelle -->
-Verbatim from `tracker/linear.md` and `docs/projektkonfiguration.md` of the slickfab plugin. It is here so that you do not have to read anything outside the project; it applies exactly as written.
+Verbatim from `tracker/linear.md` and `docs/project-config.md` of the slickfab plugin. It is here so that you do not have to read anything outside the project; it applies exactly as written.
 <!-- /regel:tickets/vertrag-quelle -->
 
 <!-- regel:tickets/ergebnis -->
@@ -2105,7 +2105,7 @@ Write the result as a comment on the spec issue (if the tracker is reachable), t
 <!-- /regel:verify/ablauf -->
 
 <!-- regel:verify/vertrag-quelle -->
-Verbatim from `tracker/linear.md` and `docs/projektkonfiguration.md` of the slickfab plugin. It is here so that you do not have to read anything outside the project; it applies exactly as written.
+Verbatim from `tracker/linear.md` and `docs/project-config.md` of the slickfab plugin. It is here so that you do not have to read anything outside the project; it applies exactly as written.
 <!-- /regel:verify/vertrag-quelle -->
 
 <!-- regel:verify/ergebnis -->
@@ -2553,7 +2553,7 @@ Rulings are collected and presented to the human at the end; they do not replace
 Answer in the user's language.
 <!-- /regel:tracker/linear.md/vertrag:rulings -->
 
-<!-- regel:docs/projektkonfiguration.md/vertrag:config-format -->
+<!-- regel:docs/project-config.md/vertrag:config-format -->
 `.slickfab/config` in the repo root: one line per value, `KEY="value"`. Blank lines and lines starting with `#` do not count.
 
 ```sh
@@ -2579,18 +2579,18 @@ CHECK_LINT=""
 The file is read as text, not executed as a shell script (no `source`), so that a configuration cannot inject code.
 
 Answer in the user's language.
-<!-- /regel:docs/projektkonfiguration.md/vertrag:config-format -->
+<!-- /regel:docs/project-config.md/vertrag:config-format -->
 
-<!-- regel:docs/projektkonfiguration.md/vertrag:config-slickrails -->
+<!-- regel:docs/project-config.md/vertrag:config-slickrails -->
 If the repo has `.slickrails/config.sh`, the check commands come from there: all non-empty `CHECK_*` values, the same way slickrails uses them in its hooks. `CHECK_*` entries in `.slickfab/config` are then not used; if they hold different values, the step names the contradiction once and follows slickrails. `.slickrails/config.sh` is also read only as text.
 
 Answer in the user's language.
-<!-- /regel:docs/projektkonfiguration.md/vertrag:config-slickrails -->
+<!-- /regel:docs/project-config.md/vertrag:config-slickrails -->
 
-<!-- regel:docs/projektkonfiguration.md/vertrag:config-fehlt -->
+<!-- regel:docs/project-config.md/vertrag:config-fehlt -->
 If `.slickfab/config` is missing, a required value is missing, or `TRACKER=` names an unknown tracker, the step reports exactly that (which file, which key) and stops at the point where it would need the tracker. It writes no plan, ledger or state file and no ticket list into the repo as a substitute; whatever it has already worked out, it shows in the chat.
 
 It offers to create `.slickfab/config` and shows the content with the values it found in the repo or in the tracker. The file is created only once the human has confirmed team and project.
 
 Answer in the user's language.
-<!-- /regel:docs/projektkonfiguration.md/vertrag:config-fehlt -->
+<!-- /regel:docs/project-config.md/vertrag:config-fehlt -->

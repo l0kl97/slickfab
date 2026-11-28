@@ -15,8 +15,8 @@
 - Jedes Werkzeug `runtime/herdr/<name>` in README und docs existiert
   (Review PR #14, A2).
 - Solange es kein ausführbares runtime/herdr/slickfab-dispatch gibt, beginnen
-  die Autopilot-Abschnitte von README.de.md und docs/betriebsarten.md mit „noch
-  nicht nutzbar“, der von README.md mit „not yet usable“, und keiner nennt
+  der Autopilot-Abschnitt von README.de.md mit „noch nicht nutzbar“, die von
+  README.md und docs/operating-modes.md mit „not yet usable“, und keiner nennt
   slickfab-dispatch (Review PR #14, A2).
   Gibt es ihn, sagen sie „noch nicht live“ bzw. „not yet live“ und nicht mehr
   „noch nicht nutzbar“ bzw. „not yet usable“: Der Dispatcher ist
@@ -44,8 +44,8 @@ READMES = {"README.md": "## Steps", "README.de.md": "## Schritte"}
 README_AUTOPILOT = re.compile(r"^- \*\*Autopilot:\*\*([^\n]*)", re.M)
 AUTOPILOT = {"README.md": (README_AUTOPILOT, "not yet usable", "not yet live"),
              "README.de.md": (README_AUTOPILOT, "noch nicht nutzbar", "noch nicht live"),
-             os.path.join("docs", "betriebsarten.md"): (
-                 re.compile(r"^## Autopilot\n(.*?)(?=^## |\Z)", re.S | re.M), "noch nicht nutzbar", "noch nicht live")}
+             os.path.join("docs", "operating-modes.md"): (
+                 re.compile(r"^## Autopilot\n(.*?)(?=^## |\Z)", re.S | re.M), "not yet usable", "not yet live")}
 # Das Werkzeug selbst, mit oder ohne Pfad davor (Pre-Push-Review), nicht das
 # Dossier docs/features/slickfab-dispatch.md (danach „.md“).
 DISPATCH_TOOL = re.compile(r"(?<![\w-])slickfab-dispatch(?![\w-]|\.\w)")

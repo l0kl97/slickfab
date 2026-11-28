@@ -53,7 +53,7 @@ LINE_BREAKS = "\r\x0b\x0c\x1c\x1d\x1e\x85\u2028\u2029"
 # Quellen der Vertragsblöcke (wie test_contract_blocks). Ihre Blöcke werden ganz eingefroren:
 # Eine gleichmäßig in Quelle und alle Kopien eingebaute Schwächung hielt der Gleichheitstest
 # nicht auf, Einzelanker nur an ihren Sätzen (Review PR #1, 12 überlebende Mutationen).
-CONTRACT_SOURCES = ("tracker/linear.md", "docs/projektkonfiguration.md")
+CONTRACT_SOURCES = ("tracker/linear.md", "docs/project-config.md")
 CONTRACT_BLOCK = re.compile(r"<!-- vertrag:([a-z-]+) -->\n(.*?)<!-- /vertrag:\1 -->", re.S)
 CONTRACT_LIKE = re.compile(r"<!--\s*/?\s*vertrag:")
 
@@ -63,7 +63,7 @@ Erzeugt mit `python3 tests/rules_golden.py --update` aus den Abschnitten
 `<!-- regel:NAME -->` … `<!-- /regel:NAME -->` in allen `skills/*/SKILL.md`
 (dazu je Schritt Frontmatter und Gliederung), den Agent-Rollen in
 `agents/` und den Vertragsblöcken `<!-- vertrag:NAME -->` der Quellen
-`tracker/linear.md` und `docs/projektkonfiguration.md`. Nicht von Hand bearbeiten.
+`tracker/linear.md` und `docs/project-config.md`. Nicht von Hand bearbeiten.
 
 Ändert sich eine Regel, wird `tests/test_rule_golden.py` rot. Ist die
 Änderung gewollt, Skript mit `--update` laufen lassen und diese Datei

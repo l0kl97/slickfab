@@ -4,7 +4,7 @@ Claude Code lädt den Text einer SKILL.md selbst; Dateien im Plugin-Ordner
 dagegen liegen außerhalb des Projekts und brauchen eine Leseerlaubnis, die
 ohne Auto-Modus verweigert wird. Deshalb trägt jeder Schritt die
 Vertragsteile, die er braucht, wörtlich in sich. Quelle bleiben
-tracker/linear.md und docs/projektkonfiguration.md; dieser Test hält die
+tracker/linear.md und docs/project-config.md; dieser Test hält die
 Kopien Zeichen für Zeichen gleich.
 
 Ein Block steht zwischen `<!-- vertrag:NAME -->` und `<!-- /vertrag:NAME -->`.
@@ -15,7 +15,7 @@ import re
 import unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SOURCES = ("tracker/linear.md", "docs/projektkonfiguration.md")
+SOURCES = ("tracker/linear.md", "docs/project-config.md")
 BLOCK = re.compile(r"<!-- vertrag:([a-z-]+) -->\n(.*?)<!-- /vertrag:\1 -->", re.S)
 
 # Welche Vertragsteile ein Schritt braucht, um ohne Nachlesen richtig zu handeln.

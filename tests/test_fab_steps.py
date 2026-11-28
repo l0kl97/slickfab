@@ -76,7 +76,7 @@ class RetroHasEndTest(unittest.TestCase):
     def test_usual_path_in_docs_ends_with_spec_done(self):
         # Review PR #17 (Optional, vom Master mitgenommen): Die Doku endete bei `retro`; wer danach
         # arbeitet, setzt die Spec nicht auf Done, und fab empfiehlt wieder retro.
-        path = [l for l in read(os.path.join(ROOT, "docs", "betriebsarten.md")).splitlines()
+        path = [l for l in read(os.path.join(ROOT, "docs", "operating-modes.md")).splitlines()
                 if l.startswith("The usual path:")]
         self.assertEqual(len(path), 1)
         self.assertIn("→ `retro` → you set the spec to `Done`.", path[0])
@@ -204,11 +204,11 @@ class RowReferencesTest(unittest.TestCase):
 READMES = (("README.md", "## Steps"), ("README.de.md", "## Schritte"))
 AUTOPILOT_DOCS = (("README.md", "not yet live", "not yet usable"),
                   ("README.de.md", "noch nicht live", "noch nicht nutzbar"),
-                  (os.path.join("docs", "betriebsarten.md"), "noch nicht live", "noch nicht nutzbar"))
+                  (os.path.join("docs", "operating-modes.md"), "not yet live", "not yet usable"))
 # Autopilot-Abschnitt ohne ausführbaren Dispatcher, so wie er vor dem Dispatcher gültig war.
 NOT_USABLE = {"README.md": "- **Autopilot:** not yet usable.",
               "README.de.md": "- **Autopilot:** noch nicht nutzbar.",
-              os.path.join("docs", "betriebsarten.md"): "**Noch nicht nutzbar.**"}
+              os.path.join("docs", "operating-modes.md"): "**Not yet usable.**"}
 
 
 def cap(phrase):
@@ -308,7 +308,7 @@ class BrokenCopyTest(unittest.TestCase):
         return os.path.join(self.tmp, rel)
 
     def test_renamed_role_in_docs_is_red(self):
-        path = self.doc(os.path.join("docs", "betriebsarten.md"))
+        path = self.doc(os.path.join("docs", "operating-modes.md"))
         write(path, read(path).replace("`slickfab:reviewer`", "`slickfab:pruefer`", 1))
         self.assertTrue(any("slickfab:pruefer" in f for f in cf.check(self.tmp)))
 
@@ -345,7 +345,7 @@ class BrokenCopyTest(unittest.TestCase):
 
     def test_missing_runtime_tool_in_docs_is_red(self):
         # Review PR #14, A2: Die Doku nennt nur Werkzeuge, die es unter runtime/herdr gibt.
-        path = self.doc(os.path.join("docs", "betriebsarten.md"))
+        path = self.doc(os.path.join("docs", "operating-modes.md"))
         write(path, read(path) + "\n`runtime/herdr/slickfab-tick`\n")
         self.assertTrue(any("runtime/herdr/slickfab-tick" in f for f in cf.check(self.tmp)))
 
@@ -387,11 +387,11 @@ class BrokenCopyTest(unittest.TestCase):
         os.chmod(tool, 0o644)
         for rel, _ in READMES:
             path = self.doc(rel)
-            write(path, re.sub(r"^- \*\*Autopilot:\*\*[^\n]*", NOT_USABLE[rel] + " `docs/betriebsarten.md`.",
+            write(path, re.sub(r"^- \*\*Autopilot:\*\*[^\n]*", NOT_USABLE[rel] + " `docs/operating-modes.md`.",
                                read(path), count=1, flags=re.M))
-        path = self.doc(os.path.join("docs", "betriebsarten.md"))
-        write(path, re.sub(r"^## Autopilot\n.*?(?=^## )", "## Autopilot\n\n**Noch nicht nutzbar.** Bis dahin "
-                           "fährst du slickfab in den Modi Hand oder Assistiert.\n\n", read(path),
+        path = self.doc(os.path.join("docs", "operating-modes.md"))
+        write(path, re.sub(r"^## Autopilot\n.*?(?=^## )", "## Autopilot\n\n**Not yet usable.** Until then "
+                           "you run slickfab in the Manual or Assisted mode.\n\n", read(path),
                            count=1, flags=re.S | re.M))
         return tool
 
@@ -415,8 +415,8 @@ class BrokenCopyTest(unittest.TestCase):
                  "- **Autopilot:** running already, long not yet usable.", "not yet usable"),
                 ("README.de.md", NOT_USABLE["README.de.md"],
                  "- **Autopilot:** läuft schon, war lange noch nicht nutzbar.", "noch nicht nutzbar"),
-                (os.path.join("docs", "betriebsarten.md"), "**Noch nicht nutzbar.**",
-                 "**Nutzbar.** Früher hieß es hier: noch nicht nutzbar.", "noch nicht nutzbar")):
+                (os.path.join("docs", "operating-modes.md"), "**Not yet usable.**",
+                 "**Usable.** This used to say: not yet usable.", "not yet usable")):
             with self.subTest(file=rel):
                 path = self.doc(rel)
                 orig = read(path)
@@ -442,9 +442,9 @@ class BrokenCopyTest(unittest.TestCase):
                 write(path, orig)
 
     def test_unknown_command_in_docs_is_red(self):
-        path = os.path.join(self.tmp, "docs", "betriebsarten.md")
+        path = os.path.join(self.tmp, "docs", "operating-modes.md")
         write(path, read(path) + "\n`/slickfab:start`\n")
-        self.assertTrue(any("betriebsarten.md" in f and "/slickfab:start" in f for f in cf.check(self.tmp)))
+        self.assertTrue(any("operating-modes.md" in f and "/slickfab:start" in f for f in cf.check(self.tmp)))
 
 
 if __name__ == "__main__":

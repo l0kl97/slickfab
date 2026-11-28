@@ -2,7 +2,7 @@
 
 Der verify-Lauf an der Spec fand: Im Repo slickfab fehlt `.slickfab/config`,
 der eigene Prozess läuft hier nur mit Rückfragen. Dieser Test liest die Datei
-so, wie es docs/projektkonfiguration.md beschreibt (als Text, `SCHLÜSSEL="wert"`,
+so, wie es docs/project-config.md beschreibt (als Text, `SCHLÜSSEL="wert"`,
 Leer- und `#`-Zeilen zählen nicht, kein `source`) und prüft die Werte aus dem
 Ticket: Tracker Linear, Team per Kürzel (kein Personenname), Projekt mit dem Namen des Produkts, Prüfbefehl `sh tests/run.sh`.
 Außerdem: nur bekannte Schlüssel, keine Geheimnisse, kein Widerspruch zu
@@ -16,7 +16,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CONFIG = os.path.join(ROOT, ".slickfab", "config")
 SLICKRAILS = os.path.join(ROOT, ".slickrails", "config.sh")
 
-# Schlüssel und Pflichtwerte laut docs/projektkonfiguration.md.
+# Schlüssel und Pflichtwerte laut docs/project-config.md.
 KNOWN = ("TRACKER", "TRACKER_TEAM", "TRACKER_PROJECT",
          "CHECK_TYPECHECK", "CHECK_TEST", "CHECK_LINT")
 REQUIRED = ("TRACKER", "TRACKER_TEAM", "TRACKER_PROJECT")
@@ -60,7 +60,7 @@ def ignored_by_git(repo):
 
 
 def problems(text):
-    """Alle Verstöße gegen das Format aus docs/projektkonfiguration.md."""
+    """Alle Verstöße gegen das Format aus docs/project-config.md."""
     values, errors = parse(text)
     for key in REQUIRED:
         if not values.get(key):
@@ -105,7 +105,7 @@ class RepoConfigTest(unittest.TestCase):
                 self.assertEqual(value, "", f"{key} hat einen Wert, den mit slickrails niemand benutzt")
 
     def test_config_is_not_gitignored(self):
-        # Die Datei wird eingecheckt (docs/projektkonfiguration.md).
+        # Die Datei wird eingecheckt (docs/project-config.md).
         self.assertFalse(ignored_by_git(ROOT), ".slickfab/config ist in .gitignore")
 
 

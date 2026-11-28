@@ -11,7 +11,7 @@ watch: tick beim Start, bei jedem Ereignis aus `hc events` und spätestens alle 
 
 Exit: 0 = ok, 1 = Lesefehler (nichts ausgeführt), 2 = Aufruf oder Konfiguration falsch,
 3 = einzelne Aktionen gescheitert (Ticket hat needs-human), 75 = ein anderer tick läuft (Lockdatei).
-Form der Konfiguration: docs/features/slickfab-dispatch.md. Nur Python-Standardbibliothek (3.9).
+Form der Konfiguration: docs/autopilot.md. Nur Python-Standardbibliothek (3.9).
 """
 import datetime
 import fcntl

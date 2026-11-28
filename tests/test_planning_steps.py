@@ -98,7 +98,7 @@ class ProjectConfigTest(unittest.TestCase):
     """Projektkonfiguration je Repo: Tracker, Team, Projekt, Prüfbefehle."""
 
     def setUp(self):
-        self.text = read("docs/projektkonfiguration.md")
+        self.text = read("docs/project-config.md")
 
     def test_names_file_and_keys(self):
         self.assertIn("`.slickfab/config`", self.text)
@@ -109,7 +109,7 @@ class ProjectConfigTest(unittest.TestCase):
         self.assertIn("`.slickrails/config.sh`", self.text)
 
     def test_missing_config_writes_no_replacement_file(self):
-        missing = section(self.text, "Wenn die Konfiguration fehlt")
+        missing = section(self.text, "When the configuration is missing")
         self.assertIn("no plan", missing)
         self.assertRegex(missing, r"plan, ledger or state file")
 
@@ -603,7 +603,7 @@ class RuleAnchorsTest(unittest.TestCase):
         ("skills/spec/SKILL.md", "### 6. Create in the tracker", "You create no spec, plan or ticket file in the repo."),
         ("skills/challenge/SKILL.md", "### 5. Record", "No file in the repo as a substitute."),
         ("tracker/linear.md", "## Access", "It writes **no** plan, ledger, state or ticket file into the repo as a substitute."),
-        ("docs/projektkonfiguration.md", "## Wenn die Konfiguration fehlt", "It writes no plan, ledger or state file and no ticket list into the repo as a substitute"),
+        ("docs/project-config.md", "## When the configuration is missing", "It writes no plan, ledger or state file and no ticket list into the repo as a substitute"),
         # Anlegen erst nach Bestätigung, Dubletten vorher
         ("skills/tickets/SKILL.md", "### 6. Check the split", "Nothing is created until there is an explicit yes to the list"),
         ("skills/tickets/SKILL.md", "### 7. Create", "Only after the yes"),
@@ -621,7 +621,7 @@ class RuleAnchorsTest(unittest.TestCase):
         ("skills/tickets/SKILL.md", "### 7. Create", "You set no ticket to `Todo`"),
         ("tracker/linear.md", "## Status flow", "No step sets a ticket to `Todo` by itself."),
         # Konfiguration nie ausführen
-        ("docs/projektkonfiguration.md", "## Format", "not executed as a shell script (no `source`)"),
+        ("docs/project-config.md", "## Format", "not executed as a shell script (no `source`)"),
         # prototype: fremde Arbeit und Hauptzweig unangetastet
         ("skills/prototype/SKILL.md", "### 1. Check the precondition", "If changes are open, stop and say so. You do not move or hide anyone else's changes."),
         ("skills/prototype/SKILL.md", "### 6. Record", "Nothing from the prototype goes into the main branch"),

@@ -16,7 +16,7 @@ Der Maintainer will einen Entwickler zehnmal schneller machen, weil er den Proze
 - **fab liest nur.** Keine Datei, kein Kommentar, kein Label, kein Status. Auch `.slickfab/config` legt fab nicht an, es zeigt nur einen Vorschlag. Deshalb bettet fab den Vertrag „config-fehlt“ nicht ein (der bietet das Anlegen an) und den Vertrag „zugang“ auch nicht (der sagt „hört auf“; fab macht ohne Tracker mit dem Repo weiter).
 - **Entscheidung als Tabelle, erste passende Zeile gilt.** Arbeit nah am Merge geht vor neuer Arbeit (PR vor Ticket vor Spec vor grill). `grill` gilt nur, wenn keine offene Spec gesehen wurde; passt bei einer gesehenen Spec keine Zeile, endet fab mit `NEEDS_CONTEXT` statt mit `grill` (Review PR #14, A1). „Danach neue Commits“ heißt Committer-Datum nach dem letzten Urteil, auch nach einem Rebase und auch nach `MERGE` (A4). Zeilen, die den Tracker brauchen, gelten ohne Tracker als nicht zutreffend, und fab sagt das. Damit rät es nie einen Tracker-Zustand. Ein PR mit Ticket-ID im Titel oder Branch zählt auch ohne Tracker.
 - **Kontextregel:** Im selben Gespräch laufen nur spec nach grill oder prototype (spec liest das Gespräch) und docs-lookup. Alles andere frisch, Prüfer erst recht. Bei langem Gespräch (Warnung von context-guard, rund zwei Drittel, mehr als etwa 150k Tokens nach aihero „Smart Zone“) vorher `handoff`.
-- **Prüfung „kennt alle 13 Schritte“ als eigenes Werkzeug** `tests/check_fab.py`, aufgerufen von `tests/test_fab_steps.py`. Damit bleiben `tests/run.sh` und `check_structure.py` unverändert. Geprüft wird: Die Tabelle im Block `regel:schritte` nennt genau die `skills/*/SKILL.md`, und jeder `/slickfab:<name>` in fab, README und `docs/*.md` existiert. Dossiers unter `docs/features/` und die Recherche zählen nicht, weil dort Mutationen und alte Namen als Geschichte stehen. Seit Review PR #14 (R1, A2) dazu: jeder Name `slickfab:<name>` ist Schritt, Rolle aus `agents/` oder Label aus dem Vertrag; die Schritt-Tabelle der README nennt genau die Schritte; jedes `runtime/herdr/<werkzeug>` in der Doku existiert; ohne ausführbares `runtime/herdr/slickfab-dispatch` sagen README und `docs/betriebsarten.md` beim Autopiloten „noch nicht nutzbar“.
+- **Prüfung „kennt alle 13 Schritte“ als eigenes Werkzeug** `tests/check_fab.py`, aufgerufen von `tests/test_fab_steps.py`. Damit bleiben `tests/run.sh` und `check_structure.py` unverändert. Geprüft wird: Die Tabelle im Block `regel:schritte` nennt genau die `skills/*/SKILL.md`, und jeder `/slickfab:<name>` in fab, README und `docs/*.md` existiert. Dossiers unter `docs/features/` und die Recherche zählen nicht, weil dort Mutationen und alte Namen als Geschichte stehen. Seit Review PR #14 (R1, A2) dazu: jeder Name `slickfab:<name>` ist Schritt, Rolle aus `agents/` oder Label aus dem Vertrag; die Schritt-Tabelle der README nennt genau die Schritte; jedes `runtime/herdr/<werkzeug>` in der Doku existiert; ohne ausführbares `runtime/herdr/slickfab-dispatch` sagen README und `docs/operating-modes.md` beim Autopiloten „noch nicht nutzbar“.
 - **Regel-Marker und Referenz:** fab hat außerhalb der Marker nur Frontmatter, Leerzeilen und feste Überschriften. Die Referenz kam aus `python3 tests/rules_golden.py --update`. fab steht in den Pflichtlisten von `test_rule_golden.py` und `test_contract_blocks.py` (Blöcke `marker`, `config-format`).
 - **Modus Assistiert in der Doku mit dem echten Aufruf.** Die Agent-Rollen sind gemergt, und der Probelauf unten zeigt, dass die Rollen als `slickfab:<rolle>` starten.
 - **Probe-Repos liegen neben einer Kopie des Plugins, nicht darin** (Befund im Probelauf, siehe Historie).
@@ -30,7 +30,7 @@ Der Maintainer will einen Entwickler zehnmal schneller machen, weil er den Proze
 - `skills/fab/SKILL.md`: der Schritt.
 - `tests/check_fab.py`, `tests/test_fab_steps.py`: Wegweiser kennt genau die Schritte, Doku nennt nur echte Befehle.
 - `tests/golden/rules.md`: eingefrorene Regeln, jetzt mit fab.
-- `docs/betriebsarten.md`: Betriebsarten, Schritte, Einrichtung, slickrails.
+- `docs/operating-modes.md`: Betriebsarten, Schritte, Einrichtung, slickrails.
 - `README.md`: Schnellstart.
 
 ## So testet man es
@@ -119,7 +119,7 @@ Im Worktree, am fertigen Stand vor dem Commit. Jede Mutation wird in die Datei g
 
 - `check_fab.py` (6): fehlender Schritt nicht gemeldet, erfundener Schritt nicht gemeldet, `docs/*.md` nicht geprüft, Befehle in fab selbst nicht geprüft, fehlendes fab still, Tabelle aus dem ganzen Text statt aus dem Block.
 - `skills/fab/SKILL.md` (4): leeres Repo → `spec` statt `grill`, PR → `implement` statt `review`, Schreibverbot gestrichen, Tracker-Raten erlaubt (alle über die Referenz `tests/golden/rules.md`).
-- Doku (2): falscher Befehl in README, falscher Befehl in `docs/betriebsarten.md`.
+- Doku (2): falscher Befehl in README, falscher Befehl in `docs/operating-modes.md`.
 
 Die Zahl deckt nur ab, was ich bedacht habe; belastbar wird sie erst mit einer fremden Probe. Die fremde Probe aus dem Review (PR #14) fand am Head `d62a07f` 4 von 16 und danach 5 von 5 Überlebenden, alle an Rollennamen und der README-Tabelle (R1).
 
@@ -134,7 +134,7 @@ Die Zahl deckt nur ab, was ich bedacht habe; belastbar wird sie erst mit einer f
 - PR-Weg im Hand-Durchlauf nicht belegt (bare-Remote), kommt im Pilot slickrails.
 - Zeile 3 (PR ohne jedes Urteil) nicht real beobachtet.
 - Zustandsmaschine und Auto-Merge-Regel stehen nicht in der Doku. Sie kommen mit dem Dispatcher.
-- Autopilot ist in der Doku als „noch nicht nutzbar“ beschrieben. Wer `runtime/herdr/slickfab-dispatch` ausführbar anlegt, muss README und `docs/betriebsarten.md` umschreiben; die Prüfung erlaubt dann einen anderen Text.
+- Autopilot ist in der Doku als „noch nicht nutzbar“ beschrieben. Wer `runtime/herdr/slickfab-dispatch` ausführbar anlegt, muss README und `docs/operating-modes.md` umschreiben; die Prüfung erlaubt dann einen anderen Text.
 - Die Tabelle hat 22 Zeilen. Sie ist Text für das Modell, nicht Code; belegt ist sie durch die Trockenläufe und vier echte Läufe, nicht durch einen Test je Zeile.
 
 ## Historie

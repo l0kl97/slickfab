@@ -87,7 +87,7 @@ Post the handoff as a comment on the ticket, with the marker line according to t
 ## Vertrag
 
 <!-- regel:vertrag-quelle -->
-Verbatim from `tracker/linear.md` and `docs/projektkonfiguration.md` of the slickfab plugin. It is here so that you do not have to read anything outside the project; it applies exactly as written.
+Verbatim from `tracker/linear.md` and `docs/project-config.md` of the slickfab plugin. It is here so that you do not have to read anything outside the project; it applies exactly as written.
 <!-- /regel:vertrag-quelle -->
 
 ### Project configuration: format

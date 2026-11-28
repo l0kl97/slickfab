@@ -4,7 +4,7 @@
 
 **A process for AI-built software, from the idea to the merged pull request.** slickfab is a Claude Code plugin for one developer working with coding agents. It splits the work into fixed steps, has the checking steps done by fresh agents, and brings you in only where the decision is yours.
 
-The steps and roles are written in English. The docs under `docs/` are currently still in German.
+The steps, roles and user docs are written in English. Only the development record (feature dossiers under `docs/features/`, research under `docs/research/`) is in German.
 
 ## The problem
 
@@ -71,7 +71,7 @@ To try it without installing: `claude --plugin-dir <path-to-slickfab>`.
 
 The project you work in must not live inside the plugin folder. Claude Code protects files there as "sensitive files", and then no step may write. If you work on slickfab itself, do it in a worktree outside the plugin folder (`git worktree add` or `runtime/herdr/slickfab-worktree add`).
 
-From `spec` on, the steps need a `.slickfab/config` in the project with tracker, team and project (`docs/projektkonfiguration.md`), signed-in Linear tools in Claude Code and, for pull requests, a signed-in `gh`. The rules for Linear are in `tracker/linear.md`.
+From `spec` on, the steps need a `.slickfab/config` in the project with tracker, team and project (`docs/project-config.md`), signed-in Linear tools in Claude Code and, for pull requests, a signed-in `gh`. The rules for Linear are in `tracker/linear.md`.
 
 ## Quickstart
 
@@ -102,11 +102,11 @@ The usual path: `grill` → `spec` → `challenge` → `tickets` → you set tic
 | `handoff` | Handover when the context changes |
 | `docs-lookup` | Current library docs for the exact version, without filling the context |
 
-Which step runs in which session (same conversation or fresh): `docs/betriebsarten.md`, section "The steps".
+Which step runs in which session (same conversation or fresh): `docs/operating-modes.md`, section "The steps".
 
 ## Operating modes
 
-It is always the same 13 steps; the mode only decides who starts them. In detail, with setup: `docs/betriebsarten.md`.
+It is always the same 13 steps; the mode only decides who starts them. In detail, with setup: `docs/operating-modes.md`.
 
 Only the autopilot needs [Herdr](https://herdr.dev/); manual and assisted mode run without it.
 
@@ -121,11 +121,11 @@ Only the autopilot needs [Herdr](https://herdr.dev/); manual and assisted mode r
 ## Status and limits
 
 - **Manual and assisted are in use.** All 13 steps and the seven roles are built; slickfab is developed with itself.
-- **Autopilot:** built and dry-run tested, not yet in production use. Only a pilot will show whether it holds up in real operation. The per-project factory configuration (`auto_merge`, `github_ci` and others) lives outside the repo; `docs/features/slickfab-dispatch.md` describes the fields.
+- **Autopilot:** built and dry-run tested, not yet in production use. Only a pilot will show whether it holds up in real operation. The per-project factory configuration (`auto_merge`, `github_ci` and others) lives outside the repo; `docs/autopilot.md` describes the setup and every field.
 - **How robust the roles are:** Each role has pressure scenarios, situations that push towards a shortcut (red gate and time pressure, a test in the way, "whatever, you do it"). The roles held in 14 of 14 scenarios, the control with older templates or no instructions in 2 of 14. Graded by hand, not by machine; scenarios, runs and limits in `docs/features/pressure-szenarien.md`.
 - **Linear only.** The tracker contract exists only for Linear today (`tracker/linear.md`).
 - **Claude Code only.** The steps are Claude Code skills, the roles Claude Code agents.
-- **Docs in German.** The docs under `docs/` (feature dossiers, operating modes, research) are currently still in German.
+- **Development record in German.** The user docs are English. The feature dossiers under `docs/features/` and the research notes under `docs/research/` stay German: they record how slickfab was built, not how to use it.
 
 ## Origins
 

@@ -64,7 +64,7 @@ REQUIRED.update({"agents/%s" % role: ("frontmatter", "einleitung", "eingang", "a
 REQUIRED.update({
     "tracker/linear.md": tuple("vertrag:" + n for n in
                                ("zugang", "issues", "status", "labels", "marker", "rulings")),
-    "docs/projektkonfiguration.md": tuple("vertrag:" + n for n in
+    "docs/project-config.md": tuple("vertrag:" + n for n in
                                           ("config-format", "config-slickrails", "config-fehlt")),
 })
 
@@ -114,7 +114,7 @@ class ContractBlocksFrozenTest(unittest.TestCase):
 
     def test_weakened_contract_rule_changes_the_reference(self):
         cases = (("tracker/linear.md", "always a human gate, never auto-merge", "usually a human gate"),
-                 ("docs/projektkonfiguration.md", "follows slickrails.", "follows `.slickfab/config`."))
+                 ("docs/project-config.md", "follows slickrails.", "follows `.slickfab/config`."))
         before = rg.render(rg.regions(self.tmp))
         for rel, old, new in cases:
             with self.subTest(file=rel):

@@ -41,7 +41,7 @@ Dieses Ticket baut die drei Schritte, die prüfen statt bauen:
 - `tests/test_check_steps.py`: Kriterien und Ankersätze der drei Schritte; läuft über `sh tests/run.sh`.
 - `tests/test_contract_blocks.py`: Pflichtblöcke je Schritt (Einträge für review, verify, retro).
 - `tests/rules_golden.py`, `tests/golden/rules.md`, `tests/test_rule_golden.py`: eingefrorene Regelabschnitte (vorher `tests/regelreferenz.py`).
-- Quelle des Vertrags unverändert: `tracker/linear.md`, `docs/projektkonfiguration.md`.
+- Quelle des Vertrags unverändert: `tracker/linear.md`, `docs/project-config.md`.
 
 ## So testet man es
 

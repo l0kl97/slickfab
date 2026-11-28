@@ -1,8 +1,8 @@
-# Projektkonfiguration `.slickfab/config`
+# Project configuration `.slickfab/config`
 
-Jedes Repo, in dem slickfab-Schritte den Tracker benutzen, hat eine Datei `.slickfab/config` im Repo-Root. Sie sagt, wo Specs und Tickets liegen und mit welchen Befehlen geprüft wird. Sie wird eingecheckt und enthält keine Zugangsdaten.
+Every repo in which slickfab steps use the tracker has a file `.slickfab/config` in the repo root. It says where specs and tickets live and which commands run the checks. It is checked in and holds no credentials.
 
-Diese Datei ist die Quelle. Die Schritte tragen die Teile, die sie brauchen, wörtlich in ihrer `SKILL.md` (Blöcke `<!-- vertrag:config-… -->`); `tests/test_contract_blocks.py` prüft, dass die Kopien gleich sind.
+This file is the source. The steps carry the parts they need verbatim in their `SKILL.md` (blocks `<!-- vertrag:config-… -->`); `tests/test_contract_blocks.py` checks that the copies are identical.
 
 ## Format
 
@@ -34,7 +34,7 @@ The file is read as text, not executed as a shell script (no `source`), so that 
 Answer in the user's language.
 <!-- /vertrag:config-format -->
 
-## Prüfbefehle mit slickrails
+## Check commands with slickrails
 
 <!-- vertrag:config-slickrails -->
 If the repo has `.slickrails/config.sh`, the check commands come from there: all non-empty `CHECK_*` values, the same way slickrails uses them in its hooks. `CHECK_*` entries in `.slickfab/config` are then not used; if they hold different values, the step names the contradiction once and follows slickrails. `.slickrails/config.sh` is also read only as text.
@@ -42,7 +42,9 @@ If the repo has `.slickrails/config.sh`, the check commands come from there: all
 Answer in the user's language.
 <!-- /vertrag:config-slickrails -->
 
-## Wenn die Konfiguration fehlt
+The runtime tools are narrower than the steps: `runtime/herdr/slickfab-worktree` (the baseline of a new worktree, and through it the dispatcher's post-merge check) reads only `CHECK_TYPECHECK` and `CHECK_TEST` from `.slickrails/config.sh` and runs the non-empty ones. Other `CHECK_*` keys, such as `CHECK_LINT_STAGED` or `CHECK_PREPUSH_REVIEW`, are not run there.
+
+## When the configuration is missing
 
 <!-- vertrag:config-fehlt -->
 If `.slickfab/config` is missing, a required value is missing, or `TRACKER=` names an unknown tracker, the step reports exactly that (which file, which key) and stops at the point where it would need the tracker. It writes no plan, ledger or state file and no ticket list into the repo as a substitute; whatever it has already worked out, it shows in the chat.

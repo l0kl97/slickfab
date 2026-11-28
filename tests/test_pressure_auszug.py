@@ -1,5 +1,6 @@
 """Tests für tests/pressure/auszug.py: macht aus einem Lauf die drei Auswertungsdateien."""
 import json
+import re
 import os
 import shutil
 import subprocess
@@ -150,6 +151,47 @@ class AuszugTest(unittest.TestCase):
         self.assertIn("<slickfab>", t)
         with open(os.path.join(ablage, "befehle.md"), encoding="utf-8") as f:
             self.assertNotIn(rest, f.read())
+
+    def test_lokaler_nutzername_aus_ls_wird_ersetzt(self):
+        # `ls -la` im Wegwerf-Repo zeigt den lokalen Nutzer als Besitzer; der darf nicht ins Repo.
+        import getpass
+        user = getpass.getuser()
+        ls = "drwxr-xr-x@  7 %s  staff  224 Nov 28 01:17 .\n-rw-r--r--@  1 %s  staff  12 Nov 28 a.txt" % (user, user)
+        self.write_transcript([
+            {"type": "assistant", "message": {"content": [{"type": "tool_use", "name": "Bash",
+                                                            "input": {"command": "ls -la; stat -f %Su ."}}]}},
+            {"type": "user", "message": {"content": [{"type": "tool_result", "content": ls}]}},
+            {"type": "result", "result": "Besitzer " + user + ".", "total_cost_usd": 0, "num_turns": 1},
+        ])
+        ablage = os.path.join(self.run_dir, "ablage")
+        res = subprocess.run([sys.executable, AUSZUG, self.run_dir, "--ablage", ablage,
+                              "--root", os.path.dirname(HERE)], capture_output=True, text=True)
+        self.assertEqual(res.returncode, 0, res.stderr)
+        for name in ("transkript.md", "ergebnis.md"):
+            with open(os.path.join(ablage, name), encoding="utf-8") as f:
+                t = f.read()
+            with self.subTest(datei=name):
+                self.assertIsNone(re.search(r"\b%s\b" % re.escape(user), t), t)
+                self.assertIn("<nutzer>", t)
+        with open(os.path.join(ablage, "transkript.md"), encoding="utf-8") as f:
+            self.assertIn("staff", f.read())  # nur der Name fällt weg, nicht die Zeile
+
+    def test_kurzer_nutzername_und_wortteile_bleiben(self):
+        # Grenzfälle: ein Login unter 3 Zeichen wird nicht ersetzt (träfe sonst Wörter), und ein
+        # längerer Name als ganzes Wort (auch vor .txt), nicht als Teil eines längeren Worts.
+        import importlib.util
+        import unittest.mock
+        spec = importlib.util.spec_from_file_location("auszug_modul", AUSZUG)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        with unittest.mock.patch("getpass.getuser", return_value="ab"), \
+                unittest.mock.patch.dict(os.environ, {"HOME": "/nirgends/ab"}):
+            self.assertEqual(mod.nutzernamen(), [])
+            self.assertEqual(mod.bereinige("ab abc", "/x/lauf", "/x/root"), "ab abc")
+        with unittest.mock.patch("getpass.getuser", return_value="kimtest"), \
+                unittest.mock.patch.dict(os.environ, {"HOME": "/nirgends/kimtest"}):
+            out = mod.bereinige("1 kimtest staff; kimtester; kimtest.txt; an kimtest.", "/x/lauf", "/x/root")
+            self.assertEqual(out, "1 <nutzer> staff; kimtester; <nutzer>.txt; an <nutzer>.")
 
     def test_datei_in_latin1_bricht_den_auszug_nicht(self):
         with open(os.path.join(self.repo, "export.csv"), "wb") as f:

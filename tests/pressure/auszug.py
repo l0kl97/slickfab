@@ -10,7 +10,7 @@ linear.json.calls und schreibt daneben:
 Mit --ablage legt es den Lauf zum Einchecken ab: die drei Dateien, lauf.md (Laufparameter plus
 Kosten) und transkript.md (Transkript ohne Systemzeilen, jeder Block gekürzt). Alles bereinigt:
 Lauf-Ordner, slickfab-Checkout und Home-Ordner werden zu <lauf>, <slickfab> und ~, Temp-Pfade zu
-<tmp>, Mailadressen zu <mail>, bekannte Schlüsselformate zu <geheim>.
+<tmp>, der lokale Nutzername zu <nutzer>, Mailadressen zu <mail>, bekannte Schlüsselformate zu <geheim>.
 """
 import json
 import os
@@ -46,6 +46,18 @@ def events(path):
                 continue
 
 
+def nutzernamen():
+    """Login und Name des Home-Ordners; zu kurze Namen nicht, sonst träfe es gewöhnliche Wörter."""
+    import getpass
+    names = set()
+    try:
+        names.add(getpass.getuser())
+    except (KeyError, OSError):
+        pass
+    names.add(os.path.basename(os.path.expanduser("~")))
+    return sorted(n for n in names if n and len(n) >= 3)
+
+
 def bereinige(text, run, root):
     for path, ersatz in ((os.path.realpath(run), "<lauf>"), (run, "<lauf>"),
                          (os.path.realpath(root), "<slickfab>"), (root, "<slickfab>"),
@@ -55,6 +67,9 @@ def bereinige(text, run, root):
     text = re.sub(r"(?:/private)?/var/folders/[^\s\"'`)]+", "<tmp>", text)
     text = re.sub(r"(?:/private)?/tmp/[^\s\"'`)]+", "<tmp>", text)
     text = re.sub(r"/(?:Users|home)/[^/\s\"'`)]+", "~", text)
+    # Der lokale Nutzer steht ohne Pfad etwa als Besitzer in `ls -l`; als ganzes Wort ersetzen.
+    for name in nutzernamen():
+        text = re.sub(r"\b%s\b" % re.escape(name), "<nutzer>", text)
     for pat in SECRET_PATTERNS:
         text = re.sub(pat, "<geheim>", text)
     text = re.sub(r"[A-Za-z0-9._%+-]+@(?!example\.invalid\b)[A-Za-z0-9.-]+\.[A-Za-z]{2,}", "<mail>", text)
